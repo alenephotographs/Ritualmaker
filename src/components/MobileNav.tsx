@@ -5,7 +5,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 
 const NAV_LINKS = [
   { href: "/farm-stand", name: "Farm stand" },
-  { href: "/photography", name: "Photographs" },
+  { href: "/photography", name: "Photography" },
   { href: "/on-location", name: "On site" },
 ] as const;
 

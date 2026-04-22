@@ -12,7 +12,6 @@ const processSteps = [
 ];
 
 const liveCompositionImages = [
-  "/photos/live-composition-01.png",
   "/photos/live-composition-02.png",
   "/photos/live-composition-03.png",
   "/photos/live-composition-04.png",
@@ -48,29 +47,18 @@ export function LiveCollageSection() {
       />
       <div id="live" className="scroll-mt-24">
         <section className="bg-magenta/95 py-20 text-cream lg:py-28">
-          <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:px-8">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cream/70">Live Collage™</p>
-              <h2 className="mt-4 font-display text-[clamp(1.85rem,5.2vw,3.1rem)] font-light leading-[1.02]">
-                Live Collage
-              </h2>
-              <p className="mt-5 max-w-2xl text-base leading-relaxed text-cream/90">
-                A live floral composition built in real time during your event. Guests
-                watch it take shape, then experience the finished piece for the rest of
-                the evening.
-              </p>
-              <p className="mt-3 text-xs text-cream/75">
-                Limited dates each season to keep every build fully custom.
-              </p>
-            </div>
-            <div className="overflow-hidden border border-cream/20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={liveCompositionImages[0]}
-                alt="Live Collage composition example"
-                className="h-full w-full object-cover"
-              />
-            </div>
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <p className="text-xs uppercase tracking-[0.2em] text-cream/70">Live Collage™</p>
+            <h2 className="mt-4 font-display text-[clamp(1.85rem,5.2vw,3.1rem)] font-light leading-[1.02]">
+              Live Collage
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-cream/90">
+              A live floral composition built in real time during your event. Guests watch it
+              take shape, then experience the finished piece for the rest of the evening.
+            </p>
+            <p className="mt-3 text-xs text-cream/75">
+              Limited dates each season to keep every build fully custom.
+            </p>
           </div>
         </section>
 

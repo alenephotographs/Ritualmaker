@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { ResolvedContactLinks } from "@/lib/siteContact";
 
 type OnLocationService = "florals" | "live-collage";
 
@@ -18,11 +17,9 @@ function defaultServices(seed?: string): OnLocationService[] {
 export function OnLocationInquiryForm({
   defaultService,
   sectionId = "inquiry",
-  contact,
 }: {
   defaultService?: string;
   sectionId?: string;
-  contact?: ResolvedContactLinks;
 }) {
   const [services, setServices] = useState<OnLocationService[]>(
     defaultServices(defaultService),
@@ -83,55 +80,6 @@ export function OnLocationInquiryForm({
         Weddings, pop-up bars, hospitality, and on-site Live Collage™. We will follow up with
         availability and next steps.
       </p>
-      <p className="mt-1 text-xs text-ink/45">Typical reply time: within 2 business days.</p>
-
-      {contact ? (
-        <div className="mt-4 border border-ink/10 bg-cream/60 px-4 py-3 text-sm text-ink/60">
-          <p className="text-xs uppercase tracking-widest text-ink/40">Stand, maps &amp; general</p>
-          <p className="mt-2 leading-relaxed text-ink/70">
-            For the 24/7 stand, directions, and quick questions:{" "}
-            <a
-              href={contact.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-ink underline decoration-ink/25 underline-offset-2 hover:decoration-ink/50"
-            >
-              Google Maps
-            </a>
-            {contact.googleProfileUrl ? (
-              <>
-                {" "}
-                ·{" "}
-                <a
-                  href={contact.googleProfileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-ink underline decoration-ink/25 underline-offset-2 hover:decoration-ink/50"
-                >
-                  Google Business
-                </a>
-              </>
-            ) : null}
-            {contact.email ? (
-              <>
-                {" "}
-                ·{" "}
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="text-ink underline decoration-ink/25 underline-offset-2 hover:decoration-ink/50"
-                >
-                  {contact.email}
-                </a>
-              </>
-            ) : null}
-            . For{" "}
-            <a href="/photography#inquiry-photography" className="text-ink underline">
-              Ritualmaker Photography
-            </a>{" "}
-            (field rental or sessions), use the photography form on that page.
-          </p>
-        </div>
-      ) : null}
 
       {status === "success" ? (
         <p className="mt-6 border border-moss/30 bg-moss/10 px-4 py-3 text-sm text-moss">

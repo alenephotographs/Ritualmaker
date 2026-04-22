@@ -1,40 +1,15 @@
 import Link from "next/link";
 import { PhotographyInquiryForm } from "@/components/inquiry/PhotographyInquiryForm";
-import { sanityClient } from "@/sanity/client";
-import { resolveContactLinks } from "@/lib/siteContact";
-import { siteSettingsQuery } from "@/sanity/queries";
-import type { SiteSettings } from "@/sanity/types";
+import {
+  photographyPortfolioFeaturedSrc,
+  photographyPortfolioImages,
+} from "@/lib/photographyPortfolio";
 
 export const metadata = {
-  title: "Ritualmaker Photography",
+  title: "Ritualmaker — Photography",
   description:
     "Photography on the farm, rent the field for portrait sessions, and book seasonal sessions in the Hudson Valley.",
 };
-
-const originalPhotographyImageUrls = [
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/6685f3f744f1ba43a7250a0d__MG_2683.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/6685f3f8add662916a13f984__MG_2692.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/6685f42c6303b030d3b34aa2__MG_2948.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/6685f4f9a61fbd641da2d78d_202406%20Alene%20-%20G%20-%20Colleen%20and%20Ross_727.jpg",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/6686bea1eec410ea11b29919__MG_4007.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668718faeea1a5fe7e13e076_202406%20Alene%20-%20G%20-%20Colleen%20and%20Ross_1079sm.jpg",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b41e5dcccb66675f882e2_202406%20Alene%20-%20G%20-%20Colleen%20and%20Ross_386.jpg",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b425f510bdea9ea52514c_202406%20Alene%20-%20G%20-%20Colleen%20and%20Ross_918.jpg",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b440935a37bf83f09c097_1048063%20copy.jpg",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b45121f29d0dfd5921f1d_ALBUM058.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b45db7900bc74909d3f65__MG_4306.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b46bec39b281a243c01cb__MG_3160.JPG",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/668b47d9134dc172d6887b03_ff0dd3ab-f34f-4f29-86f8-2fe7d874a8e8_rw_1920.jpg",
-  "https://cdn.prod.website-files.com/668355e7019629426d2886a7/682e1500a5f5b08c49bcf0d9__MG_5278.jpg",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/66be514dc001d577364153cc_202406%20Alene%20-%20G%20-%20Colleen%20and%20Ross_1105-1.jpg",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/66be5e709f72c1653dbb15e3_Alene%20-%20202406%20Jennas%20Bridal%20Shower%20-7.jpg",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/66bfa3366b8fef22f0e5f915_ALBUM077.JPG",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/66bfa9fc6925c7d8dba1092a__MG_3527.JPG",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/6712b303f045700b989403d1__MG_0911.jpg",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/686309232deb8c4280279b4d_PierroLiamEngagement_71.jpg",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/6993e43f01f48514ab615b7d__0240128.jpg",
-  "https://cdn.prod.website-files.com/66be4e84949884104a5e61c8/6993e658e1bc23a8fe389ea6__0240567.jpg",
-];
 
 const FARM_RENTAL_HERO = "/photos/field-mixed-tulips-cluster.jpg";
 
@@ -43,23 +18,9 @@ type PhotographyPageProps = {
 };
 
 export default async function PhotographyPage({ searchParams }: PhotographyPageProps) {
-  const siteSettings = await sanityClient
-    .fetch<SiteSettings | null>(siteSettingsQuery)
-    .catch(() => null);
-  const contact = resolveContactLinks(siteSettings);
-
   return (
     <div className="bg-cream">
-      <header className="border-b border-ink/10 bg-cream px-6 pt-12 lg:px-8 lg:pt-16">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-xs uppercase tracking-widest text-ink/40">
-            Ritualmaker Photography
-          </p>
-          <h1 className="mt-3 font-display text-4xl font-light sm:text-5xl lg:text-6xl">
-            Photography &amp; the farm
-          </h1>
-        </div>
-      </header>
+      <h1 className="sr-only">Photography</h1>
 
       {/* Top: Ritualmaker farm — rentable */}
       <section
@@ -136,8 +97,8 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
             <div className="overflow-hidden border border-ink/10 bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={originalPhotographyImageUrls[0]}
-                alt="Ritualmaker Photography — portfolio sample"
+                src={photographyPortfolioFeaturedSrc}
+                alt="Portrait session — couple on the garden path"
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>
@@ -157,7 +118,6 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
             Photography inquiry
           </h2>
           <PhotographyInquiryForm
-            contact={contact}
             defaultKind={searchParams?.kind}
             sectionId="inquiry-photography"
           />
@@ -165,27 +125,38 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
       </section>
 
       <section
-        className="mx-auto max-w-7xl px-6 pb-20 lg:px-8 lg:pb-24"
+        className="border-t border-ink/10 bg-gradient-to-b from-cream via-cream to-stone/25"
         aria-labelledby="gallery-heading"
       >
-        <h2
-          id="gallery-heading"
-          className="max-w-4xl font-display text-4xl font-light leading-tight lg:text-5xl"
-        >
-          See Ritualmaker Photography&rsquo;s work
-        </h2>
-        <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {originalPhotographyImageUrls.map((src) => (
-            <figure key={src} className="aspect-square overflow-hidden bg-stone/30">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt="Ritualmaker Photography portfolio"
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-            </figure>
-          ))}
+        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+          <p
+            id="gallery-heading"
+            className="text-xs uppercase tracking-[0.2em] text-ink/40"
+          >
+            Selected work
+          </p>
+          <p className="mt-3 max-w-2xl font-display text-3xl font-light leading-snug text-ink/90 sm:text-4xl">
+            Weddings, portraits, family, and the field—natural light, color, and place.
+          </p>
+          <div className="mt-12 columns-2 gap-4 sm:gap-5 md:columns-3 lg:columns-4 [&>figure]:mb-4 sm:[&>figure]:mb-5">
+            {photographyPortfolioImages
+              .filter((src) => src !== photographyPortfolioFeaturedSrc)
+              .map((src, index) => (
+              <figure
+                key={src}
+                className="break-inside-avoid overflow-hidden border border-ink/10 bg-stone/20 shadow-sm shadow-ink/5"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={`Ritualmaker photography portfolio, image ${index + 1}`}
+                  loading={index < 4 ? "eager" : "lazy"}
+                  decoding="async"
+                  className="w-full object-cover transition duration-500 hover:opacity-95"
+                />
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
     </div>

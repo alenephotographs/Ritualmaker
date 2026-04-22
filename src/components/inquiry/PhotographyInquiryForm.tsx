@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { ResolvedContactLinks } from "@/lib/siteContact";
 
 export type PhotoInquiryKind =
   | "field-rental"
@@ -32,11 +31,9 @@ function kindFromSearchParam(raw?: string): PhotoInquiryKind | undefined {
 
 export function PhotographyInquiryForm({
   sectionId = "inquiry-photography",
-  contact,
   defaultKind,
 }: {
   sectionId?: string;
-  contact?: ResolvedContactLinks;
   /** From ?kind= on the URL */
   defaultKind?: string;
 }) {
@@ -89,38 +86,6 @@ export function PhotographyInquiryForm({
         Field rental, sessions, and wedding or on-location coverage — we will confirm dates and
         scope with you.
       </p>
-      <p className="mt-1 text-xs text-ink/45">Typical reply time: within 2 business days.</p>
-
-      {contact ? (
-        <div className="mt-4 border border-ink/10 bg-cream/60 px-4 py-3 text-sm text-ink/60">
-          <p className="text-xs uppercase tracking-widest text-ink/40">Not photography?</p>
-          <p className="mt-2 leading-relaxed text-ink/70">
-            For on-site floristry and Live Collage™ (not photo sessions), use the{" "}
-            <a href="/on-location#inquiry" className="text-ink underline">
-              on location inquiry form
-            </a>
-            . For the 24/7 stand:{" "}
-            <a
-              href={contact.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-ink underline decoration-ink/25 underline-offset-2"
-            >
-              Google Maps
-            </a>
-            {contact.email ? (
-              <>
-                {" "}
-                ·{" "}
-                <a href={`mailto:${contact.email}`} className="text-ink underline">
-                  {contact.email}
-                </a>
-              </>
-            ) : null}
-            .
-          </p>
-        </div>
-      ) : null}
 
       {status === "success" ? (
         <p className="mt-6 border border-moss/30 bg-moss/10 px-4 py-3 text-sm text-moss">

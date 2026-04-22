@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ResolvedContactLinks } from "@/lib/siteContact";
 
 type ContactOutreachBlockProps = {
@@ -6,7 +7,7 @@ type ContactOutreachBlockProps = {
 };
 
 /**
- * Location + Google links + email. Used on on-location and anywhere inquiries are central.
+ * Location + Google links + email. Primary placement: farm stand page.
  */
 export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
   return (
@@ -20,7 +21,14 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
       </p>
       <p className="mt-3 text-sm leading-relaxed text-ink/60">
         Get directions, see photos and hours on the Google listing, and leave a review after you
-        visit. For work that travels to you, use the inquiry form below.
+        visit. For work that travels to you, use the{" "}
+        <Link
+          href="/on-location#inquiry"
+          className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
+        >
+          on location inquiry form
+        </Link>
+        .
       </p>
       <ul className="mt-5 space-y-2.5 text-sm text-ink/80">
         <li>

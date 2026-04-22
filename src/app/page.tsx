@@ -78,7 +78,7 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-12">
-            <BouquetGrid bouquets={bouquets} showCheckoutTagline={false} />
+            <BouquetGrid bouquets={bouquets} />
           </div>
         </div>
       </section>

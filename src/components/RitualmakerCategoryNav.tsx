@@ -19,7 +19,7 @@ const TABS: {
   },
   {
     href: "/photography",
-    label: "Photographs",
+    label: "Photography",
     isActive: (path: string) => path.startsWith("/photography"),
   },
   {

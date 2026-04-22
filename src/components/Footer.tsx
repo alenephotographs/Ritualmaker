@@ -138,7 +138,7 @@ export async function Footer() {
               Farm stand
             </Link>
             <Link href="/photography" className={`${brandCategoryClassName} inline-block`}>
-              Photographs
+              Photography
             </Link>
             <Link
               href="/on-location"
