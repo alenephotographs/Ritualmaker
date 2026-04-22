@@ -10,11 +10,11 @@ type LogoProps = {
 };
 
 /**
- * @deprecated Prefer `Wordmark` with text "Ritualmaker" for the site header. Kept for assets that still need the image mark.
+ * @deprecated Prefer `Wordmark` for the site header.
  */
 export function Logo({ className = "h-7 w-auto", title = "Ritualmaker" }: LogoProps) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/brand/logo.svg" alt={title} className={className} />;
+  return <img src="/brand/wordmark.png" alt={title} className={className} />;
 }
 
 type SubMarkProps = {
@@ -39,19 +39,21 @@ export function SubMark({
 }
 
 /**
- * Pure-CSS wordmark in Oleo Script (the brand display font).
- * Use when an SVG isn't available or you need to inherit text color.
+ * Brand wordmark image (transparent PNG). Pass `h-* w-auto` (or max-h-*) via className to size.
  */
 export function Wordmark({
-  className = "text-3xl text-ink",
+  className = "h-8 w-auto",
   text = "Ritualmaker",
 }: {
   className?: string;
   text?: string;
 }) {
   return (
-    <span className={`font-display leading-none tracking-tight ${className}`}>
-      {text}
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/brand/wordmark.png"
+      alt={text}
+      className={`block object-contain object-left ${className}`}
+    />
   );
 }
