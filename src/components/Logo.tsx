@@ -14,7 +14,15 @@ type LogoProps = {
  */
 export function Logo({ className = "h-7 w-auto", title = "Ritualmaker" }: LogoProps) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/brand/wordmark.png" alt={title} className={className} />;
+  return (
+    <img
+      src="/brand/wordmark.png"
+      alt={title}
+      width={1024}
+      height={118}
+      className={`shrink-0 object-contain ${className}`}
+    />
+  );
 }
 
 type SubMarkProps = {
@@ -53,7 +61,9 @@ export function Wordmark({
     <img
       src="/brand/wordmark.png"
       alt={text}
-      className={`block object-contain object-left ${className}`}
+      width={1024}
+      height={118}
+      className={`block shrink-0 object-contain object-left ${className}`}
     />
   );
 }

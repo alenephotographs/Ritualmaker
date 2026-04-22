@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
+import { Wordmark } from "@/components/Logo";
 
 const NAV_LINKS = [
   { href: "/farm-stand", name: "Farm stand" },
@@ -111,9 +112,9 @@ export function MobileNav({ standClosed }: MobileNavProps) {
                 </svg>
               </button>
               </div>
-              <p className="mt-3 font-display text-xl font-light tracking-tight text-ink">
-                Ritualmaker
-              </p>
+              <div className="mt-3">
+                <Wordmark className="h-8 w-auto" />
+              </div>
             </div>
             <nav className="flex flex-1 flex-col gap-0 overflow-y-auto px-2 py-2" aria-label="Ritualmaker categories">
               {NAV_LINKS.map((item) => (

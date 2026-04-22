@@ -12,7 +12,6 @@ const processSteps = [
 ];
 
 const liveCompositionImages = [
-  "/photos/live-composition-02.png",
   "/photos/live-composition-03.png",
   "/photos/live-composition-04.png",
   "/photos/live-composition-05.png",

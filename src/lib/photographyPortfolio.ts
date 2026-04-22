@@ -1,6 +1,9 @@
 /** Local files in /public/photography/portfolio — curated order for the Photography page gallery. */
 const base = "/photography/portfolio";
 
+/** Hero image for the “Sessions with me” block (excluded from masonry grid via filter on the page). */
+export const photographyPortfolioFeaturedSrc = `${base}/j7-c4fa17e2-5796-4d1b-924a-9e0c412a32c6.png`;
+
 export const photographyPortfolioImages: string[] = [
   `${base}/JessTommy_1076-7a067d19-0b07-4256-8f65-cb411ff9e8ca.png`,
   `${base}/JessTommy_0959-b2cb1cb3-757d-4050-8bf0-e2f97d4b9d6f.png`,
@@ -35,5 +38,3 @@ export const photographyPortfolioImages: string[] = [
   `${base}/p-202510202510_Flowers_00135-016ccaf5-fcf7-4355-9691-3e2070a199dd.png`,
   `${base}/p-202510_0241053-96b29e74-4caa-4bf1-845f-32bd62b952f9.png`,
 ];
-
-export const photographyPortfolioFeaturedSrc = photographyPortfolioImages[0]!;

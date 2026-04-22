@@ -98,7 +98,7 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photographyPortfolioFeaturedSrc}
-                alt="Portrait session — couple on the garden path"
+                alt="Portrait — children in a meadow with summer wildflowers"
                 className="aspect-[4/3] w-full object-cover"
               />
             </div>

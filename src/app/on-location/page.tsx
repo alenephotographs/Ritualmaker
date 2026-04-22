@@ -40,50 +40,64 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
       />
       <h1 className="sr-only">On location</h1>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-6 py-12 sm:grid-cols-2 sm:py-16 lg:grid-cols-4 lg:px-8 lg:py-20">
-        <article className="border border-ink/10 bg-white p-6">
-          <p className="text-[10px] uppercase tracking-widest text-ink/40">On location</p>
-          <h2 className="mt-2 font-display text-2xl font-light sm:text-3xl">Weddings &amp; events</h2>
-          <p className="mt-3 text-sm text-ink/65">
-            Personals, ceremony and reception, tablescapes, and installations—styled to
-            your date, space, and season.
+      <section className="w-full border-b border-ink/10 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-28">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink/40">On location</p>
+          <h2 className="mt-4 max-w-3xl font-display text-3xl font-light leading-tight sm:text-4xl lg:text-5xl">
+            Weddings &amp; events
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
+            Personals, ceremony and reception, tablescapes, and installations—styled to your date,
+            space, and season.
           </p>
-        </article>
+        </div>
+      </section>
 
-        <article className="border border-ink/10 bg-white p-6">
-          <p className="text-[10px] uppercase tracking-widest text-ink/40">On location</p>
-          <h2 className="mt-2 font-display text-2xl font-light sm:text-3xl">Pop-up flower bars</h2>
-          <p className="mt-3 text-sm text-ink/65">
+      <section className="w-full border-b border-ink/10 bg-cream">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-28">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink/40">On location</p>
+          <h2 className="mt-4 max-w-3xl font-display text-3xl font-light leading-tight sm:text-4xl lg:text-5xl">
+            Pop-up flower bars
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
             A temporary flower bar at your market, pop-up, hotel, or block party—we set up, sell
             stems and wraps, and pack down. Tell us the footprint and the crowd; we will plan the
             ice and the stems.
           </p>
-        </article>
+        </div>
+      </section>
 
-        <article className="border border-ink/10 bg-white p-6">
-          <p className="text-[10px] uppercase tracking-widest text-ink/40">On location</p>
-          <h2 className="mt-2 font-display text-2xl font-light sm:text-3xl">Hospitality &amp; commercial</h2>
-          <p className="mt-3 text-sm text-ink/65">
-            Ongoing and rotating florals for restaurants, hotels, and other accounts. Tell us
-            about delivery cadence, volume, and style—we can set up a regular run that fits
-            the kitchen or front-of-house.
+      <section className="w-full border-b border-ink/10 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-28">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink/40">On location</p>
+          <h2 className="mt-4 max-w-3xl font-display text-3xl font-light leading-tight sm:text-4xl lg:text-5xl">
+            Hospitality &amp; commercial
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
+            Ongoing and rotating florals for restaurants, hotels, and other accounts. Tell us about
+            delivery cadence, volume, and style—we can set up a regular run that fits the kitchen
+            or front-of-house.
           </p>
-        </article>
+        </div>
+      </section>
 
-        <article className="border border-magenta/20 bg-bloom/10 p-6">
-          <p className="text-[10px] uppercase tracking-widest text-magenta/70">On location</p>
-          <h2 className="mt-2 font-display text-2xl font-light sm:text-3xl">Live Collage™</h2>
-          <p className="mt-3 text-sm text-ink/65">
-            A live floral composition in real time at your event. How it works and examples
-            are below.
+      <section className="w-full border-b border-ink/10 bg-bloom/15">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-28">
+          <p className="text-xs uppercase tracking-[0.2em] text-magenta/80">On location</p>
+          <h2 className="mt-4 max-w-3xl font-display text-3xl font-light leading-tight text-ink sm:text-4xl lg:text-5xl">
+            Live Collage™
+          </h2>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
+            A live floral composition in real time at your event. How it works and examples are
+            below.
           </p>
           <Link
             href="#live"
-            className="mt-4 inline-block text-xs uppercase tracking-widest text-magenta underline decoration-magenta/40 underline-offset-4"
+            className="mt-8 inline-block text-xs uppercase tracking-[0.2em] text-magenta underline decoration-magenta/40 underline-offset-4 hover:decoration-magenta"
           >
             How it works &amp; examples
           </Link>
-        </article>
+        </div>
       </section>
 
       <LiveCollageSection />
