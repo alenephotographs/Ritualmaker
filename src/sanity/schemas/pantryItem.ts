@@ -88,6 +88,14 @@ export default defineType({
       initialValue: true,
     }),
     defineField({
+      name: "shipsAvailable",
+      title: "Shipping available for this item",
+      type: "boolean",
+      initialValue: false,
+      description:
+        "When enabled, the storefront shows that this item can ship. Leave off for stand-only items.",
+    }),
+    defineField({
       name: "inventoryAudit",
       title: "Inventory audit",
       type: "object",

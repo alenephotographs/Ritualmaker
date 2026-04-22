@@ -53,6 +53,8 @@ export interface PantryItem {
   shelfLocation?: string;
   comingSoon?: boolean;
   available?: boolean;
+  /** When true, show shipping on the item card (pantry has no separate PDP yet). */
+  shipsAvailable?: boolean;
   inventoryAudit?: InventoryAudit;
   inventoryAuditHistory?: InventoryAuditHistoryEntry[];
   stripePriceId?: string;

@@ -1,56 +1,61 @@
 "use client";
 
 import { useState } from "react";
+import type { ResolvedContactLinks } from "@/lib/siteContact";
 
-type InquiryService = "florals" | "live-collage" | "photography";
+export type PhotoInquiryKind =
+  | "field-rental"
+  | "sessions-with-me"
+  | "wedding-engagement-on-location";
 
-const allServices: { id: InquiryService; label: string }[] = [
-  { id: "florals", label: "Event florals" },
-  { id: "live-collage", label: "Live Collage™" },
-  { id: "photography", label: "Photography" },
+const kindOptions: { value: PhotoInquiryKind; label: string }[] = [
+  { value: "field-rental", label: "Field rental (portrait use of the farm)" },
+  { value: "sessions-with-me", label: "Sessions with me (farm or elsewhere)" },
+  {
+    value: "wedding-engagement-on-location",
+    label: "Wedding, engagement, or on-location coverage",
+  },
 ];
 
-function toDefaultServices(seed?: string): InquiryService[] {
-  if (!seed) return ["florals"];
-  if (seed === "live") return ["live-collage"];
-  if (seed === "florals") return ["florals"];
-  if (seed === "photography") return ["photography"];
-  return ["florals"];
+function kindFromSearchParam(raw?: string): PhotoInquiryKind | undefined {
+  if (raw === "field" || raw === "field-rental") return "field-rental";
+  if (raw === "sessions" || raw === "sessions-with-me") return "sessions-with-me";
+  if (
+    raw === "wedding" ||
+    raw === "wedding-engagement-on-location" ||
+    raw === "event"
+  ) {
+    return "wedding-engagement-on-location";
+  }
+  return undefined;
 }
 
-export function InquiryForm({
-  defaultService,
-  sectionId = "inquiry",
+export function PhotographyInquiryForm({
+  sectionId = "inquiry-photography",
+  contact,
+  defaultKind,
 }: {
-  defaultService?: string;
   sectionId?: string;
+  contact?: ResolvedContactLinks;
+  /** From ?kind= on the URL */
+  defaultKind?: string;
 }) {
-  const [services, setServices] = useState<InquiryService[]>(
-    toDefaultServices(defaultService),
+  const [kind, setKind] = useState<PhotoInquiryKind>(
+    () => kindFromSearchParam(defaultKind) ?? "sessions-with-me",
   );
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
     "idle",
   );
   const [error, setError] = useState<string | null>(null);
 
-  function toggleService(service: InquiryService) {
-    setServices((prev) =>
-      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service],
-    );
-  }
-
   async function onSubmit(formData: FormData) {
     setError(null);
-
-    if (!services.length) {
-      setStatus("error");
-      setError("Please select at least one service.");
-      return;
-    }
-
     setStatus("submitting");
     try {
       const payload = {
+        formType: "photography" as const,
+        photoInquiryKind: kind,
+        services: ["photography"] as const,
         name: String(formData.get("name") || "").trim(),
         email: String(formData.get("email") || "").trim(),
         phone: String(formData.get("phone") || "").trim(),
@@ -59,9 +64,7 @@ export function InquiryForm({
         guestCount: Number(formData.get("guestCount") || 0) || undefined,
         budgetBand: String(formData.get("budgetBand") || "").trim(),
         notes: String(formData.get("notes") || "").trim(),
-        services,
       };
-
       const res = await fetch("/api/inquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,13 +83,44 @@ export function InquiryForm({
 
   return (
     <div id={sectionId} className="border border-ink/10 bg-white p-8">
-      <p className="text-xs uppercase tracking-widest text-ink/40">Inquiry</p>
-      <h2 className="mt-3 font-display text-4xl font-light">Start your inquiry</h2>
+      <p className="text-xs uppercase tracking-widest text-ink/40">Photography</p>
+      <h2 className="mt-3 font-display text-4xl font-light">Photography inquiry</h2>
       <p className="mt-3 text-sm text-ink/65">
-        Share a few details and we will review availability, then reach out with next
-        steps.
+        Field rental, sessions, and wedding or on-location coverage — we will confirm dates and
+        scope with you.
       </p>
       <p className="mt-1 text-xs text-ink/45">Typical reply time: within 2 business days.</p>
+
+      {contact ? (
+        <div className="mt-4 border border-ink/10 bg-cream/60 px-4 py-3 text-sm text-ink/60">
+          <p className="text-xs uppercase tracking-widest text-ink/40">Not photography?</p>
+          <p className="mt-2 leading-relaxed text-ink/70">
+            For on-site floristry and Live Collage™ (not photo sessions), use the{" "}
+            <a href="/on-location#inquiry" className="text-ink underline">
+              on location inquiry form
+            </a>
+            . For the 24/7 stand:{" "}
+            <a
+              href={contact.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-ink underline decoration-ink/25 underline-offset-2"
+            >
+              Google Maps
+            </a>
+            {contact.email ? (
+              <>
+                {" "}
+                ·{" "}
+                <a href={`mailto:${contact.email}`} className="text-ink underline">
+                  {contact.email}
+                </a>
+              </>
+            ) : null}
+            .
+          </p>
+        </div>
+      ) : null}
 
       {status === "success" ? (
         <p className="mt-6 border border-moss/30 bg-moss/10 px-4 py-3 text-sm text-moss">
@@ -101,27 +135,25 @@ export function InquiryForm({
         >
           <fieldset>
             <legend className="text-xs uppercase tracking-widest text-ink/50">
-              Services interested in
+              What are you inquiring about?
             </legend>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {allServices.map((service) => {
-                const selected = services.includes(service.id);
-                return (
-                  <button
-                    key={service.id}
-                    type="button"
-                    onClick={() => toggleService(service.id)}
-                    aria-pressed={selected}
-                    className={`px-3 py-2 text-xs uppercase tracking-widest ${
-                      selected
-                        ? "bg-ink text-cream"
-                        : "border border-ink/20 text-ink/70 hover:border-ink/40"
-                    }`}
-                  >
-                    {service.label}
-                  </button>
-                );
-              })}
+            <div className="mt-2 space-y-2">
+              {kindOptions.map((opt) => (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-start gap-3 border border-ink/10 bg-cream/30 px-3 py-2.5 text-sm text-ink/80 has-[:checked]:border-ink/40 has-[:checked]:bg-white"
+                >
+                  <input
+                    type="radio"
+                    name="photoInquiryKindUi"
+                    value={opt.value}
+                    checked={kind === opt.value}
+                    onChange={() => setKind(opt.value)}
+                    className="mt-0.5"
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
             </div>
           </fieldset>
 
@@ -156,23 +188,24 @@ export function InquiryForm({
               />
             </label>
             <label className="text-sm text-ink/70">
-              Event date
+              Preferred date or season
               <input
                 type="date"
                 name="eventDate"
                 className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
               />
             </label>
-            <label className="text-sm text-ink/70">
-              Venue
+            <label className="text-sm text-ink/70 md:col-span-2">
+              Location or venue
               <input
                 type="text"
                 name="venue"
                 className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                placeholder='e.g. "farm", town, or venue name'
               />
             </label>
             <label className="text-sm text-ink/70">
-              Guest count
+              Guest count (if applicable)
               <input
                 type="number"
                 name="guestCount"
@@ -185,7 +218,7 @@ export function InquiryForm({
           <label className="block text-sm text-ink/70">
             Budget band
             <select name="budgetBand" className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm">
-              <option value="">Select a range</option>
+              <option value="">Prefer not to say</option>
               <option value="under-3k">Under $3k</option>
               <option value="3k-6k">$3k-$6k</option>
               <option value="6k-10k">$6k-$10k</option>
@@ -199,7 +232,7 @@ export function InquiryForm({
               name="notes"
               rows={5}
               className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-              placeholder="Tell us what matters most to you."
+              placeholder="Tell us about your timeline, vision, and anything we should know."
             />
           </label>
 
@@ -218,7 +251,7 @@ export function InquiryForm({
             disabled={status === "submitting"}
             className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/30"
           >
-            {status === "submitting" ? "Sending..." : "Submit inquiry"}
+            {status === "submitting" ? "Sending..." : "Submit photography inquiry"}
           </button>
         </form>
       )}

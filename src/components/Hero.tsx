@@ -33,27 +33,18 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
 
         <p className="mt-5 max-w-xl text-lg font-light text-cream/85">
           The Ritualmaker flower stand: a seasonal, self-serve cut flower stop on
-          Miller Hill Road. Grab a bouquet at the stand — pay cash or pay online
+          38 Miller Hill Road. Grab a bouquet at the stand — pay cash or pay online
           below. Always fresh, always homegrown. Ready when you are.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
+        <div className="mt-8">
           <Link
-            href="/shop#flowers"
+            href="/farm-stand#flowers"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
             Shop bouquets now
           </Link>
-          <Link
-            href="/#services"
-            className="inline-block border border-cream/50 px-5 py-3 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-cream/10"
-          >
-            See other services
-          </Link>
         </div>
-        <p className="mt-4 text-xs uppercase tracking-widest text-cream/70">
-          One tap checkout · on-site flowers for venues, photos, and pantry
-        </p>
       </div>
     </section>
   );

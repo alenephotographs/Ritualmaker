@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { InquiryForm } from "@/components/InquiryForm";
+import { ContactOutreachBlock } from "@/components/ContactOutreachBlock";
+import { OnLocationInquiryForm } from "@/components/inquiry/OnLocationInquiryForm";
 import { LiveCollageSection } from "@/components/LiveCollageSection";
+import { sanityClient } from "@/sanity/client";
+import { resolveContactLinks } from "@/lib/siteContact";
+import { siteSettingsQuery } from "@/sanity/queries";
+import type { SiteSettings } from "@/sanity/types";
 
 export const metadata = {
   title: "On location",
@@ -14,7 +19,11 @@ type OnLocationPageProps = {
   };
 };
 
-export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
+export default async function OnLocationPage({ searchParams }: OnLocationPageProps) {
+  const siteSettings = await sanityClient
+    .fetch<SiteSettings | null>(siteSettingsQuery)
+    .catch(() => null);
+  const contact = resolveContactLinks(siteSettings);
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com";
   const jsonLd = {
     "@context": "https://schema.org",
@@ -64,10 +73,16 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
             Start inquiry
           </Link>
           <Link
+            href="#visit"
+            className="border border-ink/20 px-6 py-3 text-xs uppercase tracking-widest text-ink/70 hover:bg-ink hover:text-cream"
+          >
+            Location &amp; contact
+          </Link>
+          <Link
             href="#live"
             className="border border-ink/20 px-6 py-3 text-xs uppercase tracking-widest text-ink/70 hover:bg-ink hover:text-cream"
           >
-            Read about Live Collage™
+            Live Collage™
           </Link>
         </div>
       </section>
@@ -121,7 +136,12 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
       <LiveCollageSection />
 
       <section className="mx-auto max-w-7xl px-6 pb-20 lg:px-8 lg:pb-24">
-        <InquiryForm defaultService={searchParams?.service ?? "florals"} sectionId="inquiry" />
+        <ContactOutreachBlock id="visit" links={contact} />
+        <OnLocationInquiryForm
+          contact={contact}
+          defaultService={searchParams?.service}
+          sectionId="inquiry"
+        />
       </section>
     </div>
   );

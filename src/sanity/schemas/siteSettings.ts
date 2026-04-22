@@ -1,5 +1,8 @@
 import { defineField, defineType } from "sanity";
 
+/** Fallback Maps search; code uses the same in `lib/siteContact` when this field is empty */
+const defaultMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("38 Miller Hill Road, Hudson Valley, NY")}`;
+
 export default defineType({
   name: "siteSettings",
   title: "Site Settings",
@@ -47,12 +50,15 @@ export default defineType({
       name: "address",
       title: "Address / Location",
       type: "string",
-      initialValue: "Miller Hill Road, Hudson Valley, NY",
+      initialValue: "38 Miller Hill Road, Hudson Valley, NY",
     }),
     defineField({
       name: "mapUrl",
-      title: "Google Maps URL",
+      title: "Google Maps URL (directions to the stand)",
       type: "url",
+      initialValue: defaultMapsUrl,
+      description:
+        "Paste “Share” from Google Maps for the stand, or the Business Profile maps link. If empty, the site uses a search for 38 Miller Hill Road.",
     }),
     defineField({
       name: "instagramUrl",
@@ -76,11 +82,14 @@ export default defineType({
       name: "googleReviewUrl",
       title: "Google review URL",
       type: "url",
+      description: "“Write a review” or review link for your business listing.",
     }),
     defineField({
       name: "googleProfileUrl",
-      title: "Google business profile URL",
+      title: "Google Business Profile URL",
       type: "url",
+      description:
+        "Your public Google Business listing (e.g. from “Share” on Search or Business Profile). Shown in the footer, checkout, and inquiry page.",
     }),
     defineField({
       name: "heroImage",

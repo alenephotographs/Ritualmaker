@@ -23,18 +23,48 @@ export default defineType({
       type: "string",
     }),
     defineField({
+      name: "formType",
+      title: "Form",
+      type: "string",
+      options: {
+        list: [
+          { title: "On location (florals / Live Collage™)", value: "on-location" },
+          { title: "Photography", value: "photography" },
+        ],
+        layout: "radio",
+      },
+      description: "Which intake form the client used. Older rows may be blank (legacy).",
+    }),
+    defineField({
       name: "services",
       title: "Services interested in",
       type: "array",
       of: [{ type: "string" }],
       options: {
         list: [
-          { title: "Wedding florals", value: "florals" },
+          { title: "Wedding / event florals", value: "florals" },
           { title: "Ritualmaker Live Collage™", value: "live-collage" },
           { title: "Ritualmaker Photography", value: "photography" },
         ],
       },
       validation: (rule) => rule.required().min(1),
+    }),
+    defineField({
+      name: "photoInquiryKind",
+      title: "Photography — inquiry type",
+      type: "string",
+      options: {
+        list: [
+          { title: "Field rental (portrait use)", value: "field-rental" },
+          { title: "Sessions with me (farm or elsewhere)", value: "sessions-with-me" },
+          {
+            title: "Wedding, engagement, or on-location coverage",
+            value: "wedding-engagement-on-location",
+          },
+        ],
+        layout: "radio",
+      },
+      hidden: ({ parent }) => parent?.formType !== "photography",
     }),
     defineField({
       name: "eventDate",
@@ -98,11 +128,14 @@ export default defineType({
       title: "name",
       subtitle: "email",
       status: "status",
+      formType: "formType",
     },
-    prepare({ title, subtitle, status }) {
+    prepare({ title, subtitle, status, formType }) {
       return {
         title,
-        subtitle: [subtitle, status ? status.toUpperCase() : ""].filter(Boolean).join(" · "),
+        subtitle: [formType, subtitle, status ? status.toUpperCase() : ""]
+          .filter(Boolean)
+          .join(" · "),
       };
     },
   },

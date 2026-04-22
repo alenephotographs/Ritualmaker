@@ -1,4 +1,4 @@
-/** Display font treatment for category names (Flowers, Photos, Pantry, On site) — matches the Ritualmaker wordmark. */
+/** Display font treatment for category names (Farm stand, Photographs, On site) — matches the Ritualmaker wordmark. */
 export const brandCategoryClassName =
   "font-display text-[0.95rem] tracking-tight text-ink/85 transition-colors hover:text-ink sm:text-base";
 

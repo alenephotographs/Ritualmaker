@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 
 const NAV_LINKS = [
-  { href: "/#shop", name: "Flowers" },
-  { href: "/photography", name: "Photos" },
-  { href: "/pantry", name: "Pantry" },
+  { href: "/farm-stand", name: "Farm stand" },
+  { href: "/photography", name: "Photographs" },
   { href: "/on-location", name: "On site" },
 ] as const;
 
@@ -39,7 +38,7 @@ export function MobileNav({ standClosed }: MobileNavProps) {
   }, [open, close]);
 
   const cta = standClosed ? "Stand closed" : "Buy flowers";
-  const ctaHref = "/shop#flowers";
+  const ctaHref = "/farm-stand#flowers";
 
   return (
     <div className="flex items-center gap-2 md:hidden">

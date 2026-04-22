@@ -13,19 +13,14 @@ const TABS: {
   isActive: (path: string) => boolean;
 }[] = [
   {
-    href: "/#shop",
-    label: "Flowers",
-    isActive: (path: string) => path === "/" || path.startsWith("/shop"),
+    href: "/farm-stand",
+    label: "Farm stand",
+    isActive: (path: string) => path.startsWith("/farm-stand"),
   },
   {
     href: "/photography",
-    label: "Photos",
+    label: "Photographs",
     isActive: (path: string) => path.startsWith("/photography"),
-  },
-  {
-    href: "/pantry",
-    label: "Pantry",
-    isActive: (path: string) => path.startsWith("/pantry"),
   },
   {
     href: "/on-location",

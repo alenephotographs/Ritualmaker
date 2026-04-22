@@ -14,7 +14,16 @@ async function readJsonSafe(response: Response) {
   }
 }
 
-export function BouquetGrid({ bouquets }: { bouquets: Bouquet[] }) {
+type BouquetGridProps = {
+  bouquets: Bouquet[];
+  /** When false, hide the one-line checkout tagline above the grid (e.g. home hero already explains buying). */
+  showCheckoutTagline?: boolean;
+};
+
+export function BouquetGrid({
+  bouquets,
+  showCheckoutTagline = true,
+}: BouquetGridProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastBouquetId, setLastBouquetId] = useState<string | null>(null);
@@ -162,9 +171,11 @@ export function BouquetGrid({ bouquets }: { bouquets: Bouquet[] }) {
           </div>
         </div>
       )}
-      <p className="mb-5 text-xs uppercase tracking-widest text-ink/45">
-        One tap checkout · choose your bouquet and pay instantly
-      </p>
+      {showCheckoutTagline ? (
+        <p className="mb-5 text-xs uppercase tracking-widest text-ink/45">
+          One tap checkout · choose your bouquet and pay instantly
+        </p>
+      ) : null}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {bouquets.map((b) => (
           <article

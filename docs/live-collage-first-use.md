@@ -6,18 +6,16 @@ This document records first-public web use of the mark **Ritualmaker Live Collag
 
 ## Live URLs where mark appears
 
-- `/live`
-- `/weddings`
-- `/` (cross-promo strip)
+- `/on-location` (including `#live` section; `/live` redirects here)
+- `/` (e.g. nav and links into on-location; cross-promo strip removed 2026-04)
 - shared footer family row
 
 ## Source files containing usage
 
-- `src/app/live/page.tsx`
-- `src/app/weddings/page.tsx`
-- `src/components/CrossPromoStrip.tsx`
+- `src/app/on-location/page.tsx`
+- `src/components/LiveCollageSection.tsx`
 - `src/components/Footer.tsx`
-- `src/components/InquiryForm.tsx`
+- `src/components/inquiry/OnLocationInquiryForm.tsx`
 - `src/sanity/schemas/weddingInquiry.ts`
 
 ## Notes

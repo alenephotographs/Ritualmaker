@@ -3,11 +3,13 @@ import { sanityClient } from "@/sanity/client";
 import { siteSettingsQuery } from "@/sanity/queries";
 import type { SiteSettings } from "@/sanity/types";
 import { Wordmark, brandCategoryClassName } from "@/components/Logo";
+import { resolveContactLinks } from "@/lib/siteContact";
 
 export async function Footer() {
   const s = await sanityClient
     .fetch<SiteSettings | null>(siteSettingsQuery)
     .catch(() => null);
+  const contact = resolveContactLinks(s);
 
   return (
     <footer className="border-t border-ink/10 bg-stone/40">
@@ -22,24 +24,27 @@ export async function Footer() {
           {s?.address && (
             <p className="mt-4 text-sm text-ink/50">{s.address}</p>
           )}
+          <a
+            href={contact.mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block text-sm text-ink/70 underline decoration-ink/20 underline-offset-4 transition-colors hover:text-ink"
+          >
+            Get directions in Google Maps
+          </a>
         </div>
 
         <div>
           <p className="text-xs uppercase tracking-widest text-ink/40">Shop</p>
           <ul className="mt-4 space-y-2 text-sm">
             <li>
-              <Link href="/shop" className="hover:text-ink">
-                All bouquets
+              <Link href="/farm-stand" className="hover:text-ink">
+                Farm stand
               </Link>
             </li>
             <li>
               <Link href="/#faq" className="hover:text-ink">
                 How to buy
-              </Link>
-            </li>
-            <li>
-              <Link href="/pantry" className="hover:text-ink">
-                Pantry
               </Link>
             </li>
           </ul>
@@ -50,6 +55,18 @@ export async function Footer() {
             Connect
           </p>
           <ul className="mt-4 space-y-2 text-sm">
+            {contact.googleProfileUrl && (
+              <li>
+                <a
+                  href={contact.googleProfileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-ink"
+                >
+                  Google Business Profile
+                </a>
+              </li>
+            )}
             {s?.instagramUrl && (
               <li>
                 <a
@@ -74,18 +91,6 @@ export async function Footer() {
                 </a>
               </li>
             )}
-            {s?.mapUrl && (
-              <li>
-                <a
-                  href={s.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-ink"
-                >
-                  Find the stand
-                </a>
-              </li>
-            )}
             {s?.googleReviewUrl && (
               <li>
                 <a
@@ -105,18 +110,13 @@ export async function Footer() {
           <p className="text-xs uppercase tracking-widest text-ink/40">Ritualmaker</p>
           <ul className="mt-4 space-y-2 text-sm">
             <li>
-              <Link href="/#shop" className="hover:text-ink">
-                Ritualmaker Flowers
+              <Link href="/farm-stand" className="hover:text-ink">
+                Ritualmaker Farm stand
               </Link>
             </li>
             <li>
               <Link href="/photography" className="hover:text-ink">
                 Ritualmaker Photography
-              </Link>
-            </li>
-            <li>
-              <Link href="/pantry" className="hover:text-ink">
-                Ritualmaker Pantry
               </Link>
             </li>
             <li>
@@ -134,14 +134,11 @@ export async function Footer() {
             Ritualmaker family
           </p>
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-ink/80">
-            <Link href="/#shop" className={`${brandCategoryClassName} inline-block`}>
-              Flowers
+            <Link href="/farm-stand" className={`${brandCategoryClassName} inline-block`}>
+              Farm stand
             </Link>
             <Link href="/photography" className={`${brandCategoryClassName} inline-block`}>
-              Photos
-            </Link>
-            <Link href="/pantry" className={`${brandCategoryClassName} inline-block`}>
-              Pantry
+              Photographs
             </Link>
             <Link
               href="/on-location"

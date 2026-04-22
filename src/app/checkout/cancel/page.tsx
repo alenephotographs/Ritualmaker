@@ -20,13 +20,13 @@ export default function CancelPage() {
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <Link
-          href="/shop#flowers"
+          href="/farm-stand#flowers"
           className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal"
         >
           Try checkout again
         </Link>
         <Link
-          href="/shop"
+          href="/farm-stand"
           className="border border-ink/20 px-6 py-3 text-xs uppercase tracking-widest hover:bg-ink hover:text-cream"
         >
           Pay cash at stand

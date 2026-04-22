@@ -62,6 +62,7 @@ export const pantryItemsQuery = groq`*[_type == "pantryItem"] | order(comingSoon
   shelfLocation,
   comingSoon,
   available,
+  shipsAvailable,
   inventoryAudit,
   "inventoryAuditHistory": inventoryAuditHistory[0...10],
   stripePriceId,
@@ -70,7 +71,7 @@ export const pantryItemsQuery = groq`*[_type == "pantryItem"] | order(comingSoon
 }`;
 
 export const onePantryItemByIdQuery = groq`*[_type == "pantryItem" && _id == $id][0]{
-  _id, name, category, priceCents, available, comingSoon,
+  _id, name, category, priceCents, available, comingSoon, shipsAvailable,
   stripePriceId, stripeProductId,
   "vendorId": vendor->_id,
   "vendorName": vendor->name,

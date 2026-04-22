@@ -24,7 +24,7 @@ export async function Header() {
         </Link>
         <div className="flex items-center gap-2">
           <Link
-            href="/shop#flowers"
+            href="/farm-stand#flowers"
             className="hidden bg-ink px-4 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal md:inline-block"
           >
             {standClosed ? "Stand closed" : "Buy flowers"}
