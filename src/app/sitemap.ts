@@ -1,0 +1,14 @@
+import type { MetadataRoute } from "next";
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com";
+  const now = new Date();
+  return [
+    { url: `${base}/`, lastModified: now, priority: 1 },
+    { url: `${base}/shop`, lastModified: now, priority: 0.9 },
+    { url: `${base}/pantry`, lastModified: now, priority: 0.8 },
+    { url: `${base}/photography`, lastModified: now, priority: 0.8 },
+    { url: `${base}/live`, lastModified: now, priority: 0.8 },
+    { url: `${base}/weddings`, lastModified: now, priority: 0.8 },
+  ];
+}

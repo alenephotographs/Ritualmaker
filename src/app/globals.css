@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Oleo Script", Georgia, serif;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+
+  /* Ritualmaker Flowers — Brand Kit */
+  --rm-primary: #f3a2a2;
+  --rm-secondary: #a7266d;
+  --rm-tertiary: #607946;
+  --rm-accent: #272727;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  @apply bg-cream text-ink antialiased;
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+
+::selection {
+  background: #1a1a1a;
+  color: #F7F5F1;
+}
+
+/* Ritualmaker vase-mark repeating pattern.
+   Use on dark or magenta surfaces, e.g. <div class="bg-magenta vase-pattern" />. */
+.vase-pattern {
+  background-image: url("/brand/mark-2.png");
+  background-repeat: repeat;
+  background-size: 56px 56px;
+  background-position: center;
+}
+
+.vase-pattern--dense {
+  background-size: 36px 36px;
+}
+
+.vase-pattern--sparse {
+  background-size: 96px 96px;
+}
