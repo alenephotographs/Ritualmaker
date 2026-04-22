@@ -6,7 +6,7 @@ import type { PantryItem } from "@/sanity/types";
 export const metadata = {
   title: "Ritualmaker Pantry",
   description:
-    "Small-batch pantry goods from the stand including oils, salts, flower sugar, and upcoming farm eggs.",
+    "Ritualmaker Pantry — small-batch goods from the stand: oils, salts, flower sugar, and farm eggs as they are ready.",
 };
 
 export default async function PantryPage() {
@@ -14,14 +14,17 @@ export default async function PantryPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
-      <p className="text-xs uppercase tracking-widest text-ink/40">Pantry</p>
+      <p className="text-xs uppercase tracking-widest text-ink/40">Ritualmaker Pantry</p>
       <h1 className="mt-4 font-display text-5xl font-light lg:text-6xl">
         Ritualmaker Pantry
       </h1>
+      <p className="mt-3 text-sm text-ink/50">
+        Same self-serve stop as the flowers — a different set of shelves.
+      </p>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink/65">
-        Pantry goods are stocked at the stand as they are finished and ready. Oils are
-        currently available, with seasoned salts, flower sugar, and farm eggs arriving
-        seasonally.
+        Stock shows up as batches are ready. Oils are available now; seasoned salts,
+        flower sugar, and farm eggs are added as we go. Buy at the stand in person
+        (not the bouquet checkout).
       </p>
       <div className="mt-10">
         <PantryGrid items={items} />

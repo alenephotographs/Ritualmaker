@@ -45,14 +45,14 @@ export function GalleryPreview({ photos }: { photos: ArchivePhoto[] }) {
                     loop
                     playsInline
                     autoPlay
-                    aria-label={p.caption ?? "Video from Ritualmaker field"}
+                    aria-label={p.caption ?? "Video from the flower field"}
                     className="h-full w-full object-cover"
                   />
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={src}
-                    alt={p.alt ?? p.caption ?? "Photo from Ritualmaker field"}
+                    alt={p.alt ?? p.caption ?? "Photo from the flower field"}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 )}

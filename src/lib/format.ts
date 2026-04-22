@@ -7,7 +7,7 @@ export function formatUSD(cents: number): string {
 }
 
 export function farmLabel(farm: string): string {
-  if (farm === "ritualmaker") return "Ritualmaker Farm";
+  if (farm === "ritualmaker") return "Flower Farm";
   if (farm === "wonderland-ridge") return "Wonderland Ridge Farm";
   return farm;
 }

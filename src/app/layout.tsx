@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     .catch(() => null);
 
   const title =
-    settings?.title ?? "Ritualmaker Flowers — Fresh cut bouquets, 24/7";
+    settings?.title ?? "Ritualmaker — Flower stand, pantry, and on-site florals";
   const description =
     settings?.description ??
     "A seasonal cut flower stand on Miller Hill Road in the Hudson Valley. Pick up a bouquet anytime — pay cash or pay online.";
@@ -36,19 +36,19 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(
       process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com",
     ),
-    title: { default: title, template: "%s · Ritualmaker" },
+    title: { default: title, template: "%s" },
     description,
     openGraph: {
       title,
       description,
       type: "website",
-      siteName: "Ritualmaker Flowers",
+      siteName: "Ritualmaker",
       images: [
         {
           url: "/photos/field-mixed-tulips-cluster.jpg",
           width: 1600,
           height: 1200,
-          alt: "Ritualmaker seasonal flowers",
+          alt: "Seasonal flowers",
         },
       ],
     },

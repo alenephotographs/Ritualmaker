@@ -6,8 +6,8 @@ type InquiryService = "florals" | "live-collage" | "photography";
 
 const allServices: { id: InquiryService; label: string }[] = [
   { id: "florals", label: "Event florals" },
-  { id: "live-collage", label: "Ritualmaker Live Collage™" },
-  { id: "photography", label: "Ritualmaker Photography" },
+  { id: "live-collage", label: "Live Collage™" },
+  { id: "photography", label: "Photography" },
 ];
 
 function toDefaultServices(seed?: string): InquiryService[] {

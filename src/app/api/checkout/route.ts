@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     const stripe = getStripe();
     const description =
       itemType === "pantryItem"
-        ? `Ritualmaker Pantry · ${(item as PantryItem).category}`
+        ? `Pantry · ${(item as PantryItem).category}`
         : `${farmLabel((item as Bouquet).farm)} · ${sizeLabel((item as Bouquet).size)}`;
 
     const session = await stripe.checkout.sessions.create({

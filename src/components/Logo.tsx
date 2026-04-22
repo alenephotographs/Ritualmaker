@@ -1,3 +1,7 @@
+/** Display font treatment for category names (Flowers, Photos, Pantry, On site) — matches the Ritualmaker wordmark. */
+export const brandCategoryClassName =
+  "font-display text-[0.95rem] tracking-tight text-ink/85 transition-colors hover:text-ink sm:text-base";
+
 type LogoProps = {
   /** Tailwind class controlling the rendered height. The SVG is fluid width. */
   className?: string;
@@ -6,8 +10,7 @@ type LogoProps = {
 };
 
 /**
- * Renders the brand wordmark SVG sourced from /public/brand/logo.svg.
- * The SVG already carries the brand pink (#F3A2A2) sub-mark + charcoal text.
+ * @deprecated Prefer `Wordmark` with text "Ritualmaker" for the site header. Kept for assets that still need the image mark.
  */
 export function Logo({ className = "h-7 w-auto", title = "Ritualmaker" }: LogoProps) {
   // eslint-disable-next-line @next/next/no-img-element
@@ -41,7 +44,7 @@ export function SubMark({
  */
 export function Wordmark({
   className = "text-3xl text-ink",
-  text = "Ritualmaker Flowers",
+  text = "Ritualmaker",
 }: {
   className?: string;
   text?: string;

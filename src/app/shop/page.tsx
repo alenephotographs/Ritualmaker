@@ -8,9 +8,9 @@ import { StandStatus } from "@/components/StandStatus";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Shop flowers and pantry",
+  title: "Ritualmaker Flowers — shop bouquets & pantry",
   description:
-    "Cut flower bouquets and Ritualmaker Pantry goods from Ritualmaker Farm. Pay online for bouquets or shop pantry goods at the stand.",
+    "Cut flower bouquets and pantry goods from the farm stand. Pay online for bouquets or shop pantry goods at the stand.",
 };
 
 export default async function ShopPage() {
@@ -23,11 +23,17 @@ export default async function ShopPage() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 pb-28 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
-      <h1 className="mt-6 font-display text-5xl font-light lg:text-6xl">Shop</h1>
+      <p className="mt-4 text-xs uppercase tracking-widest text-ink/40">
+        Ritualmaker Flowers
+      </p>
+      <h1 className="mt-2 font-display text-5xl font-light lg:text-6xl">
+        Shop the stand
+      </h1>
       <p className="mt-3 max-w-xl text-sm text-ink/60">
-        Pay here, then pick up at the stand on Miller Hill Road. Or pay cash at the
-        site — bouquets are first come, first served and restocked throughout
-        the day.
+        <span className="text-ink/80">Bouquets:</span> pay online for pickup, or
+        cash on site. <span className="text-ink/80">Pantry (below):</span> in
+        person at the same stand, not in this checkout. Everything is on Miller
+        Hill Road, restocked through the day.
       </p>
 
       <div className="mt-6 border border-moss/25 bg-moss/10 px-5 py-4">
@@ -56,7 +62,7 @@ export default async function ShopPage() {
 
       <div className="mt-16 border-t border-ink/10 pt-10">
         <p className="text-xs uppercase tracking-widest text-ink/40">
-          Ritualmaker Pantry
+          Pantry
         </p>
         <h2 className="mt-3 font-display text-4xl font-light">At the stand now</h2>
         <p className="mt-3 max-w-2xl text-sm text-ink/60">

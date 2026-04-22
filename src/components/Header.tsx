@@ -2,61 +2,38 @@ import Link from "next/link";
 import { sanityClient } from "@/sanity/client";
 import { siteSettingsQuery } from "@/sanity/queries";
 import type { SiteSettings } from "@/sanity/types";
-import { Logo } from "@/components/Logo";
+import { Wordmark } from "@/components/Logo";
+import { MobileNav } from "@/components/MobileNav";
+import { RitualmakerCategoryNav } from "@/components/RitualmakerCategoryNav";
 
 export async function Header() {
   const settings = await sanityClient
     .fetch<SiteSettings | null>(siteSettingsQuery)
     .catch(() => null);
+  const standClosed = settings?.standStatus === "closed";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ink/10 bg-cream/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+    <header className="sticky top-0 z-50 bg-cream/80 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between border-b border-ink/10 px-6 py-3.5 lg:px-8 lg:py-4">
         <Link
           href="/"
           className="flex items-center"
           aria-label="Ritualmaker, home"
         >
-          <Logo
-            className="h-6 w-auto sm:h-7 lg:h-8"
-            title="Ritualmaker Flowers"
-          />
+          <Wordmark className="text-[1.6rem] leading-none text-ink sm:text-3xl lg:text-[1.9rem]" />
         </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link
-            href="/"
-            className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink"
-          >
-            Flowers
-          </Link>
-          <Link
-            href="/live"
-            className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink"
-          >
-            Live
-          </Link>
-          <Link
-            href="/weddings"
-            className="text-xs uppercase tracking-widest text-ink/70 hover:text-ink"
-          >
-            Weddings
-          </Link>
-        </nav>
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="flex items-center gap-2">
           <Link
             href="/shop#flowers"
-            className="bg-ink px-4 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal"
+            className="hidden bg-ink px-4 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal md:inline-block"
           >
-            {settings?.standStatus === "closed" ? "Stand closed" : "Buy flowers"}
+            {standClosed ? "Stand closed" : "Buy flowers"}
           </Link>
+          <MobileNav standClosed={standClosed} />
         </div>
-        <Link
-          href="/shop#flowers"
-          className="bg-ink px-4 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal md:hidden"
-        >
-          {settings?.standStatus === "closed" ? "Stand closed" : "Buy flowers"}
-        </Link>
       </div>
+      <RitualmakerCategoryNav variant="mobile-scroll" />
+      <RitualmakerCategoryNav />
     </header>
   );
 }

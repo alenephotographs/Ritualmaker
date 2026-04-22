@@ -8,7 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/shop`, lastModified: now, priority: 0.9 },
     { url: `${base}/pantry`, lastModified: now, priority: 0.8 },
     { url: `${base}/photography`, lastModified: now, priority: 0.8 },
-    { url: `${base}/live`, lastModified: now, priority: 0.8 },
-    { url: `${base}/weddings`, lastModified: now, priority: 0.8 },
+    { url: `${base}/on-location`, lastModified: now, priority: 0.8 },
   ];
 }

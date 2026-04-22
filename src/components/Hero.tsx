@@ -11,7 +11,7 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={heroUrl}
-          alt="Seasonal Ritualmaker flower arrangement"
+          alt="Seasonal flower arrangement"
           className="absolute inset-0 h-full w-full object-cover"
           fetchPriority="high"
         />
@@ -24,26 +24,35 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 lg:px-8 lg:pb-28">
         <StandStatus settings={settings} />
 
-        <h1 className="mt-6 max-w-4xl font-display text-5xl font-light text-cream md:text-7xl lg:text-8xl">
+        <p className="text-xs uppercase tracking-widest text-cream/75">
+          Ritualmaker Flowers · flower stand
+        </p>
+        <h1 className="mt-4 max-w-4xl font-display text-5xl font-light text-cream md:text-7xl lg:text-8xl">
           {settings?.tagline ?? "Fresh flowers in the neighborhood, 24/7"}
         </h1>
 
         <p className="mt-5 max-w-xl text-lg font-light text-cream/85">
-          A seasonal cut flower stand on Miller Hill Road. Grab a bouquet from
-          our stand — pay cash or pay online below. Always fresh, always
-          homegrown. Ready when you are.
+          The Ritualmaker flower stand: a seasonal, self-serve cut flower stop on
+          Miller Hill Road. Grab a bouquet at the stand — pay cash or pay online
+          below. Always fresh, always homegrown. Ready when you are.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
           <Link
             href="/shop#flowers"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
             Shop bouquets now
           </Link>
+          <Link
+            href="/#services"
+            className="inline-block border border-cream/50 px-5 py-3 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-cream/10"
+          >
+            See other services
+          </Link>
         </div>
         <p className="mt-4 text-xs uppercase tracking-widest text-cream/70">
-          One tap checkout · pick up at stand
+          One tap checkout · on-site flowers for venues, photos, and pantry
         </p>
       </div>
     </section>
