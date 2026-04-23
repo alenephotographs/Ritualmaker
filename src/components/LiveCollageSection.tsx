@@ -6,9 +6,9 @@ const suitedFor = [
 ];
 
 const processSteps = [
-  "We align on tone, placement, and palette before the event.",
-  "During your event window, the work is built live in front of guests.",
-  "The finished piece remains as part of the room for the rest of the evening.",
+  "We lock tone, placement, and palette before the day.",
+  "The piece is built live during the event window.",
+  "It stays in the room for the rest of the night.",
 ];
 
 const liveCompositionImages = [
@@ -31,7 +31,7 @@ export function LiveCollageSection() {
     serviceType: "Live floral composition performance",
     provider: {
       "@type": "Organization",
-      name: "Ritualmakerny",
+      name: "Ritualmaker",
       url: siteUrl,
     },
     areaServed: "Hudson Valley, NY",
@@ -52,11 +52,10 @@ export function LiveCollageSection() {
               Live Collage
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-cream/90">
-              A live floral composition built in real time during your event. Guests watch it
-              take shape, then experience the finished piece for the rest of the evening.
+              Florals built in front of your guests, then left in the room.
             </p>
             <p className="mt-3 text-xs text-cream/75">
-              Limited dates each season to keep every build fully custom.
+              Limited season dates, fully custom.
             </p>
           </div>
         </section>
@@ -65,10 +64,9 @@ export function LiveCollageSection() {
           <div className="grid gap-10 lg:grid-cols-2">
             <div className="border border-ink/10 bg-white p-8">
               <p className="text-xs uppercase tracking-widest text-ink/40">How it works</p>
-              <h3 className="mt-3 font-display text-4xl font-light">A live moment</h3>
+              <h3 className="mt-3 font-display text-4xl font-light">The flow</h3>
               <p className="mt-4 text-sm leading-relaxed text-ink/70">
-                Most builds run 60-90 minutes. We coordinate with your planner or host so
-                the performance feels effortless in the flow of the event.
+                ~60–90 min. We sync with your planner on timing.
               </p>
               <ol className="mt-6 space-y-3 text-sm text-ink/70">
                 {processSteps.map((step) => (
@@ -82,7 +80,7 @@ export function LiveCollageSection() {
 
             <div className="border border-ink/10 bg-white p-8">
               <p className="text-xs uppercase tracking-widest text-ink/40">Suited for</p>
-              <h3 className="mt-3 font-display text-4xl font-light">Best for</h3>
+              <h3 className="mt-3 font-display text-4xl font-light">Good for</h3>
               <ul className="mt-6 space-y-3 text-sm text-ink/70">
                 {suitedFor.map((item) => (
                   <li key={item} className="flex gap-3">
@@ -96,8 +94,8 @@ export function LiveCollageSection() {
         </section>
 
         <section className="mx-auto max-w-7xl px-6 pb-20 lg:px-8 lg:pb-24">
-          <p className="text-xs uppercase tracking-widest text-ink/40">Live composition examples</p>
-          <h3 className="mt-3 font-display text-4xl font-light lg:text-5xl">From recent builds</h3>
+          <p className="text-xs uppercase tracking-widest text-ink/40">Examples</p>
+          <h3 className="mt-3 font-display text-4xl font-light lg:text-5xl">Recent builds</h3>
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3">
             {liveCompositionImages.map((src) => (
               <figure key={src} className="overflow-hidden border border-ink/10 bg-white">

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const ON_SITE_ARIA =
-  "Ritualmaker on location — weddings, pop-up flower bars, venues, commercial accounts, and Live Collage";
+const ON_LOCATION_ARIA =
+  "Ritualmaker on location — weddings, pop-up flower bars, venues, commercial accounts, and Live Collage™";
 
 const TABS: {
   href: string;
@@ -24,8 +24,8 @@ const TABS: {
   },
   {
     href: "/on-location",
-    label: "On site",
-    ariaLabel: ON_SITE_ARIA,
+    label: "On location",
+    ariaLabel: ON_LOCATION_ARIA,
     isActive: (path: string) => path.startsWith("/on-location"),
   },
 ];

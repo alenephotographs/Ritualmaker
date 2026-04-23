@@ -12,19 +12,21 @@ export default defineType({
       name: "title",
       title: "Site title",
       type: "string",
-      initialValue: "Ritualmaker Flowers",
+      initialValue: "Ritualmaker",
     }),
     defineField({
       name: "tagline",
       title: "Tagline",
       type: "string",
-      initialValue: "Fresh flowers in the neighborhood 24/7",
+      initialValue: "Fresh flowers in the neighborhood, 24/7",
     }),
     defineField({
       name: "description",
       title: "Meta description",
       type: "text",
       rows: 3,
+      initialValue:
+        "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Order online for pickup or pay cash at the stand.",
     }),
     defineField({
       name: "standStatus",
@@ -32,7 +34,7 @@ export default defineType({
       type: "string",
       options: {
         list: [
-          { title: "Open — bouquets available", value: "open" },
+          { title: "Open (flowers on the shelf)", value: "open" },
           { title: "Restocking soon", value: "restocking" },
           { title: "Closed for the season", value: "closed" },
         ],
@@ -44,7 +46,8 @@ export default defineType({
       name: "standMessage",
       title: "Stand status message",
       type: "string",
-      description: 'Optional short message, e.g. "Fresh batch on the stand now"',
+      initialValue: "Restocked through the day",
+      description: 'Short line with the status pill, e.g. "Restocked through the day"',
     }),
     defineField({
       name: "address",

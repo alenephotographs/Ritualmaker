@@ -25,16 +25,14 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
         <StandStatus settings={settings} />
 
         <p className="text-xs uppercase tracking-widest text-cream/75">
-          Ritualmaker Flowers · flower stand
+          Self-serve stand · Hudson Valley
         </p>
         <h1 className="mt-4 max-w-4xl font-display text-5xl font-light text-cream md:text-7xl lg:text-8xl">
           {settings?.tagline ?? "Fresh flowers in the neighborhood, 24/7"}
         </h1>
 
-        <p className="mt-5 max-w-xl text-lg font-light text-cream/85">
-          The Ritualmaker flower stand: a seasonal, self-serve cut flower stop on
-          38 Miller Hill Road. Grab a bouquet at the stand — pay cash or pay online
-          below. Always fresh, always homegrown. Ready when you are.
+        <p className="mt-5 max-w-xl text-base font-light text-cream/85 sm:text-lg">
+          38 Miller Hill Road — grab stems at the stand (cash) or order below for pickup.
         </p>
 
         <div className="mt-8">
@@ -42,7 +40,7 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
             href="/farm-stand#flowers"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
-            Shop bouquets now
+            Shop flowers
           </Link>
         </div>
       </div>

@@ -9,27 +9,26 @@ export default function CancelPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 text-center">
       <p className="text-xs uppercase tracking-widest text-magenta">
-        No charge made
+        No charge
       </p>
       <h1 className="mt-4 font-display text-5xl font-light lg:text-6xl">
-        Checkout cancelled.
+        Cancelled
       </h1>
       <p className="mt-6 max-w-md text-base text-ink/65">
-        No worries — nothing was charged. Try again any time, or pay cash at the
-        stand.
+        Nothing charged. Retry below or pay cash at the stand.
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <Link
           href="/farm-stand#flowers"
           className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal"
         >
-          Try checkout again
+          Try again
         </Link>
         <Link
           href="/farm-stand"
           className="border border-ink/20 px-6 py-3 text-xs uppercase tracking-widest hover:bg-ink hover:text-cream"
         >
-          Pay cash at stand
+          Cash at stand
         </Link>
       </div>
     </div>

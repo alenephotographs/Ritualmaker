@@ -15,24 +15,23 @@ export default async function SuccessPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 text-center">
       <p className="text-xs uppercase tracking-widest text-moss">
-        Payment received
+        Paid
       </p>
       <h1 className="mt-4 font-display text-5xl font-light lg:text-6xl">
-        Thank you for stopping by.
+        You&apos;re all set
       </h1>
       <p className="mt-6 max-w-md text-base text-ink/65">
-        Your bouquet is yours — grab it from the stand on 38 Miller Hill Road. If
-        the shelf you ordered from is empty, take an equivalent one or DM us on
-        Instagram and we'll sort it out.
+        Pick up at the stand, 38 Miller Hill Road. Wrong shelf or empty? Grab a match
+        and DM us on Instagram.
       </p>
       <div className="mt-6 w-full max-w-md border border-moss/25 bg-moss/10 px-4 py-4 text-left">
-        <p className="text-xs uppercase tracking-widest text-moss">Pickup checklist</p>
+        <p className="text-xs uppercase tracking-widest text-moss">Pickup</p>
         <ul className="mt-2 space-y-1.5 text-sm text-ink/70">
-          <li>1) Go to the flower stand on 38 Miller Hill Road.</li>
-          <li>2) Pick up your bouquet from the matching shelf.</li>
-          <li>3) If it is empty, take an equivalent bouquet and message us.</li>
+          <li>1. Stand at 38 Miller Hill Road</li>
+          <li>2. Your bouquet, labeled shelf</li>
+          <li>3. Shelf bare? Take the closest match + message us</li>
         </ul>
-        <p className="mt-3 text-xs uppercase tracking-widest text-ink/40">Get directions &amp; more</p>
+        <p className="mt-3 text-xs uppercase tracking-widest text-ink/40">Links</p>
         <ul className="mt-1.5 space-y-1 text-sm text-ink/75">
           <li>
             <a
@@ -41,7 +40,7 @@ export default async function SuccessPage() {
               rel="noopener noreferrer"
               className="underline decoration-ink/25 underline-offset-2 hover:decoration-ink/50"
             >
-              Open in Google Maps
+              Maps
             </a>
           </li>
           {c.googleProfileUrl ? (
@@ -52,9 +51,9 @@ export default async function SuccessPage() {
                 rel="noopener noreferrer"
                 className="underline decoration-ink/25 underline-offset-2 hover:decoration-ink/50"
               >
-                Google Business Profile
+                Google
               </a>{" "}
-              <span className="text-ink/45">(hours &amp; photos)</span>
+              <span className="text-ink/45">hours &amp; photos</span>
             </li>
           ) : null}
           {c.googleReviewUrl ? (
@@ -65,7 +64,7 @@ export default async function SuccessPage() {
                 rel="noopener noreferrer"
                 className="underline decoration-ink/25 underline-offset-2 hover:decoration-ink/50"
               >
-                Leave a Google review after you visit
+                Leave a review
               </a>
             </li>
           ) : null}
@@ -90,7 +89,7 @@ export default async function SuccessPage() {
           href="/farm-stand"
           className="inline-flex border border-ink/20 px-5 py-3 text-xs uppercase tracking-widest text-ink/85 hover:bg-ink hover:text-cream"
         >
-          Buy another
+          Order again
         </Link>
       </div>
     </div>

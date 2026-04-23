@@ -74,7 +74,7 @@ export default defineType({
       title: "Highlights",
       type: "array",
       of: [{ type: "string" }],
-      description: "Short bullet points (e.g. Cut today, Grown on site, Lasts 10–12 days)",
+      description: "Short bullet points (e.g. Cut today, Grown on the farm, Lasts 10–12 days)",
     }),
     defineField({
       name: "image",

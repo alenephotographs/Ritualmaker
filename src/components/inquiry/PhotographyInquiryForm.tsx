@@ -8,11 +8,11 @@ export type PhotoInquiryKind =
   | "wedding-engagement-on-location";
 
 const kindOptions: { value: PhotoInquiryKind; label: string }[] = [
-  { value: "field-rental", label: "Field rental (portrait use of the farm)" },
-  { value: "sessions-with-me", label: "Sessions with me (farm or elsewhere)" },
+  { value: "field-rental", label: "Field rental" },
+  { value: "sessions-with-me", label: "Sessions (farm or on location)" },
   {
     value: "wedding-engagement-on-location",
-    label: "Wedding, engagement, or on-location coverage",
+    label: "Wedding or engagement",
   },
 ];
 
@@ -81,15 +81,14 @@ export function PhotographyInquiryForm({
   return (
     <div id={sectionId} className="border border-ink/10 bg-white p-8">
       <p className="text-xs uppercase tracking-widest text-ink/40">Photography</p>
-      <h2 className="mt-3 font-display text-4xl font-light">Photography inquiry</h2>
+      <h2 className="mt-3 font-display text-4xl font-light">Get in touch</h2>
       <p className="mt-3 text-sm text-ink/65">
-        Field rental, sessions, and wedding or on-location coverage — we will confirm dates and
-        scope with you.
+        We reply within two business days with dates and next steps.
       </p>
 
       {status === "success" ? (
         <p className="mt-6 border border-moss/30 bg-moss/10 px-4 py-3 text-sm text-moss">
-          Inquiry received. We will review and follow up within 2 business days.
+          Sent. Expect a reply within 2 business days.
         </p>
       ) : (
         <form
@@ -100,7 +99,7 @@ export function PhotographyInquiryForm({
         >
           <fieldset>
             <legend className="text-xs uppercase tracking-widest text-ink/50">
-              What are you inquiring about?
+              Topic
             </legend>
             <div className="mt-2 space-y-2">
               {kindOptions.map((opt) => (
@@ -153,7 +152,7 @@ export function PhotographyInquiryForm({
               />
             </label>
             <label className="text-sm text-ink/70">
-              Preferred date or season
+              Date or season
               <input
                 type="date"
                 name="eventDate"
@@ -170,7 +169,7 @@ export function PhotographyInquiryForm({
               />
             </label>
             <label className="text-sm text-ink/70">
-              Guest count (if applicable)
+              Guests
               <input
                 type="number"
                 name="guestCount"
@@ -197,7 +196,7 @@ export function PhotographyInquiryForm({
               name="notes"
               rows={5}
               className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-              placeholder="Tell us about your timeline, vision, and anything we should know."
+              placeholder="Timeline, style, must-haves"
             />
           </label>
 
@@ -216,7 +215,7 @@ export function PhotographyInquiryForm({
             disabled={status === "submitting"}
             className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/30"
           >
-            {status === "submitting" ? "Sending..." : "Submit photography inquiry"}
+            {status === "submitting" ? "Sending..." : "Send"}
           </button>
         </form>
       )}

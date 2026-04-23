@@ -34,7 +34,7 @@ export function AdminSignInForm() {
       <p className="text-xs uppercase tracking-widest text-ink/40">Admin sign-in</p>
       <h1 className="mt-2 font-display text-4xl font-light">Access code</h1>
       <p className="mt-3 text-sm text-ink/60">
-        Sign in with your vendor or owner email and your access code.
+        Email + access code.
       </p>
       <form
         className="mt-6"

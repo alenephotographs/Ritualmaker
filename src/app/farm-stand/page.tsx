@@ -12,7 +12,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "Ritualmaker — Flowers & pantry",
   description:
-    "Flowers and pantry at the self-serve stand: cut bouquets and small-batch goods. 38 Miller Hill Road.",
+    "Bouquets and pantry at 38 Miller Hill Road — self-serve, restocked often.",
 };
 
 export default async function FarmStandPage() {
@@ -27,22 +27,20 @@ export default async function FarmStandPage() {
     <div className="mx-auto max-w-7xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
       <p className="mt-6 max-w-xl text-sm text-ink/60">
-        Same self-serve stop for flowers and pantry (below). Bouquets: pay online for
-        pickup or cash on site. Pantry details on each item.{" "}
+        Flowers and pantry, same stop.{" "}
         <a
           href="#visit"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"
         >
-          Maps, hours &amp; contact
+          Location &amp; hours
         </a>
-        . For florals that travel to you, see{" "}
+        {" · "}
         <a
           href="/on-location#inquiry"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"
         >
-          on location
+          We come to you
         </a>
-        .
       </p>
 
       <div id="flowers" className="mt-12 scroll-mt-24">

@@ -125,7 +125,7 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
   if (!bouquets.length) {
     return (
       <p className="text-sm text-ink/50">
-        No bouquets are listed right now. Please check back soon.
+        Nothing listed yet — check back.
       </p>
     );
   }
@@ -140,7 +140,7 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
       {lastBouquet && lastBouquet.available && (
         <div className="mb-6 border border-moss/30 bg-moss/10 px-4 py-4">
           <p className="text-xs uppercase tracking-widest text-moss">
-            Your usual bouquet
+            Order again
           </p>
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-sm text-ink/75">
@@ -153,15 +153,15 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
               aria-label={
                 loadingId === lastBouquet._id
                   ? "Starting checkout"
-                  : `${ctaVariant === "checkout" ? "Checkout now" : "Buy now"} for ${lastBouquet.name}`
+                  : `${ctaVariant === "checkout" ? "Checkout" : "Order"} for ${lastBouquet.name}`
               }
               className="bg-ink px-4 py-2 text-xs uppercase tracking-widest text-cream hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/30"
             >
               {loadingId === lastBouquet._id
                 ? "Starting..."
                 : ctaVariant === "checkout"
-                  ? "Checkout now"
-                  : "Buy now"}
+                  ? "Checkout"
+                  : "Order"}
             </button>
           </div>
         </div>
@@ -193,7 +193,7 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
               </p>
               {b._id === mostBoughtId && (
                 <p className="mt-2 inline-flex w-fit bg-moss/15 px-2 py-1 text-[10px] uppercase tracking-widest text-moss">
-                  Most bought
+                  Popular
                 </p>
               )}
               <h3 className="mt-2 font-display text-2xl font-light">
@@ -233,7 +233,7 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
                       ? `${b.name} is out today`
                       : loadingId === b._id
                         ? `Starting checkout for ${b.name}`
-                        : `${ctaVariant === "checkout" ? "Checkout now" : "Buy now"} for ${b.name}`
+                        : `${ctaVariant === "checkout" ? "Checkout" : "Order"} for ${b.name}`
                   }
                   className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
                 >
@@ -242,8 +242,8 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
                     : loadingId === b._id
                       ? "Starting..."
                       : ctaVariant === "checkout"
-                        ? "Checkout now"
-                        : "Buy now"}
+                        ? "Checkout"
+                        : "Order"}
                 </button>
               </div>
               {!b.available && availableBouquets.length > 0 && (

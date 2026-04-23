@@ -28,7 +28,7 @@ export default async function HomePage() {
     name: settings?.title ?? "Ritualmaker",
     description:
       settings?.description ??
-      "A 24/7 self-serve cut flower stand in the Hudson Valley.",
+      "Self-serve flowers, Hudson Valley — 24/7.",
     url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com",
     address: {
       "@type": "PostalAddress",
@@ -62,18 +62,16 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div>
             <p className="text-xs uppercase tracking-widest text-ink/40">
-              Ritualmaker Farm stand
+              Farm stand
             </p>
             <h2
               id="farm-stand-heading"
               className="mt-3 font-display text-4xl font-light lg:text-5xl"
             >
-              Farm stand
+              What&apos;s on the shelf
             </h2>
             <p className="mt-3 max-w-xl text-sm text-ink/60">
-              Self-serve cut flowers on 38 Miller Hill Road. Order a bouquet
-              for pickup, or pay cash at the site. Bouquets are restocked
-              through the day.
+              Restocked through the day — pay online here or cash at the stand.
             </p>
           </div>
 

@@ -7,7 +7,7 @@ import { Wordmark } from "@/components/Logo";
 const NAV_LINKS = [
   { href: "/farm-stand", name: "Farm stand" },
   { href: "/photography", name: "Photography" },
-  { href: "/on-location", name: "On site" },
+  { href: "/on-location", name: "On location" },
 ] as const;
 
 type MobileNavProps = {
@@ -38,7 +38,7 @@ export function MobileNav({ standClosed }: MobileNavProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
 
-  const cta = standClosed ? "Stand closed" : "Buy flowers";
+  const cta = standClosed ? "Stand closed" : "Shop flowers";
   const ctaHref = "/farm-stand#flowers";
 
   return (

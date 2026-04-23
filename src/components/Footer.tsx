@@ -30,7 +30,7 @@ export async function Footer() {
             rel="noopener noreferrer"
             className="mt-3 inline-block text-sm text-ink/70 underline decoration-ink/20 underline-offset-4 transition-colors hover:text-ink"
           >
-            Get directions in Google Maps
+            Directions
           </a>
         </div>
 
@@ -44,7 +44,7 @@ export async function Footer() {
             </li>
             <li>
               <Link href="/#faq" className="hover:text-ink">
-                How to buy
+                FAQ
               </Link>
             </li>
           </ul>
@@ -63,7 +63,7 @@ export async function Footer() {
                   rel="noopener noreferrer"
                   className="hover:text-ink"
                 >
-                  Google Business Profile
+                  Google (hours &amp; photos)
                 </a>
               </li>
             )}
@@ -99,7 +99,7 @@ export async function Footer() {
                   rel="noopener noreferrer"
                   className="hover:text-ink"
                 >
-                  Leave a Google review
+                  Leave a review
                 </a>
               </li>
             )}
@@ -111,12 +111,12 @@ export async function Footer() {
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <Link href="/farm-stand" className="hover:text-ink">
-                Ritualmaker Farm stand
+                Farm stand
               </Link>
             </li>
             <li>
               <Link href="/photography" className="hover:text-ink">
-                Ritualmaker Photography
+                Photography
               </Link>
             </li>
             <li>
@@ -143,9 +143,9 @@ export async function Footer() {
             <Link
               href="/on-location"
               className={`${brandCategoryClassName} inline-block`}
-              aria-label="Ritualmaker on location — weddings, pop-up flower bars, commercial accounts, and Live Collage"
+              aria-label="Ritualmaker on location — weddings, pop-up flower bars, commercial accounts, and Live Collage™"
             >
-              On site
+              On location
             </Link>
           </div>
         </div>

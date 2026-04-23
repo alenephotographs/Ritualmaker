@@ -8,7 +8,7 @@ import {
 export const metadata = {
   title: "Ritualmaker — Photography",
   description:
-    "Photography on the farm, rent the field for portrait sessions, and book seasonal sessions in the Hudson Valley.",
+    "Field rentals, sessions, and wedding coverage in the Hudson Valley.",
 };
 
 const FARM_RENTAL_HERO = "/photos/field-mixed-tulips-cluster.jpg";
@@ -30,24 +30,23 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
       >
         <div>
           <p className="text-xs uppercase tracking-widest text-ink/40">
-            On the farm
+            Field
           </p>
           <h2
             id="farm-heading"
             className="mt-2 font-display text-3xl font-light sm:text-4xl lg:text-5xl"
           >
-            Rent the field for portrait sessions
+            Rent the field for portraits
           </h2>
           <p className="mt-4 max-w-xl text-sm text-ink/60">
-            Photo portrait use of the field when we can make it work with the stand and
-            the season. One inquiry; we will confirm dates with you.
+            When the season and stand schedule allow. We confirm dates by email.
           </p>
           <div className="mt-8">
             <Link
               href="/photography?kind=field#inquiry-photography"
               className="inline-block bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal"
             >
-              Inquire — field rental
+              Request field rental
             </Link>
           </div>
         </div>
@@ -77,20 +76,17 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
                 id="photo-services-heading"
                 className="mt-2 font-display text-4xl font-light lg:text-5xl"
               >
-                Sessions with me
+                Sessions &amp; events
               </h2>
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-ink/65">
-                Short seasonal portrait and portfolio sessions on the farm when the field is
-                at its best; engagement and elopement in natural light, following bloom,
-                weather, and place; and on location for weddings, venues, and anywhere
-                else—documentary coverage in the same language as the flower work.
+                Portraits on the farm, engagements, elopements, and wedding coverage on location — natural light, same eye as the flowers.
               </p>
               <div className="mt-8">
                 <Link
                   href="/photography#inquiry-photography"
                   className="inline-block border border-ink/20 bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink/80 hover:bg-ink hover:text-cream"
                 >
-                  Start photography inquiry
+                  Book a session
                 </Link>
               </div>
             </div>
@@ -133,10 +129,10 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
             id="gallery-heading"
             className="text-xs uppercase tracking-[0.2em] text-ink/40"
           >
-            Selected work
+            Work
           </p>
-          <p className="mt-3 max-w-2xl font-display text-3xl font-light leading-snug text-ink/90 sm:text-4xl">
-            Weddings, portraits, family, and the field—natural light, color, and place.
+          <p className="mt-3 max-w-2xl font-display text-2xl font-light leading-snug text-ink/90 sm:text-3xl">
+            Portraits, weddings, family, field.
           </p>
           <div className="mt-12 columns-2 gap-4 sm:gap-5 md:columns-3 lg:columns-4 [&>figure]:mb-4 sm:[&>figure]:mb-5">
             {photographyPortfolioImages

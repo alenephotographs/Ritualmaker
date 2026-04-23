@@ -75,15 +75,14 @@ export function OnLocationInquiryForm({
   return (
     <div id={sectionId} className="border border-ink/10 bg-white p-8">
       <p className="text-xs uppercase tracking-widest text-ink/40">On location</p>
-      <h2 className="mt-3 font-display text-4xl font-light">Inquire — florals &amp; Live Collage™</h2>
+      <h2 className="mt-3 font-display text-4xl font-light">Get in touch</h2>
       <p className="mt-3 text-sm text-ink/65">
-        Weddings, pop-up bars, hospitality, and on-site Live Collage™. We will follow up with
-        availability and next steps.
+        Event florals, pop-ups, hospitality, or Live Collage™ — we reply in two business days.
       </p>
 
       {status === "success" ? (
         <p className="mt-6 border border-moss/30 bg-moss/10 px-4 py-3 text-sm text-moss">
-          Inquiry received. We will review and follow up within 2 business days.
+          Sent. Expect a reply within 2 business days.
         </p>
       ) : (
         <form
@@ -94,7 +93,7 @@ export function OnLocationInquiryForm({
         >
           <fieldset>
             <legend className="text-xs uppercase tracking-widest text-ink/50">
-              Services
+              You need
             </legend>
             <div className="mt-2 flex flex-wrap gap-2">
               {servicesList.map((svc) => {
@@ -193,7 +192,7 @@ export function OnLocationInquiryForm({
               name="notes"
               rows={5}
               className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-              placeholder="Tell us about the event, timeline, and style."
+              placeholder="Event type, look, timing"
             />
           </label>
 
@@ -212,7 +211,7 @@ export function OnLocationInquiryForm({
             disabled={status === "submitting"}
             className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/30"
           >
-            {status === "submitting" ? "Sending..." : "Submit inquiry"}
+            {status === "submitting" ? "Sending..." : "Send"}
           </button>
         </form>
       )}

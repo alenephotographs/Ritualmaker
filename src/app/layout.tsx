@@ -27,10 +27,11 @@ export async function generateMetadata(): Promise<Metadata> {
     .catch(() => null);
 
   const title =
-    settings?.title ?? "Ritualmaker — Flower stand, pantry, and on-site florals";
+    settings?.title ??
+    "Ritualmaker — Farm stand, pantry, and on-location flowers";
   const description =
     settings?.description ??
-    "A seasonal cut flower stand on 38 Miller Hill Road in the Hudson Valley. Pick up a bouquet anytime — pay cash or pay online.";
+    "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Order online for pickup or pay cash at the stand.";
 
   return {
     metadataBase: new URL(

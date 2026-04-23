@@ -7,7 +7,7 @@ export function PantryGrid({ items }: { items: PantryItem[] }) {
   if (!items.length) {
     return (
       <p className="text-sm text-ink/50">
-        Pantry items are coming soon. Check back soon for new stand offerings.
+        Pantry soon — check back.
       </p>
     );
   }
@@ -49,8 +49,8 @@ export function PantryGrid({ items }: { items: PantryItem[] }) {
               <h3 className="mt-2 font-display text-2xl font-light">{item.name}</h3>
               <p className="mt-2 text-[11px] uppercase tracking-widest text-ink/45">
                 {item.shipsAvailable
-                  ? "At the stand · shipping available on this item"
-                  : "At the self-serve stand"}
+                  ? "Stand + ships"
+                  : "At the stand"}
               </p>
               {item.description && (
                 <p className="mt-3 text-sm leading-relaxed text-ink/70">

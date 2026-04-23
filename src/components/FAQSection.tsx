@@ -12,13 +12,13 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
     >
       <div className="mx-auto max-w-4xl px-6 lg:px-8">
         <p className="text-xs uppercase tracking-widest text-ink/40">
-          Questions? We've got answers.
+          FAQ
         </p>
         <h2
           id="faq-heading"
           className="mt-3 font-display text-4xl font-light lg:text-5xl"
         >
-          Everything you need to know.
+          Quick answers
         </h2>
 
         <div className="mt-12 divide-y divide-ink/10 border-t border-ink/10">

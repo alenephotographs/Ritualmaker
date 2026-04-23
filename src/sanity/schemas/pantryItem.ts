@@ -6,7 +6,7 @@ export default defineType({
   title: "Pantry / Goods",
   type: "document",
   description:
-    "Non-bouquet goods at the stand: oils, salts, sugars, eggs, etc. Set 'Coming soon' to show a teaser without a buy button.",
+    "Non-bouquet goods at the stand: oils, salts, sugars, eggs, etc. Use Coming soon to list an item before it can be ordered at checkout.",
   fields: [
     defineField({
       name: "name",
@@ -79,7 +79,7 @@ export default defineType({
       type: "boolean",
       initialValue: false,
       description:
-        "Show as a teaser. The buy button is hidden and a 'Coming soon' badge is displayed.",
+        "Show as a teaser: ordering is off until you clear Coming soon and set a price.",
     }),
     defineField({
       name: "available",

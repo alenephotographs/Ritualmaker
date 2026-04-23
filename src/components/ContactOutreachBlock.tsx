@@ -15,20 +15,18 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
       id={id}
       className="mb-10 border border-ink/10 bg-white p-6 lg:p-8"
     >
-      <p className="text-xs uppercase tracking-widest text-ink/40">Visit the stand</p>
+      <p className="text-xs uppercase tracking-widest text-ink/40">Visit</p>
       <p className="mt-2 font-display text-2xl font-light text-ink/90 sm:text-3xl">
         {links.addressLine}
       </p>
       <p className="mt-3 text-sm leading-relaxed text-ink/60">
-        Get directions, see photos and hours on the Google listing, and leave a review after you
-        visit. For work that travels to you, use the{" "}
         <Link
           href="/on-location#inquiry"
           className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
         >
-          on location inquiry form
+          Event florals &amp; travel
         </Link>
-        .
+        {" — separate from the stand."}
       </p>
       <ul className="mt-5 space-y-2.5 text-sm text-ink/80">
         <li>
@@ -38,7 +36,7 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
             rel="noopener noreferrer"
             className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
           >
-            Open in Google Maps
+            Maps
           </a>
         </li>
         {links.googleProfileUrl ? (
@@ -49,9 +47,9 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
               rel="noopener noreferrer"
               className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
             >
-              Google Business Profile
+              Google
             </a>
-            <span className="ml-1.5 text-ink/45">(hours, updates, and messages)</span>
+            <span className="ml-1.5 text-ink/45">hours &amp; photos</span>
           </li>
         ) : null}
         {links.googleReviewUrl ? (
@@ -62,7 +60,7 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
               rel="noopener noreferrer"
               className="text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
             >
-              Leave a Google review
+              Review
             </a>
           </li>
         ) : null}
@@ -74,7 +72,6 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
             >
               {links.email}
             </a>
-            <span className="ml-1.5 text-ink/45">(general email)</span>
           </li>
         ) : null}
         {links.instagramUrl ? (
