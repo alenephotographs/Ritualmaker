@@ -11,15 +11,18 @@ import type {
 } from "@/sanity/types";
 import { Hero } from "@/components/Hero";
 import { BouquetGrid } from "@/components/BouquetGrid";
+import { InstagramFeedSection } from "@/components/InstagramFeedSection";
 import { FAQSection } from "@/components/FAQSection";
+import { getRecentInstagramMedia } from "@/lib/instagram";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [settings, bouquets, faqs] = await Promise.all([
+  const [settings, bouquets, faqs, instagramPosts] = await Promise.all([
     sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
     sanityClient.fetch<Bouquet[]>(bouquetsQuery).catch(() => []),
     sanityClient.fetch<FAQ[]>(faqsQuery).catch(() => []),
+    getRecentInstagramMedia(9).catch(() => null),
   ]);
 
   const jsonLd = {
@@ -80,6 +83,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <InstagramFeedSection settings={settings} posts={instagramPosts} />
 
       <FAQSection faqs={faqs} />
     </>
