@@ -3,9 +3,9 @@ export const brandCategoryClassName =
   "font-display text-[0.95rem] tracking-tight text-ink/85 transition-colors hover:text-ink sm:text-base";
 
 type LogoProps = {
-  /** Tailwind classes controlling the rendered text treatment. */
+  /** Tailwind classes controlling the rendered logo size. */
   className?: string;
-  /** Accessible label/text for the logo. */
+  /** Accessible label for the logo. */
   title?: string;
 };
 
@@ -13,7 +13,7 @@ type LogoProps = {
  * @deprecated Prefer `Wordmark` for the site header.
  */
 export function Logo({ className = "h-7 w-auto", title = "Ritualmaker" }: LogoProps) {
-  return <Wordmark text={title} className={className} />;
+  return <Wordmark title={title} className={className} />;
 }
 
 type SubMarkProps = {
@@ -38,21 +38,20 @@ export function SubMark({
 }
 
 /**
- * Text wordmark. This avoids raster/SVG asset backgrounds in constrained browser headers.
+ * Transparent logo mask. The asset supplies shape only; the header background shows through.
  */
 export function Wordmark({
-  className = "text-5xl",
-  text = "Ritualmaker",
+  className = "h-8 w-auto",
+  title = "Ritualmaker",
 }: {
   className?: string;
-  text?: string;
+  title?: string;
 }) {
   return (
     <span
-      aria-label={text}
-      className={`block shrink-0 font-display font-light leading-none tracking-tight text-ink ${className}`}
-    >
-      {text}
-    </span>
+      role="img"
+      aria-label={title}
+      className={`block shrink-0 bg-ink [aspect-ratio:1589/120] [-webkit-mask-image:url('/brand/logo.svg')] [mask-image:url('/brand/logo.svg')] [-webkit-mask-position:left_center] [mask-position:left_center] [-webkit-mask-repeat:no-repeat] [mask-repeat:no-repeat] [-webkit-mask-size:contain] [mask-size:contain] ${className}`}
+    />
   );
 }
