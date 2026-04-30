@@ -18,7 +18,7 @@ export default async function HomePage() {
   const [settings, faqs, instagramPosts] = await Promise.all([
     sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
     sanityClient.fetch<FAQ[]>(faqsQuery).catch(() => []),
-    getRecentInstagramMedia(9).catch(() => null),
+    getRecentInstagramMedia(3).catch(() => null),
   ]);
 
   const jsonLd = {
