@@ -2,16 +2,29 @@
 
 import { useState } from "react";
 
-type OnLocationService = "florals" | "live-collage";
+type OnLocationService =
+  | "wedding-event-florals"
+  | "popup-flower-bar"
+  | "restaurant-hotel"
+  | "commercial-account"
+  | "live-collage"
+  | "general-on-location";
 
 const servicesList: { id: OnLocationService; label: string }[] = [
-  { id: "florals", label: "Event florals" },
+  { id: "wedding-event-florals", label: "Weddings & events" },
+  { id: "popup-flower-bar", label: "Pop-up flower bars" },
+  { id: "restaurant-hotel", label: "Restaurants & hotels" },
+  { id: "commercial-account", label: "Commercial accounts" },
   { id: "live-collage", label: "Live Collage™" },
+  { id: "general-on-location", label: "General on-location inquiry" },
 ];
 
 function defaultServices(seed?: string): OnLocationService[] {
   if (seed === "live" || seed === "live-collage") return ["live-collage"];
-  return ["florals"];
+  if (seed === "pop-up" || seed === "popup-flower-bar") return ["popup-flower-bar"];
+  if (seed === "restaurant" || seed === "restaurant-hotel") return ["restaurant-hotel"];
+  if (seed === "commercial" || seed === "commercial-account") return ["commercial-account"];
+  return ["wedding-event-florals"];
 }
 
 export function OnLocationInquiryForm({
@@ -77,7 +90,7 @@ export function OnLocationInquiryForm({
       <p className="text-xs uppercase tracking-widest text-ink/40">On location</p>
       <h2 className="mt-3 font-display text-4xl font-light">Get in touch</h2>
       <p className="mt-3 text-sm text-ink/65">
-        Event florals, pop-ups, hospitality, or Live Collage™ — we reply in two business days.
+        Weddings, pop-up flower bars, hospitality, commercial accounts, or Live Collage™ — we reply in two business days.
       </p>
 
       {status === "success" ? (

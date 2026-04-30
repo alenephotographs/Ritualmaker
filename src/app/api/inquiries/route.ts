@@ -24,8 +24,17 @@ type InquiryPayload = {
   photoInquiryKind?: PhotoInquiryKind;
 };
 
-const allowedServices = new Set(["florals", "live-collage", "photography"]);
-const onLocationServices = new Set(["florals", "live-collage"]);
+const onLocationServiceValues = [
+  "wedding-event-florals",
+  "popup-flower-bar",
+  "restaurant-hotel",
+  "commercial-account",
+  "live-collage",
+  "general-on-location",
+  "florals",
+];
+const allowedServices = new Set([...onLocationServiceValues, "photography"]);
+const onLocationServices = new Set(onLocationServiceValues);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const allowedPhotoKinds = new Set<string>([
@@ -70,14 +79,14 @@ export async function POST(req: Request) {
     if (formType === "on-location") {
       if (!services.length) {
         return NextResponse.json(
-          { error: "Select at least one on-location service (florals or Live Collage™)" },
+          { error: "Select at least one on-location inquiry type" },
           { status: 400 },
         );
       }
       const invalid = services.some((s) => !onLocationServices.has(s));
       if (invalid) {
         return NextResponse.json(
-          { error: "On-location inquiries can only include event florals and/or Live Collage™" },
+          { error: "On-location inquiries can only include on-location services" },
           { status: 400 },
         );
       }

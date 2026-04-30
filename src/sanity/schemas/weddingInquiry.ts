@@ -43,7 +43,11 @@ export default defineType({
       options: {
         list: [
           { title: "Wedding / event florals", value: "florals" },
+          { title: "Pop-up flower bar", value: "popup-flower-bar" },
+          { title: "Restaurants / hotels", value: "restaurant-hotel" },
+          { title: "Commercial / hospitality account", value: "commercial-account" },
           { title: "Ritualmaker Live Collage™", value: "live-collage" },
+          { title: "General on-location inquiry", value: "general-on-location" },
           { title: "Ritualmaker Photography", value: "photography" },
         ],
       },

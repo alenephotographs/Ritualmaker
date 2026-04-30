@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { OnLocationInquiryForm } from "@/components/inquiry/OnLocationInquiryForm";
 
 export const metadata = {
@@ -82,12 +81,6 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
             Florals built live at your event for 30-90 minutes, depending upon budget.
           </p>
-          <Link
-            href="#inquiry"
-            className="mt-8 inline-block text-xs uppercase tracking-[0.2em] text-magenta underline decoration-magenta/40 underline-offset-4 hover:decoration-magenta"
-          >
-            Inquire
-          </Link>
         </div>
       </section>
 
