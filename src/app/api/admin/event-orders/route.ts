@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 
 type EventOrderPatchBody = {
   id?: string;
+  phone?: string;
   eventType?: string;
   eventDate?: string;
   eventLocation?: string;
@@ -16,7 +17,12 @@ type EventOrderPatchBody = {
   balanceAmountCents?: number;
   balanceDueDate?: string;
   internalNotes?: string;
+  clientFacingNotes?: string;
   status?: string;
+  depositPaid?: boolean;
+  balancePaid?: boolean;
+  paidInFull?: boolean;
+  proposalPdfSentManuallyAt?: string | null;
 };
 
 function cleanText(value: unknown) {
@@ -37,16 +43,44 @@ async function fetchEventOrder(id: string) {
   return sanityWriteClient.fetch<EventOrder | null>(
     `*[_type == "weddingInquiry" && _id == $id][0]{
       _id,
+      _createdAt,
+      _updatedAt,
+      name,
+      email,
+      phone,
+      formType,
+      services,
+      photoInquiryKind,
       eventType,
       eventDate,
       venue,
+      guestCount,
+      budgetBand,
+      notes,
+      status,
       proposalScope,
       proposalTotalCents,
       depositAmountCents,
       balanceAmountCents,
       balanceDueDate,
+      proposalPdfGeneratedAt,
+      proposalPdfFileName,
+      proposalPdfSentManuallyAt,
+      depositPaymentLinkId,
+      depositPaymentLinkUrl,
+      balancePaymentLinkId,
+      balancePaymentLinkUrl,
+      stripeInvoiceId,
+      stripeInvoiceUrl,
+      stripeInvoicePdfUrl,
+      stripeInvoiceStatus,
+      stripeInvoiceCreatedAt,
+      depositPaid,
+      balancePaid,
+      paidInFull,
+      paymentStatusUpdatedAt,
       internalNotes,
-      status
+      clientFacingNotes
     }`,
     { id },
   );
@@ -87,18 +121,28 @@ export async function PATCH(req: Request) {
         : undefined);
 
     const patch: Record<string, unknown> = {
+      ...(typeof body.phone === "string" ? { phone: cleanText(body.phone) } : {}),
       eventType: cleanText(body.eventType) || existing.eventType || "Wedding",
       eventDate: cleanDate(body.eventDate) ?? existing.eventDate ?? "",
-      venue: cleanText(body.eventLocation) || existing.eventLocation || existing.venue || "",
+      venue: cleanText(body.eventLocation) || existing.venue || "",
       proposalScope: cleanText(body.proposalScope),
       proposalTotalCents,
       depositAmountCents,
       balanceAmountCents,
       balanceDueDate: cleanDate(body.balanceDueDate),
       internalNotes: cleanText(body.internalNotes),
+      clientFacingNotes: cleanText(body.clientFacingNotes),
       status: cleanText(body.status) || existing.status || "replied",
-      eventOrderUpdatedAt: new Date().toISOString(),
     };
+
+    if (typeof body.depositPaid === "boolean") patch.depositPaid = body.depositPaid;
+    if (typeof body.balancePaid === "boolean") patch.balancePaid = body.balancePaid;
+    if (typeof body.paidInFull === "boolean") patch.paidInFull = body.paidInFull;
+    if (body.proposalPdfSentManuallyAt === null) {
+      patch.proposalPdfSentManuallyAt = null;
+    } else if (typeof body.proposalPdfSentManuallyAt === "string" && body.proposalPdfSentManuallyAt) {
+      patch.proposalPdfSentManuallyAt = body.proposalPdfSentManuallyAt;
+    }
 
     await sanityWriteClient.patch(body.id).set(patch).commit();
     const updated = await fetchEventOrder(body.id);

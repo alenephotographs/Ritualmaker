@@ -201,6 +201,7 @@ export const eventOrdersQuery = groq`*[_type == "weddingInquiry"] | order(_creat
   formType,
   services,
   photoInquiryKind,
+  eventType,
   eventDate,
   venue,
   guestCount,
@@ -214,6 +215,7 @@ export const eventOrdersQuery = groq`*[_type == "weddingInquiry"] | order(_creat
   balanceDueDate,
   proposalPdfGeneratedAt,
   proposalPdfFileName,
+  proposalPdfSentManuallyAt,
   depositPaymentLinkId,
   depositPaymentLinkUrl,
   balancePaymentLinkId,
@@ -227,7 +229,8 @@ export const eventOrdersQuery = groq`*[_type == "weddingInquiry"] | order(_creat
   balancePaid,
   paidInFull,
   paymentStatusUpdatedAt,
-  internalNotes
+  internalNotes,
+  clientFacingNotes
 }`;
 
 export const eventOrderByIdQuery = groq`*[_type == "weddingInquiry" && _id == $id][0]{
@@ -268,7 +271,9 @@ export const eventOrderByIdQuery = groq`*[_type == "weddingInquiry" && _id == $i
   balancePaid,
   paidInFull,
   paymentStatusUpdatedAt,
-  internalNotes
+  internalNotes,
+  clientFacingNotes,
+  proposalPdfSentManuallyAt
 }`;
 
 export const featuredReviewsQuery = groq`*[_type == "review" && featured == true] | order(displayOrder asc){

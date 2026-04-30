@@ -241,6 +241,18 @@ export default defineType({
       type: "text",
       rows: 4,
     }),
+    defineField({
+      name: "clientFacingNotes",
+      title: "Client-facing notes",
+      type: "text",
+      rows: 4,
+      description: "Optional extra context for the client (emails, PDF). Not the same as internal notes.",
+    }),
+    defineField({
+      name: "proposalPdfSentManuallyAt",
+      title: "Proposal PDF marked sent manually at",
+      type: "datetime",
+    }),
   ],
   orderings: [
     {

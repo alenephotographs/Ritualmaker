@@ -158,6 +158,7 @@ export interface EventOrder {
   _updatedAt?: string;
   name?: string;
   email?: string;
+  phone?: string;
   formType?: "on-location" | "photography";
   services?: string[];
   eventType?: string;
@@ -188,6 +189,8 @@ export interface EventOrder {
   paidInFull?: boolean;
   paymentStatusUpdatedAt?: string;
   internalNotes?: string;
+  clientFacingNotes?: string;
+  proposalPdfSentManuallyAt?: string;
 }
 
 export interface Review {

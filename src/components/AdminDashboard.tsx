@@ -5,6 +5,20 @@ import { useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
 import type { EventOrder, FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
+import {
+  AdminCard,
+  AdminEmptyState,
+  AdminSection,
+  SectionFeedback,
+  StatusBadge,
+  adminHelperClass,
+  adminInputClass,
+  adminLabelClass,
+  btnDestructive,
+  btnPrimary,
+  btnSecondary,
+  btnUtility,
+} from "@/components/admin/AdminPrimitives";
 
 type AdminDashboardProps = {
   isOwner: boolean;
@@ -77,6 +91,13 @@ type EventOrderFormState = {
   balanceAmount: string;
   balanceDueDate: string;
   internalNotes: string;
+  clientFacingNotes: string;
+  phone: string;
+  status: string;
+  balanceManualOverride: boolean;
+  depositPaidManual: boolean;
+  balancePaidManual: boolean;
+  paidInFullManual: boolean;
 };
 
 const productCategories = [
@@ -254,7 +275,21 @@ const emptyEventOrderForm: EventOrderFormState = {
   balanceAmount: "",
   balanceDueDate: "",
   internalNotes: "",
+  clientFacingNotes: "",
+  phone: "",
+  status: "new",
+  balanceManualOverride: false,
+  depositPaidManual: false,
+  balancePaidManual: false,
+  paidInFullManual: false,
 };
+
+const eventOrderStatusOptions: { value: string; label: string }[] = [
+  { value: "new", label: "New" },
+  { value: "replied", label: "Replied" },
+  { value: "booked", label: "Booked" },
+  { value: "declined", label: "Declined" },
+];
 
 function dollarsFromCents(cents?: number) {
   if (typeof cents !== "number") return "";
@@ -273,22 +308,6 @@ function inferEventType(order: EventOrder) {
   if (services.includes("wedding-event-florals") || services.includes("florals")) return "Wedding";
   if (services.includes("restaurant-hotel")) return "Corporate";
   return "Event";
-}
-
-function badgeClassName(on: boolean) {
-  return on ? "bg-moss/15 text-moss border-moss/30" : "bg-ink/5 text-ink/45 border-ink/15";
-}
-
-function badgesForOrder(order: EventOrder) {
-  return [
-    { label: "Proposal PDF generated", active: Boolean(order.proposalPdfGeneratedAt) },
-    { label: "Deposit link created", active: Boolean(order.depositPaymentLinkUrl) },
-    { label: "Balance link created", active: Boolean(order.balancePaymentLinkUrl) },
-    { label: "Stripe invoice created", active: Boolean(order.stripeInvoiceId) },
-    { label: "Deposit paid", active: Boolean(order.depositPaid) },
-    { label: "Balance paid", active: Boolean(order.balancePaid) },
-    { label: "Paid in full", active: Boolean(order.paidInFull) },
-  ];
 }
 
 function statusClassName(on: boolean) {
@@ -328,18 +347,6 @@ async function readJson<T>(response: Response) {
   }
 }
 
-function eventBadges(order: EventOrder) {
-  return [
-    { label: "Proposal PDF generated", on: Boolean(order.proposalPdfGeneratedAt) },
-    { label: "Deposit link created", on: Boolean(order.depositPaymentLinkUrl) },
-    { label: "Balance link created", on: Boolean(order.balancePaymentLinkUrl) },
-    { label: "Stripe invoice created", on: Boolean(order.stripeInvoiceId) },
-    { label: "Deposit paid", on: Boolean(order.depositPaid) },
-    { label: "Balance paid", on: Boolean(order.balancePaid) },
-    { label: "Paid in full", on: Boolean(order.paidInFull) },
-  ];
-}
-
 export function AdminDashboard({
   isOwner,
   defaultVendorId,
@@ -366,6 +373,14 @@ export function AdminDashboard({
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [expandedEventOrderIds, setExpandedEventOrderIds] = useState<Set<string>>(new Set());
+  const [eventOrderSectionError, setEventOrderSectionError] = useState<string | null>(null);
+  const [eventOrderSectionSuccess, setEventOrderSectionSuccess] = useState<string | null>(null);
+  const [eventOrderFieldErrors, setEventOrderFieldErrors] = useState<Record<string, string>>({});
+  const [paymentsSectionFeedback, setPaymentsSectionFeedback] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const visibleVendors = useMemo(
     () => vendorRows.filter((vendor) => (isOwner ? true : vendor._id === defaultVendorId)),
@@ -389,6 +404,15 @@ export function AdminDashboard({
   const selectedProducts = useMemo(
     () => visibleProducts.filter((product) => selectedProductIds.includes(product._id)),
     [selectedProductIds, visibleProducts],
+  );
+
+  const bouquetProducts = useMemo(
+    () => visibleProducts.filter((p) => p.category === "bouquet"),
+    [visibleProducts],
+  );
+  const pantryProducts = useMemo(
+    () => visibleProducts.filter((p) => p.category === "pantry"),
+    [visibleProducts],
   );
 
   const activeInStock = visibleProducts.filter(
@@ -718,6 +742,16 @@ export function AdminDashboard({
   }
 
   function openEventOrder(order: EventOrder) {
+    const total = order.proposalTotalCents;
+    const dep = order.depositAmountCents;
+    const savedBal = order.balanceAmountCents;
+    const computedBal =
+      typeof total === "number" && typeof dep === "number" ? Math.max(0, total - dep) : undefined;
+    const manualOverride =
+      typeof savedBal === "number" &&
+      typeof computedBal === "number" &&
+      savedBal !== computedBal;
+
     setEventOrderForm({
       id: order._id,
       eventType: order.eventType || inferEventType(order),
@@ -729,41 +763,143 @@ export function AdminDashboard({
       balanceAmount: dollarsFromCents(order.balanceAmountCents),
       balanceDueDate: order.balanceDueDate || "",
       internalNotes: order.internalNotes || "",
+      clientFacingNotes: order.clientFacingNotes || "",
+      phone: order.phone || "",
+      status: typeof order.status === "string" ? order.status : "new",
+      balanceManualOverride: manualOverride,
+      depositPaidManual: Boolean(order.depositPaid),
+      balancePaidManual: Boolean(order.balancePaid),
+      paidInFullManual: Boolean(order.paidInFull),
+    });
+    setEventOrderFieldErrors({});
+    setEventOrderSectionError(null);
+  }
+
+  function toggleEventOrderExpanded(id: string) {
+    setExpandedEventOrderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const computedBalanceCents = useMemo(() => {
+    const total = centsFromDollars(eventOrderForm.proposalTotal);
+    const dep = centsFromDollars(eventOrderForm.depositAmount);
+    if (!eventOrderForm.proposalTotal.trim() && !eventOrderForm.depositAmount.trim()) return null;
+    return Math.max(0, total - dep);
+  }, [eventOrderForm.proposalTotal, eventOrderForm.depositAmount]);
+
+  function syncBalanceFromTotals(next: Partial<EventOrderFormState>) {
+    setEventOrderForm((f) => {
+      const merged = { ...f, ...next };
+      if (merged.balanceManualOverride) return merged;
+      const total = centsFromDollars(merged.proposalTotal);
+      const dep = centsFromDollars(merged.depositAmount);
+      const computed = Math.max(0, total - dep);
+      return { ...merged, balanceAmount: dollarsFromCents(computed) };
     });
   }
 
   async function saveEventOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setEventOrderSectionError(null);
+    setEventOrderSectionSuccess(null);
+    setEventOrderFieldErrors({});
+
     if (!eventOrderForm.id) {
-      setErrorMessage("Select an event order first.");
+      setEventOrderSectionError("Select an event order from the list to edit.");
       return;
     }
+
+    const errs: Record<string, string> = {};
+    if (!eventOrderForm.eventDate.trim()) errs.eventDate = "Event date helps align the proposal and invoice due dates.";
+    if (!eventOrderForm.proposalTotal.trim() || centsFromDollars(eventOrderForm.proposalTotal) <= 0) {
+      errs.proposalTotal = "Enter a proposal total greater than zero.";
+    }
+    if (Object.keys(errs).length) {
+      setEventOrderFieldErrors(errs);
+      setEventOrderSectionError("Fix the highlighted fields before saving.");
+      return;
+    }
+
+    const balancePayload = eventOrderForm.balanceManualOverride
+      ? centsFromDollars(eventOrderForm.balanceAmount)
+      : computedBalanceCents ?? centsFromDollars(eventOrderForm.balanceAmount);
+
     const data = await postJson<EventOrder>("/api/admin/event-orders", {
       id: eventOrderForm.id,
+      phone: eventOrderForm.phone,
       eventType: eventOrderForm.eventType,
       eventDate: eventOrderForm.eventDate,
       eventLocation: eventOrderForm.eventLocation,
       proposalScope: eventOrderForm.proposalScope,
       proposalTotalCents: centsFromDollars(eventOrderForm.proposalTotal),
       depositAmountCents: centsFromDollars(eventOrderForm.depositAmount),
-      balanceAmountCents: centsFromDollars(eventOrderForm.balanceAmount),
+      balanceAmountCents: balancePayload,
       balanceDueDate: eventOrderForm.balanceDueDate,
       internalNotes: eventOrderForm.internalNotes,
+      clientFacingNotes: eventOrderForm.clientFacingNotes,
+      status: eventOrderForm.status,
+      depositPaid: eventOrderForm.depositPaidManual,
+      balancePaid: eventOrderForm.balancePaidManual,
+      paidInFull: eventOrderForm.paidInFullManual,
     });
     if (data?.order) {
-      setEventOrderRows((current) => upsertById(current, data.order as EventOrder));
-      openEventOrder(data.order as EventOrder);
+      const patch = data.order as EventOrder;
+      const rowBefore = eventOrderRows.find((r) => r._id === patch._id);
+      const merged = rowBefore ? { ...rowBefore, ...patch } : patch;
+      setEventOrderRows((current) => upsertById(current, merged));
+      openEventOrder(merged);
+      setEventOrderSectionSuccess("Event order saved.");
     }
   }
 
-  async function copyToClipboard(value: string, label: string) {
+  async function markProposalPdfSentManually() {
+    if (!eventOrderForm.id) {
+      setEventOrderSectionError("Select an order first.");
+      return;
+    }
+    setBusyId(`mark-sent-${eventOrderForm.id}`);
+    setEventOrderSectionError(null);
+    try {
+      const response = await fetch("/api/admin/event-orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: eventOrderForm.id,
+          proposalPdfSentManuallyAt: new Date().toISOString(),
+        }),
+      });
+      const data = await readJson<EventOrder>(response);
+      if (!response.ok) throw new Error(data.error ?? "Could not update");
+      if (data.order) {
+        const patch = data.order as EventOrder;
+        const rowBefore = eventOrderRows.find((r) => r._id === patch._id);
+        const merged = rowBefore ? { ...rowBefore, ...patch } : patch;
+        setEventOrderRows((current) => upsertById(current, merged));
+        openEventOrder(merged);
+      }
+      setEventOrderSectionSuccess("Marked proposal as sent manually.");
+    } catch (e) {
+      setEventOrderSectionError(e instanceof Error ? e.message : "Could not update");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function copyToClipboard(value: string, label: string, orderId?: string) {
     try {
       await navigator.clipboard.writeText(value);
-      setCopiedText(label);
+      const key = orderId ? `${label}:${orderId}` : label;
+      setCopiedText(key);
       setStatusMessage(`${label} copied.`);
-      setTimeout(() => setCopiedText(null), 1200);
+      if (orderId) setEventOrderSectionSuccess(`${label} copied.`);
+      setTimeout(() => setCopiedText((c) => (c === key ? null : c)), 1200);
     } catch {
       setErrorMessage(`Could not copy ${label.toLowerCase()}`);
+      if (orderId) setEventOrderSectionError(`Could not copy ${label.toLowerCase()}`);
     }
   }
 
@@ -797,8 +933,12 @@ export function AdminDashboard({
         ),
       );
       setStatusMessage("Proposal PDF generated.");
+      setEventOrderSectionSuccess("Proposal PDF downloaded. Send it manually when ready.");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Could not generate proposal PDF");
+      setEventOrderSectionError(
+        error instanceof Error ? error.message : "Could not generate proposal PDF",
+      );
     } finally {
       setBusyId(null);
     }
@@ -828,8 +968,14 @@ export function AdminDashboard({
         ),
       );
       setStatusMessage(`${paymentType === "deposit" ? "Deposit" : "Balance"} payment link created.`);
+      setEventOrderSectionSuccess(
+        `${paymentType === "deposit" ? "Deposit" : "Balance"} payment link is ready.`,
+      );
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Could not create payment link");
+      setEventOrderSectionError(
+        error instanceof Error ? error.message : "Could not create payment link",
+      );
     } finally {
       setBusyId(null);
     }
@@ -861,65 +1007,136 @@ export function AdminDashboard({
         ),
       );
       setStatusMessage("Stripe invoice created.");
+      setEventOrderSectionSuccess("Stripe invoice created. Copy or open the hosted link below.");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Could not create Stripe invoice");
+      setEventOrderSectionError(
+        error instanceof Error ? error.message : "Could not create Stripe invoice",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteSalesRecord(recordId: string) {
+    if (
+      !window.confirm(
+        "Delete this billing record permanently? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    setBusyId(`delete-sale-${recordId}`);
+    setPaymentsSectionFeedback(null);
+    try {
+      const response = await fetch("/api/admin/sales-records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recordId, delete: true }),
+      });
+      const data = await readJson(response);
+      if (!response.ok) throw new Error(data.error ?? "Could not delete record");
+      setSalesRows((current) => current.filter((r) => r._id !== recordId));
+      setPaymentsSectionFeedback({ kind: "success", message: "Billing record deleted." });
+    } catch (e) {
+      setPaymentsSectionFeedback({
+        kind: "error",
+        message: e instanceof Error ? e.message : "Could not delete record",
+      });
     } finally {
       setBusyId(null);
     }
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-ink/40">Admin</p>
-          <h1 className="mt-2 font-display text-4xl font-light sm:text-5xl">
-            Inventory + billing
-          </h1>
-          <p className="mt-2 text-sm text-ink/60">
-            {userEmail} · Flower services, local pickup, vendors, and simple records.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
-          className="border border-ink/20 px-4 py-2 text-xs uppercase tracking-widest text-ink/70 hover:bg-ink hover:text-cream"
-        >
-          Sign out
-        </button>
-      </div>
+    <div className="min-h-screen bg-cream/40">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <header className="mb-10 flex flex-col gap-6 border-b border-ink/10 pb-8 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-ink/45">Admin</p>
+            <h1 className="mt-2 font-display text-4xl font-light text-ink sm:text-5xl">
+              Ritualmaker admin
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink/60">
+              Signed in as <span className="text-ink/80">{userEmail}</span>. Use the sections below
+              to manage inventory, event orders, and payments.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:items-end">
+            <nav
+              aria-label="Admin sections"
+              className="flex max-w-full flex-wrap gap-2 rounded-lg border border-ink/10 bg-white p-2 shadow-sm"
+            >
+              {[
+                ["#admin-overview", "Overview"],
+                ["#admin-inventory", "Inventory"],
+                ["#admin-bouquets", "Bouquets"],
+                ["#admin-pantry", "Pantry"],
+                ["#admin-events", "Events"],
+                ["#admin-payments", "Payments"],
+                ["#admin-utility", "Utility"],
+              ].map(([href, label]) => (
+                <a
+                  key={href}
+                  href={href}
+                  className="rounded-md px-3 py-2 text-[10px] font-medium uppercase tracking-widest text-ink/65 transition hover:bg-cream/80 hover:text-ink"
+                >
+                  {label}
+                </a>
+              ))}
+            </nav>
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
+              className={`${btnSecondary()} sm:self-end`}
+            >
+              Sign out
+            </button>
+          </div>
+        </header>
 
-      {(statusMessage || errorMessage) && (
-        <div
-          className={`mb-5 border px-4 py-3 text-sm ${
-            errorMessage
-              ? "border-magenta/30 bg-bloom/10 text-magenta"
-              : "border-moss/30 bg-moss/10 text-moss"
-          }`}
-          role={errorMessage ? "alert" : "status"}
-        >
-          {errorMessage ?? statusMessage}
-        </div>
-      )}
+        {(statusMessage || errorMessage) && (
+          <div
+            className={`mb-8 rounded-lg border px-4 py-3 text-sm ${
+              errorMessage
+                ? "border-magenta/30 bg-bloom/10 text-magenta"
+                : "border-moss/30 bg-moss/10 text-moss"
+            }`}
+            role={errorMessage ? "alert" : "status"}
+          >
+            {errorMessage ?? statusMessage}
+          </div>
+        )}
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-col gap-12 lg:gap-16">
+      <AdminSection
+        id="admin-overview"
+        title="Dashboard overview"
+        description="At-a-glance counts for active stock, vendor items, and recent billing activity."
+      >
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Active in-stock", activeInStock],
           ["Out recurring", outRecurring],
           ["Active vendor items", activeVendorItems],
           ["Recent records", visibleSales.length],
         ].map(([label, value]) => (
-          <div key={label} className="border border-ink/10 bg-white p-4">
-            <p className="text-xs uppercase tracking-widest text-ink/40">{label}</p>
-            <p className="mt-2 font-display text-4xl font-light">{value}</p>
+          <div
+            key={label}
+            className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm"
+          >
+            <p className="text-xs uppercase tracking-widest text-ink/45">{label}</p>
+            <p className="mt-2 font-display text-4xl font-light text-ink">{value}</p>
           </div>
         ))}
-      </section>
+      </div>
 
-      <section className="mt-6 border border-ink/10 bg-white p-4 sm:p-5">
-        <p className="text-xs uppercase tracking-widest text-ink/40">Quick stock</p>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+      <AdminCard
+        title="Quick stock — core bouquets"
+        description="Fast price and availability for Glimmer, Blessing, and Abundance. Scroll horizontally on small screens."
+      >
+        <div className="-mx-1 overflow-x-auto px-1">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="text-xs uppercase tracking-widest text-ink/40">
               <tr>
                 <th className="border-b border-ink/10 py-2 pr-3 font-normal">Name</th>
@@ -954,7 +1171,7 @@ export function AdminDashboard({
                     min={0}
                     step="0.01"
                     defaultValue={dollarsFromCents(product.priceCents)}
-                    className="w-20 border border-ink/20 bg-white px-2 py-1.5 text-sm"
+                    className={`w-24 ${adminInputClass} py-2`}
                   />
                 </td>
                 <td className="px-3 py-3">
@@ -964,7 +1181,7 @@ export function AdminDashboard({
                     min={0}
                     step={1}
                     defaultValue={product.quantity ?? ""}
-                    className="w-20 border border-ink/20 bg-white px-2 py-1.5 text-sm"
+                    className={`w-24 ${adminInputClass} py-2`}
                   />
                 </td>
                 <td className="px-3 py-3">
@@ -972,7 +1189,7 @@ export function AdminDashboard({
                     type="button"
                     disabled={busyId === product._id}
                     onClick={() => patchProduct(product._id, { inStock: product.inStock === false })}
-                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(product.inStock !== false)}`}
+                    className={`min-h-[44px] px-3 py-2 text-xs uppercase tracking-widest sm:min-h-0 ${statusClassName(product.inStock !== false)}`}
                   >
                     {product.inStock === false ? "Out" : "In"}
                   </button>
@@ -982,7 +1199,7 @@ export function AdminDashboard({
                     type="button"
                     disabled={busyId === product._id}
                     onClick={() => patchProduct(product._id, { active: product.active === false })}
-                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(product.active !== false)}`}
+                    className={`min-h-[44px] px-3 py-2 text-xs uppercase tracking-widest sm:min-h-0 ${statusClassName(product.active !== false)}`}
                   >
                     {product.active === false ? "Off" : "On"}
                   </button>
@@ -992,7 +1209,7 @@ export function AdminDashboard({
                     type="button"
                     disabled={busyId === product._id}
                     onClick={() => quickSaveProduct(product)}
-                    className="bg-ink px-3 py-1.5 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
+                    className={`${btnPrimary()} px-4 py-2.5`}
                   >
                     Save
                   </button>
@@ -1009,250 +1226,16 @@ export function AdminDashboard({
             </tbody>
           </table>
         </div>
-      </section>
+      </AdminCard>
+      </AdminSection>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="border border-ink/10 bg-white p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-ink/40">
-                Event / Wedding / Corporate Orders
-              </p>
-              <h2 className="mt-2 font-display text-3xl font-light">Client output actions</h2>
-              <p className="mt-1 text-sm text-ink/60">
-                Keep this flow inline: proposal PDF, payment links, and Stripe invoice.
-              </p>
-            </div>
-            <span className="border border-ink/15 px-2 py-1 text-[10px] uppercase tracking-widest text-ink/55">
-              {visibleEventOrders.length} orders
-            </span>
-          </div>
-          <div className="mt-4 space-y-3">
-            {visibleEventOrders.length ? (
-              visibleEventOrders.map((order) => {
-                const badges = badgesForOrder(order);
-                return (
-                  <article key={order._id} className="border border-ink/10 bg-cream/50 p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => openEventOrder(order)}
-                          className="font-medium underline decoration-ink/20 underline-offset-4"
-                        >
-                          {order.name || "Unnamed client"}
-                        </button>
-                        <p className="mt-1 text-sm text-ink/60">
-                          {order.email || "No email"} · {order.eventType || inferEventType(order)} ·{" "}
-                          {order.eventDate || "No date"}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => generateProposalPdf(order)}
-                          disabled={busyId === `proposal-${order._id}`}
-                          className="border border-ink/20 px-2.5 py-1.5 text-[10px] uppercase tracking-widest disabled:opacity-40"
-                        >
-                          {busyId === `proposal-${order._id}` ? "Generating..." : "Generate proposal PDF"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => createEventPaymentLink(order, "deposit")}
-                          disabled={busyId === `deposit-link-${order._id}`}
-                          className="border border-ink/20 px-2.5 py-1.5 text-[10px] uppercase tracking-widest disabled:opacity-40"
-                        >
-                          {busyId === `deposit-link-${order._id}` ? "Creating..." : "Create deposit payment link"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => createEventPaymentLink(order, "balance")}
-                          disabled={busyId === `balance-link-${order._id}`}
-                          className="border border-ink/20 px-2.5 py-1.5 text-[10px] uppercase tracking-widest disabled:opacity-40"
-                        >
-                          {busyId === `balance-link-${order._id}` ? "Creating..." : "Create balance payment link"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => createEventInvoice(order)}
-                          disabled={busyId === `invoice-${order._id}`}
-                          className="bg-ink px-2.5 py-1.5 text-[10px] uppercase tracking-widest text-cream disabled:bg-ink/30"
-                        >
-                          {busyId === `invoice-${order._id}` ? "Creating..." : "Create Stripe invoice"}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {badges.map((badge) => (
-                        <span
-                          key={`${order._id}-${badge.label}`}
-                          className={`rounded border px-2 py-1 text-[10px] uppercase tracking-widest ${badgeClassName(badge.active)}`}
-                        >
-                          {badge.label}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      {order.depositPaymentLinkUrl && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => window.open(order.depositPaymentLinkUrl, "_blank", "noopener,noreferrer")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            Open deposit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void copyToClipboard(order.depositPaymentLinkUrl!, "Deposit link")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            {copiedText === "Deposit link" ? "Copied" : "Copy deposit"}
-                          </button>
-                        </>
-                      )}
-                      {order.balancePaymentLinkUrl && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => window.open(order.balancePaymentLinkUrl, "_blank", "noopener,noreferrer")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            Open balance
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void copyToClipboard(order.balancePaymentLinkUrl!, "Balance link")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            {copiedText === "Balance link" ? "Copied" : "Copy balance"}
-                          </button>
-                        </>
-                      )}
-                      {order.stripeInvoiceUrl && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => window.open(order.stripeInvoiceUrl, "_blank", "noopener,noreferrer")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            Open invoice
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void copyToClipboard(order.stripeInvoiceUrl!, "Invoice URL")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            {copiedText === "Invoice URL" ? "Copied" : "Copy invoice"}
-                          </button>
-                        </>
-                      )}
-                      {order.stripeInvoicePdfUrl && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => window.open(order.stripeInvoicePdfUrl, "_blank", "noopener,noreferrer")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            Open invoice PDF
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void copyToClipboard(order.stripeInvoicePdfUrl!, "Invoice PDF URL")}
-                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
-                          >
-                            {copiedText === "Invoice PDF URL" ? "Copied" : "Copy invoice PDF"}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </article>
-                );
-              })
-            ) : (
-              <p className="text-sm text-ink/55">No event orders yet.</p>
-            )}
-          </div>
-        </div>
-        <form onSubmit={saveEventOrder} className="border border-ink/10 bg-white p-4 sm:p-5">
-          <p className="text-xs uppercase tracking-widest text-ink/40">
-            {eventOrderForm.id ? "Edit selected order" : "Select an order to edit"}
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-light">Order details</h2>
-          <div className="mt-4 space-y-3">
-            <SelectInput
-              label="Event type"
-              value={eventOrderForm.eventType}
-              onChange={(value) => setEventOrderForm({ ...eventOrderForm, eventType: value })}
-              options={[
-                { value: "Wedding", label: "Wedding" },
-                { value: "Event", label: "Event" },
-                { value: "Corporate", label: "Corporate" },
-              ]}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextInput
-                label="Event date"
-                type="date"
-                value={eventOrderForm.eventDate}
-                onChange={(value) => setEventOrderForm({ ...eventOrderForm, eventDate: value })}
-              />
-              <TextInput
-                label="Balance due date"
-                type="date"
-                value={eventOrderForm.balanceDueDate}
-                onChange={(value) => setEventOrderForm({ ...eventOrderForm, balanceDueDate: value })}
-              />
-            </div>
-            <TextInput
-              label="Event location"
-              value={eventOrderForm.eventLocation}
-              onChange={(value) => setEventOrderForm({ ...eventOrderForm, eventLocation: value })}
-            />
-            <TextareaInput
-              label="Proposal notes / scope"
-              value={eventOrderForm.proposalScope}
-              onChange={(value) => setEventOrderForm({ ...eventOrderForm, proposalScope: value })}
-            />
-            <div className="grid gap-3 sm:grid-cols-3">
-              <TextInput
-                label="Proposal total"
-                type="number"
-                value={eventOrderForm.proposalTotal}
-                onChange={(value) => setEventOrderForm({ ...eventOrderForm, proposalTotal: value })}
-              />
-              <TextInput
-                label="Deposit amount"
-                type="number"
-                value={eventOrderForm.depositAmount}
-                onChange={(value) => setEventOrderForm({ ...eventOrderForm, depositAmount: value })}
-              />
-              <TextInput
-                label="Balance amount"
-                type="number"
-                value={eventOrderForm.balanceAmount}
-                onChange={(value) => setEventOrderForm({ ...eventOrderForm, balanceAmount: value })}
-              />
-            </div>
-            <TextareaInput
-              label="Internal notes (never on client PDF)"
-              value={eventOrderForm.internalNotes}
-              onChange={(value) => setEventOrderForm({ ...eventOrderForm, internalNotes: value })}
-            />
-            <button
-              type="submit"
-              disabled={!eventOrderForm.id || busyId === (eventOrderForm.id ?? "/api/admin/event-orders")}
-              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
-            >
-              {busyId === (eventOrderForm.id ?? "/api/admin/event-orders")
-                ? "Saving..."
-                : "Save event order"}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <AdminSection
+        id="admin-inventory"
+        title="Inventory / offerings"
+        description="All flower products and services: batch pricing, per-item controls, and the full add/edit form."
+      >
+      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
+      <section className="grid gap-6 lg:grid-cols-1 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="border border-ink/10 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -1678,136 +1661,654 @@ export function AdminDashboard({
           </div>
         </form>
       </section>
+      </div>
+      </AdminSection>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        <form onSubmit={saveVendor} className="border border-ink/10 bg-white p-4 sm:p-6">
-          <p className="text-xs uppercase tracking-widest text-ink/40">
-            {vendorForm.id ? "Edit vendor" : "Add vendor"}
-          </p>
-          <div className="mt-4 space-y-3">
-            <TextInput
-              label="Vendor name"
-              value={vendorForm.name}
-              onChange={(value) => setVendorForm({ ...vendorForm, name: value })}
-              required
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextInput
-                label="Contact name"
-                value={vendorForm.contactName}
-                onChange={(value) => setVendorForm({ ...vendorForm, contactName: value })}
-              />
-              <TextInput
-                label="Email"
-                value={vendorForm.contactEmail}
-                onChange={(value) => setVendorForm({ ...vendorForm, contactEmail: value })}
-              />
-            </div>
-            <TextInput
-              label="Phone"
-              value={vendorForm.phone}
-              onChange={(value) => setVendorForm({ ...vendorForm, phone: value })}
-            />
-            <TextareaInput
-              label="Payout method notes"
-              value={vendorForm.payoutMethodNotes}
-              onChange={(value) =>
-                setVendorForm({ ...vendorForm, payoutMethodNotes: value })
-              }
-            />
-            <TextareaInput
-              label="Commission or wholesale notes"
-              value={vendorForm.commissionOrWholesaleNotes}
-              onChange={(value) =>
-                setVendorForm({ ...vendorForm, commissionOrWholesaleNotes: value })
-              }
-            />
-            <TextareaInput
-              label="Internal notes"
-              value={vendorForm.internalNotes}
-              onChange={(value) => setVendorForm({ ...vendorForm, internalNotes: value })}
-            />
-            <CheckboxInput
-              label="Active"
-              checked={vendorForm.active}
-              onChange={(checked) => setVendorForm({ ...vendorForm, active: checked })}
-            />
-            <button
-              type="submit"
-              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream"
-            >
-              Save vendor
-            </button>
-          </div>
-        </form>
-
-        <div className="border border-ink/10 bg-white p-4 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-ink/40">Vendors</p>
-              <h2 className="mt-2 font-display text-3xl font-light">Consignment notes</h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => setVendorForm(emptyVendorForm)}
-              className="border border-ink/20 px-3 py-2 text-xs uppercase tracking-widest"
-            >
-              New
-            </button>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {visibleVendors.map((vendor) => (
-              <article key={vendor._id} className="border border-ink/10 bg-cream/60 p-4">
-                <p className="font-medium">{vendor.name}</p>
-                <p className="mt-1 text-sm text-ink/60">
-                  {vendor.contactName || vendor.contactEmail || "No contact saved"}
-                </p>
-                <p className="mt-1 text-xs uppercase tracking-widest text-ink/40">
-                  {vendor.active === false ? "Inactive" : "Active"}
+      <AdminSection
+        id="admin-bouquets"
+        title="Bouquets"
+        description="Flower products in the bouquet category. Use Inventory above for the full list and batch tools."
+      >
+        {bouquetProducts.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {bouquetProducts.map((product) => (
+              <AdminCard key={product._id} className="!p-4">
+                <p className="font-medium text-ink">{product.publicName ?? product.name}</p>
+                <p className="mt-1 text-sm text-ink/60">{formatUSD(product.priceCents)}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/45">
+                  {product.inStock === false ? "Out of stock" : "In stock"} ·{" "}
+                  {product.active === false ? "Inactive" : "Active"}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => editVendor(vendor)}
-                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
-                  >
+                  <button type="button" onClick={() => editProduct(product)} className={btnSecondary()}>
                     Edit
                   </button>
                   <button
                     type="button"
-                    onClick={() => openConnectLink(vendor._id)}
-                    disabled={busyId === vendor._id || !vendor.contactEmail}
-                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest disabled:opacity-40"
-                    title={vendor.contactEmail ? undefined : "Add vendor email before Stripe setup"}
+                    onClick={() => startSalesFromProduct(product)}
+                    className={btnSecondary()}
                   >
-                    Stripe setup
+                    Record sale
+                  </button>
+                </div>
+              </AdminCard>
+            ))}
+          </div>
+        ) : (
+          <AdminEmptyState
+            title="No bouquet items yet"
+            description="Add a product with category “Bouquet” in Inventory, or run your CMS seed so Glimmer, Blessing, and Abundance appear."
+          />
+        )}
+      </AdminSection>
+
+      <AdminSection
+        id="admin-pantry"
+        title="Pantry items"
+        description="Seasonal pantry SKUs (oils, sugars, teas). Manage pricing and stock from Inventory."
+      >
+        {pantryProducts.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pantryProducts.map((product) => (
+              <AdminCard key={product._id} className="!p-4">
+                <p className="font-medium text-ink">{product.publicName ?? product.name}</p>
+                <p className="mt-1 text-sm text-ink/60">{formatUSD(product.priceCents)}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => editProduct(product)} className={btnSecondary()}>
+                    Edit
                   </button>
                   <button
                     type="button"
-                    onClick={() => openDashboard(vendor._id)}
-                    disabled={busyId === vendor._id || !vendor.stripeAccountId}
-                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest disabled:opacity-40"
+                    onClick={() => duplicateProduct(product)}
+                    className={btnUtility()}
                   >
-                    Stripe
+                    Duplicate
                   </button>
                 </div>
-                {!vendor.contactEmail && (
-                  <p className="mt-2 text-xs text-ink/45">
-                    Add vendor email before Stripe setup.
-                  </p>
-                )}
-                {!vendor.stripeAccountId && (
-                  <p className="mt-2 text-xs text-ink/45">
-                    Stripe dashboard is not connected yet.
-                  </p>
-                )}
-              </article>
+              </AdminCard>
             ))}
           </div>
-        </div>
-      </section>
+        ) : (
+          <AdminEmptyState
+            title="No pantry items yet"
+            description="Create flower products with category “Pantry” in Inventory, or seed the CMS with Garden Oil, Botanical Sugar, and Herbal Tea presets."
+          />
+        )}
+      </AdminSection>
 
-      <section className="mt-6 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <AdminSection
+        id="admin-events"
+        title="Event / wedding / corporate orders"
+        description="Proposals, Stripe invoices, and payment links for inquiries. Expand an order to edit details; PDFs and links stay client-safe (internal notes never go on the PDF)."
+      >
+        {eventOrderSectionError ? (
+          <SectionFeedback kind="error" message={eventOrderSectionError} />
+        ) : null}
+        {eventOrderSectionSuccess ? (
+          <SectionFeedback kind="success" message={eventOrderSectionSuccess} />
+        ) : null}
+
+        {!isOwner ? (
+          <AdminCard>
+            <p className="text-sm text-ink/65">Event orders are visible to shop owners only.</p>
+          </AdminCard>
+        ) : visibleEventOrders.length ? (
+          <div className="space-y-4">
+            {visibleEventOrders.map((order) => {
+              const expanded = expandedEventOrderIds.has(order._id);
+              const selected = eventOrderForm.id === order._id;
+              const badges = [
+                { label: "Proposal PDF generated", on: Boolean(order.proposalPdfGeneratedAt) },
+                { label: "Deposit link created", on: Boolean(order.depositPaymentLinkUrl) },
+                { label: "Balance link created", on: Boolean(order.balancePaymentLinkUrl) },
+                { label: "Stripe invoice created", on: Boolean(order.stripeInvoiceId) },
+                { label: "Deposit paid", on: Boolean(order.depositPaid), variant: "success" as const },
+                { label: "Balance paid", on: Boolean(order.balancePaid), variant: "success" as const },
+                { label: "Paid in full", on: Boolean(order.paidInFull), variant: "success" as const },
+              ];
+              const proposalState = order.proposalPdfGeneratedAt
+                ? order.proposalPdfSentManuallyAt
+                  ? "Sent manually"
+                  : "Generated"
+                : "Not generated";
+              return (
+                <AdminCard key={order._id} className="!p-0 overflow-hidden">
+                  <div className="border-b border-ink/10 bg-cream/50 px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-base font-medium text-ink">
+                          {order.name || "Unnamed client"}
+                        </p>
+                        <p className="mt-1 truncate text-sm text-ink/60">{order.email || "No email"}</p>
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-6">
+                          <div>
+                            <span className={adminLabelClass}>Event date</span>
+                            <p className="mt-1 font-medium text-ink">{order.eventDate || "—"}</p>
+                          </div>
+                          <div>
+                            <span className={adminLabelClass}>Total</span>
+                            <p className="mt-1 font-medium text-ink">
+                              {typeof order.proposalTotalCents === "number"
+                                ? formatUSD(order.proposalTotalCents)
+                                : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className={adminLabelClass}>Deposit</span>
+                            <p className="mt-1 font-medium text-ink">
+                              {typeof order.depositAmountCents === "number"
+                                ? formatUSD(order.depositAmountCents)
+                                : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className={adminLabelClass}>Balance</span>
+                            <p className="mt-1 font-medium text-ink">
+                              {typeof order.balanceAmountCents === "number"
+                                ? formatUSD(order.balanceAmountCents)
+                                : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className={adminLabelClass}>Pipeline</span>
+                            <p className="mt-1 font-medium capitalize text-ink">
+                              {order.status || "new"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className={adminLabelClass}>Proposal PDF</span>
+                            <p className="mt-1 font-medium text-ink">{proposalState}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 sm:items-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleEventOrderExpanded(order._id);
+                            openEventOrder(order);
+                          }}
+                          className={btnSecondary()}
+                        >
+                          {expanded ? "Collapse" : "Expand"} · {selected ? "Editing" : "Edit"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {badges.map((b) => (
+                        <StatusBadge
+                          key={b.label}
+                          variant={b.on ? (b.variant ?? "info") : "neutral"}
+                        >
+                          {b.label}
+                        </StatusBadge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 px-4 py-4 sm:px-5">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => generateProposalPdf(order)}
+                        disabled={busyId === `proposal-${order._id}`}
+                        className={btnPrimary()}
+                      >
+                        {busyId === `proposal-${order._id}` ? "Generating…" : "Generate proposal PDF"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => createEventPaymentLink(order, "deposit")}
+                        disabled={busyId === `deposit-link-${order._id}`}
+                        className={btnPrimary()}
+                      >
+                        {busyId === `deposit-link-${order._id}`
+                          ? "Creating…"
+                          : "Create deposit payment link"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => createEventPaymentLink(order, "balance")}
+                        disabled={busyId === `balance-link-${order._id}`}
+                        className={btnPrimary()}
+                      >
+                        {busyId === `balance-link-${order._id}`
+                          ? "Creating…"
+                          : "Create balance payment link"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => createEventInvoice(order)}
+                        disabled={busyId === `invoice-${order._id}`}
+                        className={btnPrimary()}
+                      >
+                        {busyId === `invoice-${order._id}` ? "Creating…" : "Create Stripe invoice"}
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      {order.depositPaymentLinkUrl ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              window.open(order.depositPaymentLinkUrl, "_blank", "noopener,noreferrer")
+                            }
+                            className={btnSecondary()}
+                          >
+                            Open deposit link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void copyToClipboard(order.depositPaymentLinkUrl!, "Deposit link", order._id)
+                            }
+                            className={btnSecondary()}
+                          >
+                            {copiedText === `Deposit link:${order._id}` ? "Link copied" : "Copy deposit link"}
+                          </button>
+                        </>
+                      ) : null}
+                      {order.balancePaymentLinkUrl ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              window.open(order.balancePaymentLinkUrl, "_blank", "noopener,noreferrer")
+                            }
+                            className={btnSecondary()}
+                          >
+                            Open balance link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void copyToClipboard(order.balancePaymentLinkUrl!, "Balance link", order._id)
+                            }
+                            className={btnSecondary()}
+                          >
+                            {copiedText === `Balance link:${order._id}` ? "Link copied" : "Copy balance link"}
+                          </button>
+                        </>
+                      ) : null}
+                      {order.stripeInvoiceUrl ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              window.open(order.stripeInvoiceUrl, "_blank", "noopener,noreferrer")
+                            }
+                            className={btnSecondary()}
+                          >
+                            Open invoice
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void copyToClipboard(order.stripeInvoiceUrl!, "Invoice URL", order._id)
+                            }
+                            className={btnSecondary()}
+                          >
+                            {copiedText === `Invoice URL:${order._id}` ? "Link copied" : "Copy invoice URL"}
+                          </button>
+                        </>
+                      ) : null}
+                      {order.stripeInvoicePdfUrl ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              window.open(order.stripeInvoicePdfUrl, "_blank", "noopener,noreferrer")
+                            }
+                            className={btnSecondary()}
+                          >
+                            Open invoice PDF
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void copyToClipboard(order.stripeInvoicePdfUrl!, "Invoice PDF URL", order._id)
+                            }
+                            className={btnSecondary()}
+                          >
+                            {copiedText === `Invoice PDF URL:${order._id}` ? "Copied" : "Copy invoice PDF"}
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-ink/50">
+                      Invoice status:{" "}
+                      <span className="font-medium text-ink">
+                        {order.stripeInvoiceStatus || "—"}
+                      </span>
+                      {order.depositPaid ? " · Deposit paid" : ""}
+                      {order.balancePaid ? " · Balance paid" : ""}
+                    </p>
+                  </div>
+
+                  {expanded ? (
+                    <div className="border-t border-ink/10 bg-white px-4 py-5 sm:px-6">
+                      {selected ? (
+                        <form onSubmit={saveEventOrder} className="space-y-8">
+                          <AdminCard title="Client details" description="Name and email come from the inquiry form. Update phone here when needed.">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <ReadOnlyField label="Client name" value={order.name || "—"} />
+                              <ReadOnlyField label="Email" value={order.email || "—"} />
+                              <TextInput
+                                label="Phone"
+                                value={eventOrderForm.phone}
+                                onChange={(v) => setEventOrderForm({ ...eventOrderForm, phone: v })}
+                                helper="Saved with the order when you click Save event order."
+                              />
+                            </div>
+                          </AdminCard>
+
+                          <AdminCard title="Event details" description="What appears on proposals and invoices.">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <SelectInput
+                                label="Event type"
+                                value={eventOrderForm.eventType}
+                                onChange={(value) =>
+                                  setEventOrderForm({ ...eventOrderForm, eventType: value })
+                                }
+                                options={[
+                                  { value: "Wedding", label: "Wedding" },
+                                  { value: "Event", label: "Event" },
+                                  { value: "Corporate", label: "Corporate" },
+                                ]}
+                              />
+                              <TextInput
+                                label={
+                                  <>
+                                    Event date <RequiredMark />
+                                  </>
+                                }
+                                type="date"
+                                value={eventOrderForm.eventDate}
+                                onChange={(value) =>
+                                  setEventOrderForm({ ...eventOrderForm, eventDate: value })
+                                }
+                                error={eventOrderFieldErrors.eventDate}
+                              />
+                              <div className="sm:col-span-2">
+                                <TextInput
+                                  label="Event location / venue"
+                                  value={eventOrderForm.eventLocation}
+                                  onChange={(value) =>
+                                    setEventOrderForm({ ...eventOrderForm, eventLocation: value })
+                                  }
+                                  helper="City, venue name, or region — whatever you send to the client."
+                                />
+                              </div>
+                            </div>
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Proposal details"
+                            description="Scope and totals used for the downloadable PDF and Stripe invoice line."
+                          >
+                            <TextareaInput
+                              label="Proposal notes / scope"
+                              rows={5}
+                              value={eventOrderForm.proposalScope}
+                              onChange={(value) =>
+                                setEventOrderForm({ ...eventOrderForm, proposalScope: value })
+                              }
+                              helper="This text can appear on the client PDF and invoice description."
+                            />
+                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                              <TextInput
+                                label={
+                                  <>
+                                    Proposal total (USD) <RequiredMark />
+                                  </>
+                                }
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={eventOrderForm.proposalTotal}
+                                onChange={(value) => syncBalanceFromTotals({ proposalTotal: value })}
+                                error={eventOrderFieldErrors.proposalTotal}
+                                helper="Full project total before tax (adjust in Stripe if you need tax)."
+                              />
+                            </div>
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Payment schedule"
+                            description="Balance auto-fills as total minus deposit. Turn on override to enter a custom balance."
+                          >
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <TextInput
+                                label="Deposit amount (USD)"
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={eventOrderForm.depositAmount}
+                                onChange={(value) => syncBalanceFromTotals({ depositAmount: value })}
+                              />
+                              <TextInput
+                                label="Balance due date"
+                                type="date"
+                                value={eventOrderForm.balanceDueDate}
+                                onChange={(value) =>
+                                  setEventOrderForm({ ...eventOrderForm, balanceDueDate: value })
+                                }
+                              />
+                            </div>
+                            <div className="mt-4 rounded-lg border border-ink/10 bg-cream/40 p-4">
+                              <p className={adminLabelClass}>Payment summary</p>
+                              <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                                <div className="flex justify-between gap-2 border-b border-ink/10 pb-2 sm:block sm:border-0 sm:pb-0">
+                                  <dt className="text-ink/55">Proposal total</dt>
+                                  <dd className="font-medium text-ink">
+                                    {eventOrderForm.proposalTotal
+                                      ? formatUSD(centsFromDollars(eventOrderForm.proposalTotal))
+                                      : "—"}
+                                  </dd>
+                                </div>
+                                <div className="flex justify-between gap-2 border-b border-ink/10 pb-2 sm:block sm:border-0 sm:pb-0">
+                                  <dt className="text-ink/55">Deposit</dt>
+                                  <dd className="font-medium text-ink">
+                                    {eventOrderForm.depositAmount
+                                      ? formatUSD(centsFromDollars(eventOrderForm.depositAmount))
+                                      : "—"}
+                                  </dd>
+                                </div>
+                                <div className="flex justify-between gap-2 sm:col-span-2">
+                                  <dt className="text-ink/55">Balance {eventOrderForm.balanceManualOverride ? "(manual)" : "(calculated)"}</dt>
+                                  <dd className="font-medium text-ink">
+                                    {eventOrderForm.balanceAmount
+                                      ? formatUSD(centsFromDollars(eventOrderForm.balanceAmount))
+                                      : "—"}
+                                  </dd>
+                                </div>
+                              </dl>
+                            </div>
+                            <CheckboxInput
+                              label="Override calculated balance (enter custom balance below)"
+                              checked={eventOrderForm.balanceManualOverride}
+                              onChange={(checked) =>
+                                setEventOrderForm({ ...eventOrderForm, balanceManualOverride: checked })
+                              }
+                            />
+                            <TextInput
+                              label="Balance amount (USD)"
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              value={eventOrderForm.balanceAmount}
+                              onChange={(value) =>
+                                setEventOrderForm({ ...eventOrderForm, balanceAmount: value })
+                              }
+                              disabled={!eventOrderForm.balanceManualOverride}
+                              helper={
+                                eventOrderForm.balanceManualOverride
+                                  ? "Saved as-is when you save the order."
+                                  : "Auto-calculated from total minus deposit."
+                              }
+                            />
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Stripe / invoice tools"
+                            description="Create links and invoices from the action row above. Mark proposal sent when you email or text it yourself."
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => void markProposalPdfSentManually()}
+                                disabled={
+                                  !eventOrderForm.id || busyId === `mark-sent-${eventOrderForm.id}`
+                                }
+                                className={btnSecondary()}
+                              >
+                                {busyId === `mark-sent-${eventOrderForm.id}`
+                                  ? "Saving…"
+                                  : "Mark proposal PDF sent manually"}
+                              </button>
+                            </div>
+                            {order.proposalPdfSentManuallyAt ? (
+                              <p className={adminHelperClass}>
+                                Last marked sent:{" "}
+                                {new Date(order.proposalPdfSentManuallyAt).toLocaleString()}
+                              </p>
+                            ) : null}
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Internal notes"
+                            description="Never included on the client-facing proposal PDF."
+                          >
+                            <TextareaInput
+                              label="Internal notes"
+                              rows={4}
+                              value={eventOrderForm.internalNotes}
+                              onChange={(value) =>
+                                setEventOrderForm({ ...eventOrderForm, internalNotes: value })
+                              }
+                            />
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Client-facing notes"
+                            description="Optional extra lines for emails or future client surfaces (stored on the order)."
+                          >
+                            <TextareaInput
+                              label="Client-facing notes"
+                              rows={3}
+                              value={eventOrderForm.clientFacingNotes}
+                              onChange={(value) =>
+                                setEventOrderForm({ ...eventOrderForm, clientFacingNotes: value })
+                              }
+                              helper="Not shown on the PDF yet unless you paste scope above; safe for your records."
+                            />
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Status & admin actions"
+                            description="Pipeline status and manual payment flags (use when Stripe webhooks are not enough)."
+                          >
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <SelectInput
+                                label="Inquiry status"
+                                value={eventOrderForm.status}
+                                onChange={(value) =>
+                                  setEventOrderForm({ ...eventOrderForm, status: value })
+                                }
+                                options={eventOrderStatusOptions}
+                              />
+                            </div>
+                            <div className="mt-4 space-y-3 rounded-lg border border-ink/10 bg-cream/30 p-4">
+                              <p className="text-xs font-medium uppercase tracking-widest text-ink/50">
+                                Mark paid (manual)
+                              </p>
+                              <CheckboxInput
+                                label="Deposit paid"
+                                checked={eventOrderForm.depositPaidManual}
+                                onChange={(checked) =>
+                                  setEventOrderForm({ ...eventOrderForm, depositPaidManual: checked })
+                                }
+                              />
+                              <CheckboxInput
+                                label="Balance paid"
+                                checked={eventOrderForm.balancePaidManual}
+                                onChange={(checked) =>
+                                  setEventOrderForm({ ...eventOrderForm, balancePaidManual: checked })
+                                }
+                              />
+                              <CheckboxInput
+                                label="Paid in full"
+                                checked={eventOrderForm.paidInFullManual}
+                                onChange={(checked) =>
+                                  setEventOrderForm({ ...eventOrderForm, paidInFullManual: checked })
+                                }
+                              />
+                            </div>
+                            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                              <button
+                                type="submit"
+                                disabled={
+                                  !eventOrderForm.id ||
+                                  busyId === (eventOrderForm.id ?? "/api/admin/event-orders")
+                                }
+                                className={`${btnPrimary()} lg:sticky lg:bottom-4 lg:z-10 lg:shadow-md`}
+                              >
+                                {busyId === (eventOrderForm.id ?? "/api/admin/event-orders")
+                                  ? "Saving…"
+                                  : "Save event order"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      "Discard unsaved changes and reset the form for this order?",
+                                    )
+                                  ) {
+                                    openEventOrder(order);
+                                    setEventOrderSectionSuccess(null);
+                                    setEventOrderSectionError(null);
+                                  }
+                                }}
+                                className={btnUtility()}
+                              >
+                                Reset form
+                              </button>
+                            </div>
+                          </AdminCard>
+                        </form>
+                      ) : (
+                        <p className="text-sm text-ink/55">
+                          Select <strong>Expand</strong> on this order, then choose it to load the editor.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+                </AdminCard>
+              );
+            })}
+          </div>
+        ) : (
+          <AdminEmptyState
+            title="No event orders yet"
+            description="When clients submit the on-location or photography inquiry form, orders appear here. You can then generate a PDF, payment links, or a Stripe invoice."
+          />
+        )}
+      </AdminSection>
+
+      <AdminSection
+        id="admin-payments"
+        title="Payments / Stripe status"
+        description="Record walk-up or manual sales and review recent entries. Vendor Stripe Connect lives under Site settings / utility."
+      >
+        {paymentsSectionFeedback ? (
+          <SectionFeedback
+            kind={paymentsSectionFeedback.kind}
+            message={paymentsSectionFeedback.message}
+          />
+        ) : null}
+
+      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <form onSubmit={saveSalesRecord} className="border border-ink/10 bg-white p-4 sm:p-6">
           <p className="text-xs uppercase tracking-widest text-ink/40">Billing record</p>
           <h2 className="mt-2 font-display text-3xl font-light">Record sale</h2>
@@ -1924,14 +2425,199 @@ export function AdminDashboard({
                     {record.saleDate} · {record.paymentMethod} ·{" "}
                     {record.billingType ?? "flower service"}
                   </p>
+                  {isOwner ? (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => void deleteSalesRecord(record._id)}
+                        disabled={busyId === `delete-sale-${record._id}`}
+                        className={btnDestructive()}
+                      >
+                        {busyId === `delete-sale-${record._id}` ? "Deleting…" : "Delete record"}
+                      </button>
+                    </div>
+                  ) : null}
                 </article>
               ))
             ) : (
-              <p className="text-sm text-ink/55">No billing records yet.</p>
+              <AdminEmptyState
+                title="No billing records yet"
+                description="Use Record sale to log cash, Venmo, or manual card payments. Stripe checkout completions also create records via webhook."
+              />
             )}
           </div>
         </div>
       </section>
+      </AdminSection>
+
+      <AdminSection
+        id="admin-utility"
+        title="Site settings / utility tools"
+        description="Vendors, product presets, and other operational tools that do not belong in checkout."
+      >
+        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+          <form
+            onSubmit={saveVendor}
+            className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6"
+          >
+            <p className={adminLabelClass}>Vendor form</p>
+            <h3 className="mt-2 font-display text-2xl font-light text-ink">
+              {vendorForm.id ? "Edit vendor" : "Add vendor"}
+            </h3>
+            <div className="mt-6 space-y-4">
+              <TextInput
+                label="Vendor name"
+                value={vendorForm.name}
+                onChange={(value) => setVendorForm({ ...vendorForm, name: value })}
+                required
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  label="Contact name"
+                  value={vendorForm.contactName}
+                  onChange={(value) => setVendorForm({ ...vendorForm, contactName: value })}
+                />
+                <TextInput
+                  label="Email"
+                  value={vendorForm.contactEmail}
+                  onChange={(value) => setVendorForm({ ...vendorForm, contactEmail: value })}
+                />
+              </div>
+              <TextInput
+                label="Phone"
+                value={vendorForm.phone}
+                onChange={(value) => setVendorForm({ ...vendorForm, phone: value })}
+              />
+              <TextareaInput
+                label="Payout method notes"
+                value={vendorForm.payoutMethodNotes}
+                onChange={(value) =>
+                  setVendorForm({ ...vendorForm, payoutMethodNotes: value })
+                }
+              />
+              <TextareaInput
+                label="Commission or wholesale notes"
+                value={vendorForm.commissionOrWholesaleNotes}
+                onChange={(value) =>
+                  setVendorForm({ ...vendorForm, commissionOrWholesaleNotes: value })
+                }
+              />
+              <TextareaInput
+                label="Internal notes"
+                value={vendorForm.internalNotes}
+                onChange={(value) => setVendorForm({ ...vendorForm, internalNotes: value })}
+              />
+              <CheckboxInput
+                label="Active"
+                checked={vendorForm.active}
+                onChange={(checked) => setVendorForm({ ...vendorForm, active: checked })}
+              />
+              <button type="submit" className={btnPrimary()}>
+                Save vendor
+              </button>
+            </div>
+          </form>
+
+          <div className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className={adminLabelClass}>Vendors</p>
+                <h3 className="mt-2 font-display text-2xl font-light text-ink">Consignment notes</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVendorForm(emptyVendorForm)}
+                className={btnUtility()}
+              >
+                New vendor
+              </button>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {visibleVendors.map((vendor) => (
+                <article
+                  key={vendor._id}
+                  className="rounded-lg border border-ink/10 bg-cream/50 p-4"
+                >
+                  <p className="font-medium text-ink">{vendor.name}</p>
+                  <p className="mt-1 text-sm text-ink/60">
+                    {vendor.contactName || vendor.contactEmail || "No contact saved"}
+                  </p>
+                  <p className="mt-2 text-[10px] uppercase tracking-widest text-ink/45">
+                    {vendor.active === false ? "Inactive" : "Active"}
+                    {vendor.stripeOnboardingComplete ? " · Stripe ready" : ""}
+                  </p>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => editVendor(vendor)}
+                      className={btnSecondary()}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openConnectLink(vendor._id)}
+                      disabled={busyId === vendor._id || !vendor.contactEmail}
+                      className={btnPrimary()}
+                      title={
+                        vendor.contactEmail ? undefined : "Add vendor email before Stripe setup"
+                      }
+                    >
+                      Stripe setup
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openDashboard(vendor._id)}
+                      disabled={busyId === vendor._id || !vendor.stripeAccountId}
+                      className={btnSecondary()}
+                    >
+                      Open Stripe dashboard
+                    </button>
+                  </div>
+                  {!vendor.contactEmail ? (
+                    <p className="mt-3 text-xs text-ink/50">Add vendor email before Stripe setup.</p>
+                  ) : null}
+                  {!vendor.stripeAccountId ? (
+                    <p className="mt-1 text-xs text-ink/50">Connect not started yet.</p>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <AdminCard
+          title="Product presets"
+          description="Quick-load starter SKUs from the product form in Inventory (Glimmer, Blessing, Abundance, pantry items)."
+          className="mt-8"
+        >
+          <p className="text-sm text-ink/65">
+            Open <strong>Inventory / offerings</strong> and use “Load Glimmer”, “Load Blessing”, etc.,
+            or start from <strong>New</strong> for a blank offering.
+          </p>
+        </AdminCard>
+      </AdminSection>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RequiredMark() {
+  return (
+    <abbr title="Required" className="ml-0.5 text-magenta no-underline">
+      *
+    </abbr>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className={adminLabelClass}>{label}</span>
+      <p className="mt-1.5 rounded-md border border-ink/10 bg-cream/40 px-3 py-2.5 text-sm text-ink/80">
+        {value}
+      </p>
     </div>
   );
 }
@@ -1944,27 +2630,40 @@ function TextInput({
   placeholder,
   type = "text",
   helper,
+  error,
+  disabled,
+  min,
+  step,
 }: {
-  label: string;
+  label: ReactNode;
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
   placeholder?: string;
   type?: string;
   helper?: string;
+  error?: string;
+  disabled?: boolean;
+  min?: number;
+  step?: string;
 }) {
   return (
-    <label className="block text-sm text-ink/70">
-      {label}
+    <label className="block">
+      <span className={adminLabelClass}>{label}</span>
       <input
         type={type}
         value={value}
         required={required}
         placeholder={placeholder}
+        disabled={disabled}
+        min={min}
+        step={step}
+        aria-invalid={error ? true : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+        className={`${adminInputClass} ${error ? "border-magenta/40 ring-1 ring-magenta/20" : ""} ${disabled ? "cursor-not-allowed bg-ink/5 opacity-70" : ""}`}
       />
-      {helper && <span className="mt-1 block text-xs text-ink/45">{helper}</span>}
+      {helper ? <span className={adminHelperClass}>{helper}</span> : null}
+      {error ? <span className="mt-1.5 block text-xs text-magenta">{error}</span> : null}
     </label>
   );
 }
@@ -1983,15 +2682,15 @@ function TextareaInput({
   rows?: number;
 }) {
   return (
-    <label className="block text-sm text-ink/70">
-      {label}
+    <label className="block">
+      <span className={adminLabelClass}>{label}</span>
       <textarea
         value={value}
         rows={rows}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+        className={`${adminInputClass} min-h-[120px] resize-y py-3`}
       />
-      {helper && <span className="mt-1 block text-xs text-ink/45">{helper}</span>}
+      {helper ? <span className={adminHelperClass}>{helper}</span> : null}
     </label>
   );
 }
@@ -2001,19 +2700,25 @@ function SelectInput({
   value,
   onChange,
   options,
+  required,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
+  required?: boolean;
 }) {
   return (
-    <label className="block text-sm text-ink/70">
-      {label}
+    <label className="block">
+      <span className={adminLabelClass}>
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <select
         value={value}
+        required={required}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full border border-ink/20 bg-white px-3 py-2 text-sm"
+        className={`${adminInputClass} bg-white`}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
