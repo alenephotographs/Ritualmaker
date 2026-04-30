@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { Bouquet, FlowerProduct } from "@/sanity/types";
 import { farmLabel, formatUSD, sizeLabel } from "@/lib/format";
 
+const RITUAL_BUNDLE_DISCOUNT_CENTS = 500;
+
 async function readJsonSafe(response: Response) {
   const text = await response.text();
   if (!text) return {};
@@ -19,11 +21,17 @@ type BouquetGridProps = {
   flowerProducts?: FlowerProduct[];
 };
 
+type CartLine = {
+  item: FlowerProduct;
+  quantity: number;
+};
+
 export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastBouquetId, setLastBouquetId] = useState<string | null>(null);
   const [ctaVariant, setCtaVariant] = useState<"buy" | "checkout">("buy");
+  const [cart, setCart] = useState<CartLine[]>([]);
 
   const availableBouquets = useMemo(
     () => bouquets.filter((bouquet) => bouquet.available),
@@ -31,6 +39,21 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
   );
   const mostBoughtId = availableBouquets[0]?._id;
   const lastBouquet = bouquets.find((bouquet) => bouquet._id === lastBouquetId);
+  const cartSubtotal = cart.reduce(
+    (total, line) => total + line.item.priceCents * line.quantity,
+    0,
+  );
+  const hasBouquetInCart = cart.some((line) => line.item.category === "bouquet");
+  const pantryLines = cart.filter((line) => line.item.category === "pantry");
+  const hasPantryInCart = pantryLines.length > 0;
+  const lowestPantryPrice = pantryLines.length
+    ? Math.min(...pantryLines.map((line) => line.item.priceCents))
+    : 0;
+  const ritualBundleDiscount =
+    hasBouquetInCart && hasPantryInCart
+      ? Math.min(RITUAL_BUNDLE_DISCOUNT_CENTS, lowestPantryPrice)
+      : 0;
+  const cartTotal = Math.max(0, cartSubtotal - ritualBundleDiscount);
 
   useEffect(() => {
     try {
@@ -123,9 +146,32 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
     }
   }
 
-  async function buyFlowerProduct(item: FlowerProduct) {
+  function addToCart(item: FlowerProduct) {
     setError(null);
-    setLoadingId(item._id);
+    setCart((current) => {
+      const existing = current.find((line) => line.item._id === item._id);
+      if (existing) {
+        return current.map((line) =>
+          line.item._id === item._id
+            ? { ...line, quantity: line.quantity + 1 }
+            : line,
+        );
+      }
+      return [...current, { item, quantity: 1 }];
+    });
+  }
+
+  function removeFromCart(itemId: string) {
+    setCart((current) => current.filter((line) => line.item._id !== itemId));
+  }
+
+  async function checkoutCart() {
+    if (!cart.length) {
+      setError("Add at least one stand item first.");
+      return;
+    }
+    setError(null);
+    setLoadingId("cart");
     try {
       try {
         await fetch("/api/analytics/cta", {
@@ -135,7 +181,7 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
             eventType: "cta_click",
             variant: ctaVariant,
             itemType: "flowerProduct",
-            itemId: item._id,
+            itemId: cart.map((line) => line.item._id).join(","),
             path: window.location.pathname,
           }),
           keepalive: true,
@@ -148,8 +194,11 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          itemType: "flowerProduct",
-          itemId: item._id,
+          items: cart.map((line) => ({
+            itemType: "flowerProduct",
+            itemId: line.item._id,
+            quantity: line.quantity,
+          })),
           ctaVariant,
         }),
       });
@@ -211,6 +260,14 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
       )}
       {flowerProducts.length > 0 && (
         <div className="mb-8">
+          <div className="mb-6 border border-moss/25 bg-moss/10 px-4 py-4">
+            <p className="text-xs uppercase tracking-widest text-moss">
+              Make it a Ritual Bundle
+            </p>
+            <p className="mt-1 text-sm text-ink/70">
+              $5 off any pantry item with a bouquet.
+            </p>
+          </div>
           {[
             {
               label: "Seasonal flower offerings",
@@ -231,14 +288,64 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
                     <FlowerProductCard
                       key={item._id}
                       item={item}
-                      loading={loadingId === item._id}
-                      onBuy={buyFlowerProduct}
+                      onAdd={addToCart}
                     />
                   ))}
                 </div>
               </div>
             ) : null,
           )}
+        </div>
+      )}
+      {cart.length > 0 && (
+        <div className="mb-10 border border-ink/10 bg-white p-5">
+          <p className="text-xs uppercase tracking-widest text-ink/40">Cart</p>
+          <div className="mt-4 space-y-3">
+            {cart.map((line) => (
+              <div
+                key={line.item._id}
+                className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium">{line.item.publicName ?? line.item.name}</p>
+                  <p className="text-xs text-ink/50">
+                    {formatUSD(line.item.priceCents)} x {line.quantity}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFromCart(line.item._id)}
+                  className="text-xs uppercase tracking-widest text-ink/50 underline decoration-ink/20 underline-offset-4"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 space-y-2 text-sm text-ink/70">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatUSD(cartSubtotal)}</span>
+            </div>
+            {ritualBundleDiscount > 0 && (
+              <div className="flex justify-between text-moss">
+                <span>Ritual Bundle Discount</span>
+                <span>-{formatUSD(ritualBundleDiscount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-t border-ink/10 pt-2 font-medium text-ink">
+              <span>Total</span>
+              <span>{formatUSD(cartTotal)}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={loadingId === "cart"}
+            onClick={checkoutCart}
+            className="mt-5 bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
+          >
+            {loadingId === "cart" ? "Starting..." : "Pay for stand items"}
+          </button>
         </div>
       )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -342,12 +449,10 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
 
 function FlowerProductCard({
   item,
-  loading,
-  onBuy,
+  onAdd,
 }: {
   item: FlowerProduct;
-  loading: boolean;
-  onBuy: (item: FlowerProduct) => void;
+  onAdd: (item: FlowerProduct) => void;
 }) {
   return (
     <article className="flex flex-col border border-ink/10 bg-cream">
@@ -393,11 +498,10 @@ function FlowerProductCard({
           </span>
           <button
             type="button"
-            disabled={loading}
-            onClick={() => onBuy(item)}
+            onClick={() => onAdd(item)}
             className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
           >
-            {loading ? "Starting..." : "Pay for stand item"}
+            Add to cart
           </button>
         </div>
       </div>

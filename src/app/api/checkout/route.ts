@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { sanityClient } from "@/sanity/client";
 import { getStripe } from "@/lib/stripe";
 import { farmLabel, sizeLabel } from "@/lib/format";
@@ -16,8 +17,90 @@ type CheckoutBody = {
   itemId?: string;
   bouquetId?: string;
   pantryItemId?: string;
+  items?: {
+    itemType?: "flowerProduct";
+    itemId?: string;
+    quantity?: number;
+  }[];
   ctaVariant?: "buy" | "checkout";
 };
+
+type CheckoutLine =
+  | { itemType: "bouquet"; item: Bouquet; quantity: number }
+  | { itemType: "pantryItem"; item: PantryItem; quantity: number }
+  | { itemType: "flowerProduct"; item: FlowerProduct; quantity: number };
+
+const RITUAL_BUNDLE_DISCOUNT_CENTS = 500;
+
+function isUnavailable(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
+  const isComingSoon = "comingSoon" in item ? Boolean(item.comingSoon) : false;
+  if (itemType === "flowerProduct") {
+    const product = item as FlowerProduct;
+    return product.active === false || product.inStock === false;
+  }
+  if (itemType === "pantryItem") {
+    return (item as PantryItem).available === false || isComingSoon;
+  }
+  return !(item as Bouquet).available;
+}
+
+function itemDescription(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
+  if (itemType === "flowerProduct") {
+    return (item as FlowerProduct).billingLabel ?? "Flower Service";
+  }
+  if (itemType === "pantryItem") {
+    return `Seasonal Garden Offering · ${(item as PantryItem).category}`;
+  }
+  return `Flower Service · ${farmLabel((item as Bouquet).farm)} · ${sizeLabel(
+    (item as Bouquet).size,
+  )}`;
+}
+
+function itemDisplayName(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
+  return itemType === "flowerProduct"
+    ? ((item as FlowerProduct).publicName ?? item.name)
+    : item.name;
+}
+
+function itemBillingLabel(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
+  if (itemType === "flowerProduct") {
+    return (item as FlowerProduct).billingLabel ?? "Flower Service";
+  }
+  if (itemType === "pantryItem") return "Seasonal Garden Offering";
+  return "Flower Service";
+}
+
+function itemTaxCategory(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
+  return itemType === "flowerProduct"
+    ? ((item as FlowerProduct).taxCategory ?? "flower_service")
+    : "flower_service";
+}
+
+function itemCategory(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
+  if (itemType === "flowerProduct") return (item as FlowerProduct).category ?? "";
+  if (itemType === "pantryItem") return (item as PantryItem).category;
+  return "bouquet";
+}
+
+function itemPriceCents(item: CheckoutLine["item"]) {
+  return typeof item.priceCents === "number" ? item.priceCents : undefined;
+}
+
+async function fetchLine(itemType: CheckoutLine["itemType"], itemId: string) {
+  const item =
+    itemType === "flowerProduct"
+      ? await sanityClient.fetch<FlowerProduct | null>(oneFlowerProductByIdQuery, {
+          id: itemId,
+        })
+      : itemType === "pantryItem"
+        ? await sanityClient.fetch<PantryItem | null>(onePantryItemByIdQuery, {
+            id: itemId,
+          })
+        : await sanityClient.fetch<Bouquet | null>(oneBouquetByIdQuery, {
+            id: itemId,
+          });
+  return item;
+}
 
 export async function POST(req: Request) {
   let body: CheckoutBody;
@@ -36,6 +119,129 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json({ error: "Invalid itemType" }, { status: 400 });
     }
+    if (Array.isArray(body.items) && body.items.length > 0) {
+      const lines: CheckoutLine[] = [];
+      for (const rawLine of body.items.slice(0, 20)) {
+        if (rawLine.itemType && rawLine.itemType !== "flowerProduct") {
+          return NextResponse.json({ error: "Invalid cart item type" }, { status: 400 });
+        }
+        if (!rawLine.itemId) {
+          return NextResponse.json({ error: "Missing cart item id" }, { status: 400 });
+        }
+        const item = (await fetchLine("flowerProduct", rawLine.itemId)) as FlowerProduct | null;
+        if (!item) {
+          return NextResponse.json({ error: "Cart item not found" }, { status: 404 });
+        }
+        if (isUnavailable("flowerProduct", item)) {
+          return NextResponse.json(
+            { error: `${itemDisplayName("flowerProduct", item)} is currently unavailable` },
+            { status: 409 },
+          );
+        }
+        lines.push({
+          itemType: "flowerProduct",
+          item,
+          quantity: Math.max(1, Math.min(99, Math.floor(rawLine.quantity ?? 1))),
+        });
+      }
+
+      const hasBouquet = lines.some((line) => itemCategory(line.itemType, line.item) === "bouquet");
+      const pantryLines = lines.filter(
+        (line): line is Extract<CheckoutLine, { itemType: "flowerProduct" }> =>
+          line.itemType === "flowerProduct" && line.item.category === "pantry",
+      );
+      const lowestPantryPrice = pantryLines.length
+        ? Math.min(...pantryLines.map((line) => line.item.priceCents))
+        : 0;
+      const discountCents =
+        hasBouquet && pantryLines.length
+          ? Math.min(RITUAL_BUNDLE_DISCOUNT_CENTS, lowestPantryPrice)
+          : 0;
+
+      const origin =
+        process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
+      const stripe = getStripe();
+      const discountTarget =
+        discountCents > 0
+          ? pantryLines.reduce((lowest, line) =>
+              line.item.priceCents < lowest.item.priceCents ? line : lowest,
+            )
+          : null;
+
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+      for (const line of lines) {
+        const description = itemDescription(line.itemType, line.item);
+        const isDiscountTarget = discountTarget?.item._id === line.item._id;
+        const lineItemFor = (
+          unitAmount: number,
+          quantity: number,
+          label?: string,
+        ): Stripe.Checkout.SessionCreateParams.LineItem => ({
+          price_data: {
+            currency: "usd",
+            unit_amount: unitAmount,
+            product_data: {
+              name: `${itemDisplayName(line.itemType, line.item)}${label ? ` — ${label}` : ""}`,
+              description,
+              images: line.item.imageUrl ? [line.item.imageUrl] : undefined,
+            },
+          },
+          quantity,
+        });
+
+        if (isDiscountTarget) {
+          const unitAmount = itemPriceCents(line.item);
+          if (unitAmount === undefined) {
+            return NextResponse.json({ error: "Cart item is missing a price" }, { status: 400 });
+          }
+          const discountedAmount = Math.max(0, unitAmount - discountCents);
+          lineItems.push(lineItemFor(discountedAmount, 1, "Ritual Bundle Discount"));
+          if (line.quantity > 1) {
+            lineItems.push(lineItemFor(unitAmount, line.quantity - 1));
+          }
+          continue;
+        }
+
+        if (line.item.stripePriceId) {
+          lineItems.push({ price: line.item.stripePriceId, quantity: line.quantity });
+          continue;
+        }
+
+        const unitAmount = itemPriceCents(line.item);
+        if (unitAmount === undefined) {
+          return NextResponse.json({ error: "Cart item is missing a price" }, { status: 400 });
+        }
+        lineItems.push(lineItemFor(unitAmount, line.quantity));
+      }
+
+      const firstLine = lines[0];
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/checkout/cancel`,
+        line_items: lineItems,
+        automatic_tax: { enabled: false },
+        metadata: {
+          itemType: "cart",
+          itemId: lines.map((line) => line.item._id).join(","),
+          itemName: lines.map((line) => itemDisplayName(line.itemType, line.item)).join(" + "),
+          productCategory: lines.map((line) => itemCategory(line.itemType, line.item)).join(","),
+          billingLabel: itemBillingLabel(firstLine.itemType, firstLine.item),
+          taxCategory: itemTaxCategory(firstLine.itemType, firstLine.item),
+          ritualBundleDiscountCents: String(discountCents),
+          ctaVariant: body.ctaVariant ?? "",
+        },
+      });
+
+      if (!session.url) {
+        return NextResponse.json(
+          { error: "Stripe did not return a checkout URL" },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json({ url: session.url });
+    }
+
     const itemType =
       body.itemType === "flowerProduct"
         ? "flowerProduct"
@@ -52,32 +258,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing itemId" }, { status: 400 });
     }
 
-    const item =
-      itemType === "flowerProduct"
-        ? await sanityClient.fetch<FlowerProduct | null>(oneFlowerProductByIdQuery, {
-            id: itemId,
-          })
-        : itemType === "pantryItem"
-          ? await sanityClient.fetch<PantryItem | null>(onePantryItemByIdQuery, {
-              id: itemId,
-            })
-          : await sanityClient.fetch<Bouquet | null>(oneBouquetByIdQuery, {
-              id: itemId,
-            });
+    const item = await fetchLine(itemType, itemId);
 
     if (!item) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    const isComingSoon = "comingSoon" in item ? Boolean(item.comingSoon) : false;
-    const isUnavailable =
-      itemType === "flowerProduct"
-        ? (item as FlowerProduct).active === false ||
-          (item as FlowerProduct).inStock === false
-        : itemType === "pantryItem"
-          ? (item as PantryItem).available === false || isComingSoon
-          : !(item as Bouquet).available;
-    if (isUnavailable) {
+    if (isUnavailable(itemType, item)) {
       return NextResponse.json(
         { error: "This flower service is currently unavailable" },
         { status: 409 },
@@ -88,32 +275,11 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
 
     const stripe = getStripe();
-    const description =
-      itemType === "flowerProduct"
-        ? (item as FlowerProduct).billingLabel ?? "Flower Service"
-        : itemType === "pantryItem"
-          ? `Pantry · ${(item as PantryItem).category}`
-          : `Local Flower Pickup · ${farmLabel((item as Bouquet).farm)} · ${sizeLabel((item as Bouquet).size)}`;
-    const itemName =
-      itemType === "flowerProduct"
-        ? ((item as FlowerProduct).publicName ?? item.name)
-        : item.name;
-    const billingLabel =
-      itemType === "flowerProduct"
-        ? ((item as FlowerProduct).billingLabel ?? "Flower Service")
-        : itemType === "pantryItem"
-          ? "Local Flower Pickup"
-          : "Flower Service";
-    const taxCategory =
-      itemType === "flowerProduct"
-        ? ((item as FlowerProduct).taxCategory ?? "flower_service")
-        : "flower_service";
-    const itemCategory =
-      itemType === "flowerProduct"
-        ? ((item as FlowerProduct).category ?? "")
-        : itemType === "pantryItem"
-          ? (item as PantryItem).category
-          : "bouquet";
+    const description = itemDescription(itemType, item);
+    const itemName = itemDisplayName(itemType, item);
+    const billingLabel = itemBillingLabel(itemType, item);
+    const taxCategory = itemTaxCategory(itemType, item);
+    const productCategory = itemCategory(itemType, item);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -151,7 +317,7 @@ export async function POST(req: Request) {
         itemType,
         itemId: item._id,
         itemName,
-        productCategory: itemCategory,
+        productCategory,
         billingLabel,
         taxCategory,
         vendorId: item.vendorId ?? "",

@@ -143,7 +143,7 @@ const skuPresets = {
   herbalTea: {
     name: "Herbal Tea",
     publicName: "Herbal Tea",
-    price: "12",
+    price: "10",
     category: "pantry",
     tier: "",
     shortDescription: "Seasonal herbal tea blend.",

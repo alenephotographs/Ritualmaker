@@ -430,7 +430,7 @@ async function seedFlowerProducts() {
       publicName: "Herbal Tea",
       category: "pantry",
       tier: "",
-      priceCents: 1200,
+      priceCents: 1000,
       shortDescription: "Seasonal herbal tea blend.",
       displayDescription:
         "A small-batch herbal tea blend made with garden-grown and seasonal botanicals.",
