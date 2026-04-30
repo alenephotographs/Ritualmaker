@@ -863,6 +863,7 @@ export function AdminDashboard({
     }
     setBusyId(`mark-sent-${eventOrderForm.id}`);
     setEventOrderSectionError(null);
+    setEventOrderSectionSuccess(null);
     try {
       const response = await fetch("/api/admin/event-orders", {
         method: "PATCH",
@@ -895,7 +896,10 @@ export function AdminDashboard({
       const key = orderId ? `${label}:${orderId}` : label;
       setCopiedText(key);
       setStatusMessage(`${label} copied.`);
-      if (orderId) setEventOrderSectionSuccess(`${label} copied.`);
+      if (orderId) {
+        setEventOrderSectionError(null);
+        setEventOrderSectionSuccess(`${label} copied.`);
+      }
       setTimeout(() => setCopiedText((c) => (c === key ? null : c)), 1200);
     } catch {
       setErrorMessage(`Could not copy ${label.toLowerCase()}`);
@@ -903,10 +907,29 @@ export function AdminDashboard({
     }
   }
 
+  function fileNameFromContentDisposition(header: string | null) {
+    if (!header) return null;
+    const utf8 = /filename\*=UTF-8''([^;\n]+)/i.exec(header);
+    if (utf8?.[1]) {
+      try {
+        return decodeURIComponent(utf8[1].trim());
+      } catch {
+        return utf8[1].trim();
+      }
+    }
+    const quoted = /filename="([^"]+)"/i.exec(header);
+    if (quoted?.[1]) return quoted[1];
+    const plain = /filename=([^;\n]+)/i.exec(header);
+    if (plain?.[1]) return plain[1].trim().replace(/^"|"$/g, "");
+    return null;
+  }
+
   async function generateProposalPdf(order: EventOrder) {
     setBusyId(`proposal-${order._id}`);
     setErrorMessage(null);
     setStatusMessage(null);
+    setEventOrderSectionError(null);
+    setEventOrderSectionSuccess(null);
     try {
       const response = await fetch(`/api/admin/event-orders/${order._id}/proposal-pdf`, {
         method: "POST",
@@ -919,7 +942,8 @@ export function AdminDashboard({
       const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = `ritualmaker-proposal-${order._id}.pdf`;
+      const fromHeader = fileNameFromContentDisposition(response.headers.get("Content-Disposition"));
+      a.download = fromHeader ?? `ritualmaker-proposal-${order._id}.pdf`;
       a.click();
       URL.revokeObjectURL(downloadUrl);
       setEventOrderRows((current) =>
@@ -948,6 +972,8 @@ export function AdminDashboard({
     setBusyId(`${paymentType}-link-${order._id}`);
     setErrorMessage(null);
     setStatusMessage(null);
+    setEventOrderSectionError(null);
+    setEventOrderSectionSuccess(null);
     try {
       const response = await fetch(`/api/admin/event-orders/${order._id}/create-payment-link`, {
         method: "POST",
@@ -985,6 +1011,8 @@ export function AdminDashboard({
     setBusyId(`invoice-${order._id}`);
     setErrorMessage(null);
     setStatusMessage(null);
+    setEventOrderSectionError(null);
+    setEventOrderSectionSuccess(null);
     try {
       const response = await fetch(`/api/admin/event-orders/${order._id}/create-invoice`, {
         method: "POST",
@@ -1297,10 +1325,14 @@ export function AdminDashboard({
                 </select>
               </label>
               <TextInput
-                label={batchPriceMode === "dollars" ? "Amount" : "Percent"}
+                label={batchPriceMode === "dollars" ? "Amount (USD)" : "Percent"}
                 value={batchPriceValue}
                 onChange={setBatchPriceValue}
-                placeholder={batchPriceMode === "dollars" ? "2" : "10"}
+                helper={
+                  batchPriceMode === "dollars"
+                    ? "Example: enter 2 for a two-dollar change per item."
+                    : "Example: enter 10 for a ten percent change per item."
+                }
               />
               <button
                 type="button"
@@ -1355,10 +1387,7 @@ export function AdminDashboard({
                         onBlur={(event) => {
                           const nextPrice = centsFromDollars(event.target.value);
                           if (nextPrice !== product.priceCents) {
-                            void postJson("/api/admin/flower-products", {
-                              id: product._id,
-                              priceCents: nextPrice,
-                            });
+                            void patchProduct(product._id, { priceCents: nextPrice });
                           }
                         }}
                         className="w-20 border border-ink/20 px-2 py-1.5 text-xs"
@@ -1367,12 +1396,11 @@ export function AdminDashboard({
                         type="button"
                         disabled={busyId === product._id}
                         onClick={() =>
-                          postJson("/api/admin/flower-products", {
-                            id: product._id,
+                          void patchProduct(product._id, {
                             inStock: product.inStock === false,
                           })
                         }
-                        className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(
+                        className={`min-h-[44px] px-3 py-2 text-xs uppercase tracking-widest sm:min-h-0 ${statusClassName(
                           product.inStock !== false,
                         )}`}
                       >
@@ -1382,12 +1410,11 @@ export function AdminDashboard({
                         type="button"
                         disabled={busyId === product._id}
                         onClick={() =>
-                          postJson("/api/admin/flower-products", {
-                            id: product._id,
+                          void patchProduct(product._id, {
                             active: product.active === false,
                           })
                         }
-                        className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(
+                        className={`min-h-[44px] px-3 py-2 text-xs uppercase tracking-widest sm:min-h-0 ${statusClassName(
                           product.active !== false,
                         )}`}
                       >
@@ -1426,7 +1453,10 @@ export function AdminDashboard({
                 </article>
               ))
             ) : (
-              <p className="text-sm text-ink/55">No flower services yet.</p>
+              <AdminEmptyState
+                title="No offerings in this view yet"
+                description="Add your first product with the form on the right, or seed required SKUs from your deployment scripts. Vendors only see their own items."
+              />
             )}
           </div>
         </div>
@@ -1450,16 +1480,54 @@ export function AdminDashboard({
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={() => applySkuPreset("glimmer")} className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest">
-              Load Glimmer
-            </button>
-            <button type="button" onClick={() => applySkuPreset("blessing")} className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest">
-              Load Blessing
-            </button>
-            <button type="button" onClick={() => applySkuPreset("abundance")} className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest">
-              Load Abundance
-            </button>
+          <div className="mt-4 flex flex-col gap-2">
+            <p className="text-xs text-ink/55">
+              Presets fill the form below; you still choose <strong>Save offering</strong> to write to the catalog.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => applySkuPreset("glimmer")}
+                className={btnUtility()}
+              >
+                Load Glimmer
+              </button>
+              <button
+                type="button"
+                onClick={() => applySkuPreset("blessing")}
+                className={btnUtility()}
+              >
+                Load Blessing
+              </button>
+              <button
+                type="button"
+                onClick={() => applySkuPreset("abundance")}
+                className={btnUtility()}
+              >
+                Load Abundance
+              </button>
+              <button
+                type="button"
+                onClick={() => applySkuPreset("gardenOil")}
+                className={btnUtility()}
+              >
+                Load Garden Oil
+              </button>
+              <button
+                type="button"
+                onClick={() => applySkuPreset("botanicalSugar")}
+                className={btnUtility()}
+              >
+                Load Botanical Sugar
+              </button>
+              <button
+                type="button"
+                onClick={() => applySkuPreset("herbalTea")}
+                className={btnUtility()}
+              >
+                Load Herbal Tea
+              </button>
+            </div>
           </div>
 
           <div className="mt-4 grid gap-2 border border-ink/10 bg-cream/50 p-3 sm:grid-cols-3">
@@ -1538,22 +1606,26 @@ export function AdminDashboard({
                 </div>
               </div>
               <TextInput
-                label="Price"
+                label="Price (USD)"
                 type="number"
+                min={0}
+                step="0.01"
                 value={productForm.price}
                 onChange={(value) => setProductForm({ ...productForm, price: value })}
-                placeholder="12"
+                helper="Retail price before tax, in dollars (e.g. 12 or 18.50)."
                 required
               />
             </FormSection>
 
             <FormSection title="Availability">
               <TextInput
-                label="Quantity optional"
+                label="Quantity (optional)"
                 type="number"
+                min={0}
+                step="1"
                 value={productForm.quantity}
                 onChange={(value) => setProductForm({ ...productForm, quantity: value })}
-                placeholder="4"
+                helper="Leave blank if you do not track a numeric count for this SKU."
               />
             </FormSection>
 
@@ -1643,14 +1715,13 @@ export function AdminDashboard({
                 type="number"
                 value={productForm.sortOrder}
                 onChange={(value) => setProductForm({ ...productForm, sortOrder: value })}
-                placeholder="10"
-                helper="Lower = shows first"
+                helper="Lower numbers appear first in admin lists and on the site where sort is used."
               />
               <TextInput
-                label="Image URL optional"
+                label="Image URL (optional)"
                 value={productForm.imageUrl}
                 onChange={(value) => setProductForm({ ...productForm, imageUrl: value })}
-                placeholder="/photos/example.jpg"
+                helper="Path or full URL to a hosted image for this product."
               />
               <TextareaInput
                 label="Internal notes"
@@ -1757,6 +1828,21 @@ export function AdminDashboard({
             {visibleEventOrders.map((order) => {
               const expanded = expandedEventOrderIds.has(order._id);
               const selected = eventOrderForm.id === order._id;
+              const depositLinkDisabled =
+                Boolean(busyId) ||
+                !order.email ||
+                !order.depositAmountCents ||
+                order.depositAmountCents <= 0;
+              const balanceLinkDisabled =
+                Boolean(busyId) ||
+                !order.email ||
+                !order.balanceAmountCents ||
+                order.balanceAmountCents <= 0;
+              const invoiceDisabled =
+                Boolean(busyId) ||
+                !order.email ||
+                !order.proposalTotalCents ||
+                order.proposalTotalCents <= 0;
               const badges = [
                 { label: "Proposal PDF generated", on: Boolean(order.proposalPdfGeneratedAt) },
                 { label: "Deposit link created", on: Boolean(order.depositPaymentLinkUrl) },
@@ -1850,16 +1936,23 @@ export function AdminDashboard({
                     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                       <button
                         type="button"
-                        onClick={() => generateProposalPdf(order)}
-                        disabled={busyId === `proposal-${order._id}`}
+                        onClick={() => void generateProposalPdf(order)}
+                        disabled={Boolean(busyId)}
                         className={btnPrimary()}
                       >
                         {busyId === `proposal-${order._id}` ? "Generating…" : "Generate proposal PDF"}
                       </button>
                       <button
                         type="button"
-                        onClick={() => createEventPaymentLink(order, "deposit")}
-                        disabled={busyId === `deposit-link-${order._id}`}
+                        onClick={() => void createEventPaymentLink(order, "deposit")}
+                        disabled={depositLinkDisabled || busyId === `deposit-link-${order._id}`}
+                        title={
+                          !order.email
+                            ? "Add client email on the inquiry (Sanity) before creating a payment link."
+                            : !order.depositAmountCents || order.depositAmountCents <= 0
+                              ? "Set a deposit amount in the order editor and save first."
+                              : undefined
+                        }
                         className={btnPrimary()}
                       >
                         {busyId === `deposit-link-${order._id}`
@@ -1868,8 +1961,15 @@ export function AdminDashboard({
                       </button>
                       <button
                         type="button"
-                        onClick={() => createEventPaymentLink(order, "balance")}
-                        disabled={busyId === `balance-link-${order._id}`}
+                        onClick={() => void createEventPaymentLink(order, "balance")}
+                        disabled={balanceLinkDisabled || busyId === `balance-link-${order._id}`}
+                        title={
+                          !order.email
+                            ? "Add client email on the inquiry (Sanity) before creating a payment link."
+                            : !order.balanceAmountCents || order.balanceAmountCents <= 0
+                              ? "Set a balance amount in the order editor and save first."
+                              : undefined
+                        }
                         className={btnPrimary()}
                       >
                         {busyId === `balance-link-${order._id}`
@@ -1878,8 +1978,15 @@ export function AdminDashboard({
                       </button>
                       <button
                         type="button"
-                        onClick={() => createEventInvoice(order)}
-                        disabled={busyId === `invoice-${order._id}`}
+                        onClick={() => void createEventInvoice(order)}
+                        disabled={invoiceDisabled || busyId === `invoice-${order._id}`}
+                        title={
+                          !order.email
+                            ? "Add client email on the inquiry (Sanity) before creating an invoice."
+                            : !order.proposalTotalCents || order.proposalTotalCents <= 0
+                              ? "Set proposal total in the order editor and save first."
+                              : undefined
+                        }
                         className={btnPrimary()}
                       >
                         {busyId === `invoice-${order._id}` ? "Creating…" : "Create Stripe invoice"}
