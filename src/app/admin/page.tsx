@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { sanityClient } from "@/sanity/client";
+import { sanityServerReadClient } from "@/sanity/serverReadClient";
 import type {
   EventOrder,
   FlowerProduct,
@@ -38,12 +38,26 @@ export default async function AdminPage() {
     });
   }
 
-  const [vendors, flowerProducts, salesRecords, eventOrders] = await Promise.all([
-    sanityClient.fetch<Vendor[]>(vendorsQuery).catch(() => []),
-    sanityClient.fetch<FlowerProduct[]>(flowerProductsQuery).catch(() => []),
-    sanityClient.fetch<FlowerSalesRecord[]>(flowerSalesRecordsQuery).catch(() => []),
-    sanityClient.fetch<EventOrder[]>(eventOrdersQuery).catch(() => []),
+  const settled = await Promise.allSettled([
+    sanityServerReadClient.fetch<Vendor[]>(vendorsQuery),
+    sanityServerReadClient.fetch<FlowerProduct[]>(flowerProductsQuery),
+    sanityServerReadClient.fetch<FlowerSalesRecord[]>(flowerSalesRecordsQuery),
+    sanityServerReadClient.fetch<EventOrder[]>(eventOrdersQuery),
   ]);
+
+  function take<T>(result: PromiseSettledResult<T>, label: string, empty: T): T {
+    if (result.status === "fulfilled") return result.value;
+    console.error(`[admin] Sanity fetch failed (${label})`, result.reason);
+    return empty;
+  }
+
+  const vendors = take(settled[0], "vendors", [] as Vendor[]);
+  const flowerProducts = take(settled[1], "flowerProducts", [] as FlowerProduct[]);
+  const salesRecords = take(settled[2], "salesRecords", [] as FlowerSalesRecord[]);
+  const eventOrders = take(settled[3], "eventOrders", [] as EventOrder[]);
+  const cmsLoadError = settled.some((r) => r.status === "rejected")
+    ? "Some lists could not be loaded from Sanity (see server logs). Inventory and records may be incomplete until this is fixed."
+    : null;
 
   return (
     <AdminDashboard
@@ -54,6 +68,7 @@ export default async function AdminPage() {
       salesRecords={salesRecords}
       eventOrders={eventOrders}
       userEmail={session.user.email}
+      cmsLoadError={cmsLoadError}
     />
   );
 }

@@ -120,10 +120,23 @@ async function ensureVendorVisible(vendorId: string | undefined) {
 }
 
 async function success(id?: string) {
+  let item: Awaited<ReturnType<typeof fetchProduct>> | undefined;
+  if (id) {
+    item = await fetchProduct(id);
+    if (!item) {
+      return NextResponse.json(
+        {
+          error:
+            "Save committed but the product could not be read back. Check Sanity project/dataset and token, then refresh.",
+        },
+        { status: 500 },
+      );
+    }
+  }
   return NextResponse.json({
     ok: true,
     id,
-    item: id ? await fetchProduct(id) : undefined,
+    item,
     savedAt: new Date().toISOString(),
   });
 }
@@ -311,7 +324,7 @@ async function saveProduct(req: Request) {
     if ("error" in access) return access.error;
     if (body.duplicateId) {
       const id = await duplicateProduct(body.duplicateId, access.session, access);
-      return NextResponse.json({ ok: true, id });
+      return await success(id);
     }
     const data = validateProductInput(body);
     const vendorId = access.isOwner ? cleanString(body.vendorId) : access.vendorId;

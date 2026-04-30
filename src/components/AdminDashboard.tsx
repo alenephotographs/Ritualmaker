@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
 import type { EventOrder, FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
@@ -28,6 +28,8 @@ type AdminDashboardProps = {
   salesRecords: FlowerSalesRecord[];
   eventOrders: EventOrder[];
   userEmail?: string | null;
+  /** Server-side hint when CMS lists could not be loaded (logged on server). */
+  cmsLoadError?: string | null;
 };
 
 type ProductFormState = {
@@ -381,6 +383,7 @@ export function AdminDashboard({
   salesRecords,
   eventOrders,
   userEmail,
+  cmsLoadError,
 }: AdminDashboardProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [productForm, setProductForm] = useState<ProductFormState>(emptyProductForm);
@@ -407,6 +410,13 @@ export function AdminDashboard({
     kind: "success" | "error";
     message: string;
   } | null>(null);
+
+  useEffect(() => {
+    setVendorRows(vendors);
+    setProductRows(flowerProducts);
+    setSalesRows(salesRecords);
+    setEventOrderRows(eventOrders);
+  }, [vendors, flowerProducts, salesRecords, eventOrders]);
 
   const visibleVendors = useMemo(
     () => vendorRows.filter((vendor) => (isOwner ? true : vendor._id === defaultVendorId)),
@@ -1151,16 +1161,16 @@ export function AdminDashboard({
           </div>
         </header>
 
-        {(statusMessage || errorMessage) && (
+        {(statusMessage || errorMessage || cmsLoadError) && (
           <div
             className={`mb-8 rounded-lg border px-4 py-3 text-sm ${
-              errorMessage
+              errorMessage || cmsLoadError
                 ? "border-magenta/30 bg-bloom/10 text-magenta"
                 : "border-moss/30 bg-moss/10 text-moss"
             }`}
-            role={errorMessage ? "alert" : "status"}
+            role={errorMessage || cmsLoadError ? "alert" : "status"}
           >
-            {errorMessage ?? statusMessage}
+            {errorMessage ?? cmsLoadError ?? statusMessage}
           </div>
         )}
 
