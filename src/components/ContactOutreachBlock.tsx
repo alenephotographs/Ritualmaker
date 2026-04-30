@@ -65,19 +65,27 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
             </a>
           </li>
         ) : null}
-        {links.instagramUrl ? (
-          <li>
-            <a
-              href={links.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
-            >
-              Instagram
-              {links.instagramHandle ? ` ${links.instagramHandle}` : ""}
-            </a>
-          </li>
-        ) : null}
+        <li>
+          <a
+            href={links.instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
+          >
+            Instagram
+            {links.instagramHandle ? ` ${links.instagramHandle}` : ""}
+          </a>
+        </li>
+        <li>
+          <a
+            href={links.facebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
+          >
+            Facebook
+          </a>
+        </li>
       </ul>
     </div>
   );

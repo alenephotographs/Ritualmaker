@@ -11,6 +11,7 @@ import { Hero } from "@/components/Hero";
 import { InstagramFeedSection } from "@/components/InstagramFeedSection";
 import { FAQSection } from "@/components/FAQSection";
 import { getRecentInstagramMedia } from "@/lib/instagram";
+import { resolveContactLinks } from "@/lib/siteContact";
 
 export const revalidate = 60;
 
@@ -21,6 +22,7 @@ export default async function HomePage() {
     getRecentInstagramMedia(3).catch(() => null),
   ]);
 
+  const contact = resolveContactLinks(settings);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -35,7 +37,9 @@ export default async function HomePage() {
       addressRegion: "NY",
       addressCountry: "US",
     },
-    sameAs: [settings?.instagramUrl, settings?.googleProfileUrl].filter(Boolean) as string[],
+    sameAs: [contact.instagramUrl, contact.facebookUrl, contact.googleProfileUrl].filter(
+      Boolean,
+    ) as string[],
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],

@@ -14,9 +14,14 @@ export type ResolvedContactLinks = {
   googleProfileUrl: string | undefined;
   googleReviewUrl: string | undefined;
   email: string | undefined;
-  instagramUrl: string | undefined;
+  instagramUrl: string;
   instagramHandle: string | undefined;
+  facebookUrl: string;
 };
+
+/** Public profiles — used when Site Settings omit URLs */
+export const DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/ritualmakerny";
+export const DEFAULT_FACEBOOK_URL = "https://www.facebook.com/ritualmakerny";
 
 export function resolveContactLinks(
   s: SiteSettings | null | undefined,
@@ -29,7 +34,8 @@ export function resolveContactLinks(
     googleProfileUrl: s?.googleProfileUrl?.trim() || undefined,
     googleReviewUrl: s?.googleReviewUrl?.trim() || undefined,
     email: s?.email?.trim() || undefined,
-    instagramUrl: s?.instagramUrl?.trim() || undefined,
+    instagramUrl: s?.instagramUrl?.trim() || DEFAULT_INSTAGRAM_URL,
     instagramHandle: s?.instagramHandle?.trim() || undefined,
+    facebookUrl: s?.facebookUrl?.trim() || DEFAULT_FACEBOOK_URL,
   };
 }

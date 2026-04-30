@@ -2,7 +2,7 @@ import Link from "next/link";
 import { sanityClient } from "@/sanity/client";
 import { siteSettingsQuery } from "@/sanity/queries";
 import type { SiteSettings } from "@/sanity/types";
-import { Wordmark, brandCategoryClassName } from "@/components/Logo";
+import { Wordmark } from "@/components/Logo";
 import { resolveContactLinks } from "@/lib/siteContact";
 
 export async function Footer() {
@@ -55,6 +55,33 @@ export async function Footer() {
             Connect
           </p>
           <ul className="mt-4 space-y-2 text-sm">
+            <li>
+              <a
+                href={contact.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={
+                  contact.instagramHandle
+                    ? `Instagram ${contact.instagramHandle}`
+                    : "Instagram @ritualmakerny"
+                }
+                className="hover:text-ink"
+              >
+                Instagram
+                {contact.instagramHandle ? ` ${contact.instagramHandle}` : " @ritualmakerny"}
+              </a>
+            </li>
+            <li>
+              <a
+                href={contact.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook Ritualmaker NY"
+                className="hover:text-ink"
+              >
+                Facebook
+              </a>
+            </li>
             {contact.googleProfileUrl && (
               <li>
                 <a
@@ -64,23 +91,6 @@ export async function Footer() {
                   className="hover:text-ink"
                 >
                   Google (hours &amp; photos)
-                </a>
-              </li>
-            )}
-            {s?.instagramUrl && (
-              <li>
-                <a
-                  href={s.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={
-                    s.instagramHandle
-                      ? `Instagram ${s.instagramHandle}`
-                      : "Instagram"
-                  }
-                  className="hover:text-ink"
-                >
-                  Instagram{s.instagramHandle ? ` ${s.instagramHandle}` : ""}
                 </a>
               </li>
             )}
@@ -125,29 +135,6 @@ export async function Footer() {
               </Link>
             </li>
           </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-ink/10 bg-cream/70">
-        <div className="mx-auto max-w-7xl px-6 py-6 lg:px-8">
-          <p className="text-[10px] uppercase tracking-widest text-ink/40">
-            Ritualmaker family
-          </p>
-          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-ink/80">
-            <Link href="/farm-stand" className={`${brandCategoryClassName} inline-block`}>
-              Farm stand
-            </Link>
-            <Link href="/photography" className={`${brandCategoryClassName} inline-block`}>
-              Photography
-            </Link>
-            <Link
-              href="/on-location"
-              className={`${brandCategoryClassName} inline-block`}
-              aria-label="Ritualmaker on location — weddings, pop-up flower bars, commercial accounts, and Live Collage™"
-            >
-              On location
-            </Link>
-          </div>
         </div>
       </div>
 

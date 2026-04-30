@@ -67,13 +67,20 @@ export default defineType({
       name: "instagramUrl",
       title: "Instagram URL",
       type: "url",
-      initialValue: "https://instagram.com/ritualmakerny",
+      initialValue: "https://www.instagram.com/ritualmakerny",
     }),
     defineField({
       name: "instagramHandle",
       title: "Instagram handle",
       type: "string",
       initialValue: "@ritualmakerny",
+    }),
+    defineField({
+      name: "facebookUrl",
+      title: "Facebook URL",
+      type: "url",
+      initialValue: "https://www.facebook.com/ritualmakerny",
+      description: "Shown in the site footer under Connect.",
     }),
     defineField({
       name: "email",

@@ -247,6 +247,7 @@ export interface SiteSettings {
   mapUrl?: string;
   instagramUrl?: string;
   instagramHandle?: string;
+  facebookUrl?: string;
   email?: string;
   googleReviewUrl?: string;
   googleProfileUrl?: string;
