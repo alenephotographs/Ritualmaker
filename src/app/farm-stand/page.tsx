@@ -9,9 +9,9 @@ import { StandStatus } from "@/components/StandStatus";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Ritualmaker — Shop infused olive oil",
+  title: "Ritualmaker — Shop pantry & infused olive oil",
   description:
-    "Botanical-infused extra virgin olive oil from Ritualmaker, shipped within the US.",
+    "Garden Oil, botanical sugar, herbal tea, and more from Ritualmaker — shipped within the US.",
 };
 
 export default async function FarmStandPage() {
@@ -26,7 +26,7 @@ export default async function FarmStandPage() {
     <div className="mx-auto max-w-7xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
       <p className="mt-6 max-w-xl text-sm text-ink/60">
-        Order our infused olive oil for shipping within the US. More offerings at the stand soon.{" "}
+        Order pantry items and infused olive oil for shipping within the US. More at the stand soon.{" "}
         <a
           href="#visit"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"

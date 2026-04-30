@@ -88,6 +88,7 @@ export const requiredOfferings: RequiredOffering[] = [
     active: true,
     inStock: true,
     recurringItem: true,
+    shipsNationwide: true,
     billingLabel: "Flower Service",
     taxCategory: "flower_service",
     sortOrder: 70,
@@ -106,6 +107,7 @@ export const requiredOfferings: RequiredOffering[] = [
     active: true,
     inStock: true,
     recurringItem: true,
+    shipsNationwide: true,
     billingLabel: "Flower Service",
     taxCategory: "flower_service",
     sortOrder: 80,
@@ -153,5 +155,18 @@ export async function ensureRequiredOfferings() {
       vendor: { _type: "reference", _ref: "vendor.ritualmaker" },
     };
     await sanityWriteClient.create({ _id, ...doc });
+  }
+
+  /** Turn on nationwide shipping for canonical pantry SKUs already in CMS (does not touch price/stock). */
+  for (const offering of requiredOfferings) {
+    if (!offering.shipsNationwide) continue;
+    const existing = await sanityWriteClient.fetch<{ _id: string; shipsNationwide?: boolean } | null>(
+      `*[_type == "flowerProduct" && (slug.current == $slug || _id == $id)][0]{_id, shipsNationwide}`,
+      { id: offering._id, slug: offering.slug },
+    );
+    if (existing?.shipsNationwide === true) continue;
+    if (existing?._id) {
+      await sanityWriteClient.patch(existing._id).set({ shipsNationwide: true }).commit();
+    }
   }
 }
