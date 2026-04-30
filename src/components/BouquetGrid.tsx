@@ -283,6 +283,11 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
                 <p className="text-xs uppercase tracking-widest text-ink/40">
                   {group.label}
                 </p>
+                {group.label === "Seasonal garden offerings" && (
+                  <p className="mt-2 max-w-2xl text-sm text-ink/60">
+                    Small-batch pantry items grown here and built to pair with your flowers.
+                  </p>
+                )}
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                   {group.items.map((item) => (
                     <FlowerProductCard
