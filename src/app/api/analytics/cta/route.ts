@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 type Body = {
   eventType?: "cta_view" | "cta_click";
   variant?: "buy" | "checkout";
-  itemType?: "bouquet" | "pantryItem";
+  itemType?: "bouquet" | "pantryItem" | "flowerProduct";
   itemId?: string;
   path?: string;
 };
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
     if (
       body.itemType &&
       body.itemType !== "bouquet" &&
-      body.itemType !== "pantryItem"
+      body.itemType !== "pantryItem" &&
+      body.itemType !== "flowerProduct"
     ) {
       return NextResponse.json({ error: "Invalid itemType" }, { status: 400 });
     }

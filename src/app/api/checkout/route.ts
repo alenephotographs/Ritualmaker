@@ -94,6 +94,26 @@ export async function POST(req: Request) {
         : itemType === "pantryItem"
           ? `Pantry · ${(item as PantryItem).category}`
           : `Local Flower Pickup · ${farmLabel((item as Bouquet).farm)} · ${sizeLabel((item as Bouquet).size)}`;
+    const itemName =
+      itemType === "flowerProduct"
+        ? ((item as FlowerProduct).publicName ?? item.name)
+        : item.name;
+    const billingLabel =
+      itemType === "flowerProduct"
+        ? ((item as FlowerProduct).billingLabel ?? "Flower Service")
+        : itemType === "pantryItem"
+          ? "Local Flower Pickup"
+          : "Flower Service";
+    const taxCategory =
+      itemType === "flowerProduct"
+        ? ((item as FlowerProduct).taxCategory ?? "flower_service")
+        : "flower_service";
+    const itemCategory =
+      itemType === "flowerProduct"
+        ? ((item as FlowerProduct).category ?? "")
+        : itemType === "pantryItem"
+          ? (item as PantryItem).category
+          : "bouquet";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -109,7 +129,7 @@ export async function POST(req: Request) {
                 product_data: {
                   name:
                     itemType === "flowerProduct"
-                      ? `${(item as FlowerProduct).publicName ?? item.name} — ${description}`
+                      ? `${itemName} — ${description}`
                       : item.name,
                   description,
                   images: item.imageUrl ? [item.imageUrl] : undefined,
@@ -130,6 +150,10 @@ export async function POST(req: Request) {
       metadata: {
         itemType,
         itemId: item._id,
+        itemName,
+        productCategory: itemCategory,
+        billingLabel,
+        taxCategory,
         vendorId: item.vendorId ?? "",
         vendorName: item.vendorName ?? "",
         ctaVariant: body.ctaVariant ?? "",

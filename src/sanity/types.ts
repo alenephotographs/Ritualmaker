@@ -133,13 +133,20 @@ export interface FlowerSalesRecord {
   customerEmail?: string;
   itemName: string;
   amountCents: number;
-  date: string;
+  saleDate: string;
   paymentMethod: FlowerPaymentMethod;
+  checkoutSessionId?: string;
+  paymentIntentId?: string;
+  itemType?: string;
+  itemId?: string;
+  productCategory?: string;
   vendorId?: string;
   vendorName?: string;
   notes?: string;
   taxCategory?: string;
   billingType?: string;
+  billingLabel?: string;
+  createdByEmail?: string;
 }
 
 export interface Review {

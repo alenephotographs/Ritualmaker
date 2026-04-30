@@ -163,19 +163,26 @@ export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
   stripeComplianceLastSyncedAt
 }`;
 
-export const flowerSalesRecordsQuery = groq`*[_type == "flowerSalesRecord"] | order(date desc, _createdAt desc)[0...50]{
+export const flowerSalesRecordsQuery = groq`*[_type == "flowerSalesRecord"] | order(saleDate desc, _createdAt desc)[0...50]{
   _id,
   customerName,
   customerEmail,
   itemName,
   amountCents,
-  date,
+  saleDate,
   paymentMethod,
   "vendorId": vendor->_id,
   "vendorName": vendor->name,
   notes,
   taxCategory,
-  billingType
+  billingType,
+  checkoutSessionId,
+  paymentIntentId,
+  stripeCustomerId,
+  itemType,
+  itemId,
+  productCategory,
+  billingLabel
 }`;
 
 export const featuredReviewsQuery = groq`*[_type == "review" && featured == true] | order(displayOrder asc){

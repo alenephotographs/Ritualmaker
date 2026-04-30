@@ -39,21 +39,41 @@ export async function POST(req: Request) {
         });
         if (hasSanityWriteClient()) {
           const vendorId = session.metadata?.vendorId;
-          await sanityWriteClient.create({
+          const checkoutSessionId = session.id;
+          const existingRecord = await sanityWriteClient.fetch<{ _id: string } | null>(
+            `*[_type == "flowerSalesRecord" && checkoutSessionId == $checkoutSessionId][0]{_id}`,
+            { checkoutSessionId },
+          );
+          const salesRecord = {
             _type: "flowerSalesRecord",
             customerName: session.customer_details?.name ?? "",
             customerEmail: session.customer_details?.email ?? "",
             itemName: session.metadata?.itemName || "Flower Service",
             amountCents: session.amount_total ?? 0,
-            date: new Date().toISOString().slice(0, 10),
+            saleDate: new Date().toISOString(),
             paymentMethod: "card",
             billingType: session.metadata?.billingLabel || "flower service",
-            taxCategory: "flower service",
+            taxCategory: session.metadata?.taxCategory || "flower_service",
+            checkoutSessionId,
+            paymentIntentId:
+              typeof session.payment_intent === "string"
+                ? session.payment_intent
+                : session.payment_intent?.id,
+            itemType: session.metadata?.itemType ?? "",
+            itemId: session.metadata?.itemId ?? "",
+            productCategory: session.metadata?.productCategory ?? "",
+            billingLabel: session.metadata?.billingLabel ?? "",
             notes: `Stripe checkout session ${session.id}`,
             ...(vendorId
               ? { vendor: { _type: "reference" as const, _ref: vendorId } }
               : {}),
-          });
+          };
+          if (existingRecord?._id) {
+            const { _type, ...updates } = salesRecord;
+            await sanityWriteClient.patch(existingRecord._id).set(updates).commit();
+          } else {
+            await sanityWriteClient.create(salesRecord);
+          }
         }
         console.log("[stripe] checkout completed", {
           id: session.id,

@@ -1023,7 +1023,7 @@ export function AdminDashboard({
                     </p>
                   </div>
                   <p className="mt-2 text-xs uppercase tracking-widest text-ink/40">
-                    {record.date} · {record.paymentMethod} ·{" "}
+                    {record.saleDate} · {record.paymentMethod} ·{" "}
                     {record.billingType ?? "flower service"}
                   </p>
                 </article>

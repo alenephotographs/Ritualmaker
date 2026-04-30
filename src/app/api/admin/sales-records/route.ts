@@ -4,6 +4,10 @@ import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
 
 type SalesRecordBody = {
   id?: string;
+  checkoutSessionId?: string;
+  paymentIntentId?: string;
+  itemType?: string;
+  itemId?: string;
   customerName?: string;
   customerEmail?: string;
   itemName?: string;
@@ -79,6 +83,10 @@ export async function POST(req: Request) {
     const vendorId = cleanText(body.vendorId);
     const doc = {
       _type: "flowerSalesRecord",
+      checkoutSessionId: cleanText(body.checkoutSessionId),
+      paymentIntentId: cleanText(body.paymentIntentId),
+      itemType: cleanText(body.itemType),
+      itemId: cleanText(body.itemId),
       customerName: cleanText(body.customerName),
       customerEmail: cleanText(body.customerEmail),
       itemName,

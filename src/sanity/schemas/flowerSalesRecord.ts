@@ -35,6 +35,36 @@ export default defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "checkoutSessionId",
+      title: "Stripe checkout session ID",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "paymentIntentId",
+      title: "Stripe payment intent ID",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "itemType",
+      title: "Item type",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "itemId",
+      title: "Item ID",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "stripeCustomerId",
+      title: "Stripe customer ID",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
       name: "paymentMethod",
       title: "Payment method",
       type: "string",
