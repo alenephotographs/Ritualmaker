@@ -16,10 +16,10 @@ export function Logo({ className = "h-7 w-auto", title = "Ritualmaker" }: LogoPr
   // eslint-disable-next-line @next/next/no-img-element
   return (
     <img
-      src="/brand/wordmark.png"
+      src="/brand/logo.svg"
       alt={title}
-      width={1024}
-      height={118}
+      width={1589}
+      height={120}
       className={`shrink-0 object-contain ${className}`}
     />
   );
@@ -47,7 +47,7 @@ export function SubMark({
 }
 
 /**
- * Brand wordmark image (transparent PNG). Pass `h-* w-auto` (or max-h-*) via className to size.
+ * Brand wordmark image. Pass `h-* w-auto` (or max-h-*) via className to size.
  */
 export function Wordmark({
   className = "h-8 w-auto",
@@ -59,10 +59,10 @@ export function Wordmark({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/brand/wordmark.png"
+      src="/brand/logo.svg"
       alt={text}
-      width={1024}
-      height={118}
+      width={1589}
+      height={120}
       className={`block shrink-0 object-contain object-left ${className}`}
     />
   );
