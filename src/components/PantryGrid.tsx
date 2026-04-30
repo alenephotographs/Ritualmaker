@@ -48,9 +48,7 @@ export function PantryGrid({ items }: { items: PantryItem[] }) {
               </p>
               <h3 className="mt-2 font-display text-2xl font-light">{item.name}</h3>
               <p className="mt-2 text-[11px] uppercase tracking-widest text-ink/45">
-                {item.shipsAvailable
-                  ? "Stand + ships"
-                  : "At the stand"}
+                {item.shipsAvailable ? "Local flower pickup + delivery" : "Local flower pickup"}
               </p>
               {item.description && (
                 <p className="mt-3 text-sm leading-relaxed text-ink/70">

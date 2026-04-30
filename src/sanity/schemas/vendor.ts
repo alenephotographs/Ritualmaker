@@ -30,6 +30,11 @@ export default defineType({
       validation: (rule) => rule.email(),
     }),
     defineField({
+      name: "phone",
+      title: "Phone",
+      type: "string",
+    }),
+    defineField({
       name: "accessCode",
       title: "Admin access code",
       type: "string",
@@ -42,6 +47,24 @@ export default defineType({
       title: "Active",
       type: "boolean",
       initialValue: true,
+    }),
+    defineField({
+      name: "payoutMethodNotes",
+      title: "Payout method notes",
+      type: "text",
+      rows: 2,
+    }),
+    defineField({
+      name: "commissionOrWholesaleNotes",
+      title: "Commission or wholesale cost notes",
+      type: "text",
+      rows: 2,
+    }),
+    defineField({
+      name: "internalNotes",
+      title: "Internal notes",
+      type: "text",
+      rows: 3,
     }),
     defineField({
       name: "stripeAccountId",

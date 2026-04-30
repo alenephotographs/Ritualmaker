@@ -73,8 +73,8 @@ export async function POST(req: Request) {
     const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
     const url = await createAccountOnboardingLink(
       accountId,
-      `${origin}/admin/vendors?vendorId=${encodeURIComponent(vendor._id)}&refresh=1`,
-      `${origin}/admin/vendors?vendorId=${encodeURIComponent(vendor._id)}&connected=1`,
+      `${origin}/admin?vendorId=${encodeURIComponent(vendor._id)}&refresh=1`,
+      `${origin}/admin?vendorId=${encodeURIComponent(vendor._id)}&connected=1`,
     );
 
     return NextResponse.json({

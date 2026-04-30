@@ -221,11 +221,133 @@ async function seedPantry() {
   console.log("Sample pantry item upserted: preprod.pantry.sample (Coming soon = on; edit in Studio)");
 }
 
+async function seedFlowerProducts() {
+  const products = [
+    {
+      _id: "flower-product.glimmer",
+      name: "Glimmer",
+      slug: "glimmer",
+      publicName: "Glimmer",
+      category: "bouquet",
+      tier: "small",
+      priceCents: 1200,
+      shortDescription: "A small seasonal grab bouquet.",
+      displayDescription:
+        "A simple daily flower offering, freshly cut and easy to take home.",
+      active: true,
+      inStock: false,
+      recurringItem: true,
+      billingLabel: "Flower Service",
+      taxCategory: "flower_service",
+      sortOrder: 10,
+    },
+    {
+      _id: "flower-product.blessing",
+      name: "Blessing",
+      slug: "blessing",
+      publicName: "Blessing",
+      category: "bouquet",
+      tier: "standard",
+      priceCents: 1800,
+      shortDescription: "The signature Ritualmaker seasonal bouquet.",
+      displayDescription:
+        "A fuller bouquet for the table, the week, or a thoughtful gift.",
+      active: true,
+      inStock: false,
+      recurringItem: true,
+      billingLabel: "Flower Service",
+      taxCategory: "flower_service",
+      sortOrder: 20,
+    },
+    {
+      _id: "flower-product.abundance",
+      name: "Abundance",
+      slug: "abundance",
+      publicName: "Abundance",
+      category: "bouquet",
+      tier: "premium",
+      priceCents: 2600,
+      shortDescription: "A larger gift-ready seasonal bouquet.",
+      displayDescription:
+        "An abundant seasonal arrangement for sharing, gifting, or anchoring a space.",
+      active: true,
+      inStock: false,
+      recurringItem: true,
+      billingLabel: "Flower Service",
+      taxCategory: "flower_service",
+      sortOrder: 30,
+    },
+    {
+      _id: "flower-product.table-ritual-set",
+      name: "Table Ritual Set",
+      slug: "table-ritual-set",
+      publicName: "Table Ritual Set",
+      category: "bundle",
+      tier: "",
+      priceCents: 2200,
+      shortDescription: "Glimmer bouquet + seasonal pantry add-on.",
+      displayDescription: "Glimmer bouquet + seasonal pantry add-on.",
+      active: false,
+      inStock: false,
+      recurringItem: true,
+      billingLabel: "Flower Service",
+      taxCategory: "flower_service",
+      sortOrder: 40,
+    },
+    {
+      _id: "flower-product.kitchen-ritual-set",
+      name: "Kitchen Ritual Set",
+      slug: "kitchen-ritual-set",
+      publicName: "Kitchen Ritual Set",
+      category: "bundle",
+      tier: "",
+      priceCents: 3200,
+      shortDescription: "Blessing bouquet + seasonal pantry add-on.",
+      displayDescription: "Blessing bouquet + seasonal pantry add-on.",
+      active: false,
+      inStock: false,
+      recurringItem: true,
+      billingLabel: "Flower Service",
+      taxCategory: "flower_service",
+      sortOrder: 50,
+    },
+    {
+      _id: "flower-product.gift-ritual",
+      name: "Gift Ritual",
+      slug: "gift-ritual",
+      publicName: "Gift Ritual",
+      category: "bundle",
+      tier: "",
+      priceCents: 4200,
+      shortDescription: "Abundance bouquet + seasonal pantry add-on.",
+      displayDescription: "Abundance bouquet + seasonal pantry add-on.",
+      active: false,
+      inStock: false,
+      recurringItem: true,
+      billingLabel: "Flower Service",
+      taxCategory: "flower_service",
+      sortOrder: 60,
+    },
+  ];
+
+  for (const product of products) {
+    const { slug, ...rest } = product;
+    await client.createOrReplace({
+      ...rest,
+      _type: "flowerProduct",
+      slug: { _type: "slug", current: slug },
+      vendor: { _type: "reference", _ref: "vendor.ritualmaker" },
+    });
+  }
+  console.log(`Flower service products upserted: ${products.length}`);
+}
+
 async function run() {
   await ensureVendors();
   await seedSiteSettings();
   await seedFaqs();
   await seedBouquets();
+  await seedFlowerProducts();
   await seedPantry();
   console.log("Done. Deploy schema if needed: pnpm run sanity:deploy-schema");
 }

@@ -37,6 +37,24 @@ export async function POST(req: Request) {
           checkoutSessionId: session.id,
           amountTotal: session.amount_total ?? undefined,
         });
+        if (hasSanityWriteClient()) {
+          const vendorId = session.metadata?.vendorId;
+          await sanityWriteClient.create({
+            _type: "flowerSalesRecord",
+            customerName: session.customer_details?.name ?? "",
+            customerEmail: session.customer_details?.email ?? "",
+            itemName: session.metadata?.itemName || "Flower Service",
+            amountCents: session.amount_total ?? 0,
+            date: new Date().toISOString().slice(0, 10),
+            paymentMethod: "card",
+            billingType: session.metadata?.billingLabel || "flower service",
+            taxCategory: "flower service",
+            notes: `Stripe checkout session ${session.id}`,
+            ...(vendorId
+              ? { vendor: { _type: "reference" as const, _ref: vendorId } }
+              : {}),
+          });
+        }
         console.log("[stripe] checkout completed", {
           id: session.id,
           itemId: session.metadata?.itemId,

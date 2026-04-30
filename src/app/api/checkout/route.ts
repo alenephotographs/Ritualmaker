@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import { sanityClient } from "@/sanity/client";
 import { getStripe } from "@/lib/stripe";
 import { farmLabel, sizeLabel } from "@/lib/format";
-import type { Bouquet, PantryItem } from "@/sanity/types";
-import { oneBouquetByIdQuery, onePantryItemByIdQuery } from "@/sanity/queries";
+import type { Bouquet, FlowerProduct, PantryItem } from "@/sanity/types";
+import {
+  oneBouquetByIdQuery,
+  oneFlowerProductByIdQuery,
+  onePantryItemByIdQuery,
+} from "@/sanity/queries";
 
 export const runtime = "nodejs";
 
 type CheckoutBody = {
-  itemType?: "bouquet" | "pantryItem";
+  itemType?: "bouquet" | "pantryItem" | "flowerProduct";
   itemId?: string;
   bouquetId?: string;
   pantryItemId?: string;
@@ -27,18 +31,21 @@ export async function POST(req: Request) {
     if (
       body.itemType &&
       body.itemType !== "bouquet" &&
-      body.itemType !== "pantryItem"
+      body.itemType !== "pantryItem" &&
+      body.itemType !== "flowerProduct"
     ) {
       return NextResponse.json({ error: "Invalid itemType" }, { status: 400 });
     }
     const itemType =
-      body.itemType === "pantryItem"
-        ? "pantryItem"
-        : body.itemType === "bouquet"
-          ? "bouquet"
-          : body.pantryItemId
-            ? "pantryItem"
-            : "bouquet";
+      body.itemType === "flowerProduct"
+        ? "flowerProduct"
+        : body.itemType === "pantryItem"
+          ? "pantryItem"
+          : body.itemType === "bouquet"
+            ? "bouquet"
+            : body.pantryItemId
+              ? "pantryItem"
+              : "bouquet";
     const itemId = body.itemId ?? body.bouquetId ?? body.pantryItemId;
 
     if (!itemId) {
@@ -46,22 +53,33 @@ export async function POST(req: Request) {
     }
 
     const item =
-      itemType === "pantryItem"
-        ? await sanityClient.fetch<PantryItem | null>(onePantryItemByIdQuery, {
+      itemType === "flowerProduct"
+        ? await sanityClient.fetch<FlowerProduct | null>(oneFlowerProductByIdQuery, {
             id: itemId,
           })
-        : await sanityClient.fetch<Bouquet | null>(oneBouquetByIdQuery, {
-            id: itemId,
-          });
+        : itemType === "pantryItem"
+          ? await sanityClient.fetch<PantryItem | null>(onePantryItemByIdQuery, {
+              id: itemId,
+            })
+          : await sanityClient.fetch<Bouquet | null>(oneBouquetByIdQuery, {
+              id: itemId,
+            });
 
     if (!item) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
     const isComingSoon = "comingSoon" in item ? Boolean(item.comingSoon) : false;
-    if (!item.available || (itemType === "pantryItem" && isComingSoon)) {
+    const isUnavailable =
+      itemType === "flowerProduct"
+        ? (item as FlowerProduct).active === false ||
+          (item as FlowerProduct).inStock === false
+        : itemType === "pantryItem"
+          ? (item as PantryItem).available === false || isComingSoon
+          : !(item as Bouquet).available;
+    if (isUnavailable) {
       return NextResponse.json(
-        { error: "This item is currently unavailable" },
+        { error: "This flower service is currently unavailable" },
         { status: 409 },
       );
     }
@@ -71,9 +89,11 @@ export async function POST(req: Request) {
 
     const stripe = getStripe();
     const description =
-      itemType === "pantryItem"
-        ? `Pantry · ${(item as PantryItem).category}`
-        : `${farmLabel((item as Bouquet).farm)} · ${sizeLabel((item as Bouquet).size)}`;
+      itemType === "flowerProduct"
+        ? (item as FlowerProduct).billingLabel ?? "Flower Service"
+        : itemType === "pantryItem"
+          ? `Pantry · ${(item as PantryItem).category}`
+          : `Local Flower Pickup · ${farmLabel((item as Bouquet).farm)} · ${sizeLabel((item as Bouquet).size)}`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -87,7 +107,10 @@ export async function POST(req: Request) {
                 currency: "usd",
                 unit_amount: item.priceCents,
                 product_data: {
-                  name: item.name,
+                  name:
+                    itemType === "flowerProduct"
+                      ? `${(item as FlowerProduct).publicName ?? item.name} — ${description}`
+                      : item.name,
                   description,
                   images: item.imageUrl ? [item.imageUrl] : undefined,
                 },

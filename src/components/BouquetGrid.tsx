@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Bouquet } from "@/sanity/types";
+import type { Bouquet, FlowerProduct } from "@/sanity/types";
 import { farmLabel, formatUSD, sizeLabel } from "@/lib/format";
 
 async function readJsonSafe(response: Response) {
@@ -16,9 +16,10 @@ async function readJsonSafe(response: Response) {
 
 type BouquetGridProps = {
   bouquets: Bouquet[];
+  flowerProducts?: FlowerProduct[];
 };
 
-export function BouquetGrid({ bouquets }: BouquetGridProps) {
+export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastBouquetId, setLastBouquetId] = useState<string | null>(null);
@@ -122,7 +123,49 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
     }
   }
 
-  if (!bouquets.length) {
+  async function buyFlowerProduct(item: FlowerProduct) {
+    setError(null);
+    setLoadingId(item._id);
+    try {
+      try {
+        await fetch("/api/analytics/cta", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventType: "cta_click",
+            variant: ctaVariant,
+            itemType: "flowerProduct",
+            itemId: item._id,
+            path: window.location.pathname,
+          }),
+          keepalive: true,
+        });
+      } catch {
+        // ignore analytics errors
+      }
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemType: "flowerProduct",
+          itemId: item._id,
+          ctaVariant,
+        }),
+      });
+      const data = await readJsonSafe(res);
+      const errorMessage =
+        typeof data.error === "string" ? data.error : "Checkout failed";
+      const checkoutUrl = typeof data.url === "string" ? data.url : null;
+      if (!res.ok || !checkoutUrl) throw new Error(errorMessage);
+      window.location.href = checkoutUrl;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setLoadingId(null);
+    }
+  }
+
+  if (!bouquets.length && !flowerProducts.length) {
     return (
       <p className="text-sm text-ink/50">
         Nothing listed yet — check back.
@@ -163,6 +206,23 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
                   ? "Checkout"
                   : "Order"}
             </button>
+          </div>
+        </div>
+      )}
+      {flowerProducts.length > 0 && (
+        <div className="mb-8">
+          <p className="text-xs uppercase tracking-widest text-ink/40">
+            Seasonal flower offerings
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {flowerProducts.map((item) => (
+              <FlowerProductCard
+                key={item._id}
+                item={item}
+                loading={loadingId === item._id}
+                onBuy={buyFlowerProduct}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -262,5 +322,70 @@ export function BouquetGrid({ bouquets }: BouquetGridProps) {
         ))}
       </div>
     </div>
+  );
+}
+
+function FlowerProductCard({
+  item,
+  loading,
+  onBuy,
+}: {
+  item: FlowerProduct;
+  loading: boolean;
+  onBuy: (item: FlowerProduct) => void;
+}) {
+  return (
+    <article className="flex flex-col border border-ink/10 bg-cream">
+      <div className="aspect-[3/4] overflow-hidden bg-stone/40">
+        {item.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs uppercase tracking-widest text-ink/30">
+            Seasonal flowers
+          </div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <p className="text-[10px] uppercase tracking-widest text-ink/40">
+          {item.billingLabel ?? "Flower Service"}
+        </p>
+        <h3 className="mt-2 font-display text-2xl font-light">
+          {item.publicName ?? item.name}
+        </h3>
+        {item.shortDescription && (
+          <p className="mt-2 text-sm font-medium text-ink/70">
+            {item.shortDescription}
+          </p>
+        )}
+        {(item.displayDescription ?? item.description) && (
+          <p className="mt-3 text-sm leading-relaxed text-ink/70">
+            {item.displayDescription ?? item.description}
+          </p>
+        )}
+        {typeof item.quantity === "number" && (
+          <p className="mt-3 text-xs uppercase tracking-widest text-ink/45">
+            {item.quantity} available for local pickup
+          </p>
+        )}
+        <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-4">
+          <span className="font-display text-2xl font-light">
+            {formatUSD(item.priceCents)}
+          </span>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => onBuy(item)}
+            className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
+          >
+            {loading ? "Starting..." : "Checkout"}
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }

@@ -1,10 +1,9 @@
 import { sanityClient } from "@/sanity/client";
 import { resolveContactLinks } from "@/lib/siteContact";
-import { bouquetsQuery, pantryItemsQuery, siteSettingsQuery } from "@/sanity/queries";
-import type { Bouquet, PantryItem, SiteSettings } from "@/sanity/types";
+import { publicFlowerProductsQuery, siteSettingsQuery } from "@/sanity/queries";
+import type { FlowerProduct, SiteSettings } from "@/sanity/types";
 import { ContactOutreachBlock } from "@/components/ContactOutreachBlock";
 import { BouquetGrid } from "@/components/BouquetGrid";
-import { PantryGrid } from "@/components/PantryGrid";
 import { StandStatus } from "@/components/StandStatus";
 
 export const revalidate = 60;
@@ -12,14 +11,13 @@ export const revalidate = 60;
 export const metadata = {
   title: "Ritualmaker — Flowers & pantry",
   description:
-    "Bouquets and pantry at 38 Miller Hill Road — self-serve, restocked often.",
+    "Flower services and local pickup at 38 Miller Hill Road — self-serve, restocked often.",
 };
 
 export default async function FarmStandPage() {
-  const [settings, bouquets, pantryItems] = await Promise.all([
+  const [settings, flowerProducts] = await Promise.all([
     sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
-    sanityClient.fetch<Bouquet[]>(bouquetsQuery).catch(() => []),
-    sanityClient.fetch<PantryItem[]>(pantryItemsQuery).catch(() => []),
+    sanityClient.fetch<FlowerProduct[]>(publicFlowerProductsQuery).catch(() => []),
   ]);
   const c = resolveContactLinks(settings);
 
@@ -36,7 +34,7 @@ export default async function FarmStandPage() {
         </a>
         {" · "}
         <a
-          href="/on-location#inquiry"
+          href="/on-location"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"
         >
           We come to you
@@ -44,16 +42,8 @@ export default async function FarmStandPage() {
       </p>
 
       <div id="flowers" className="mt-12 scroll-mt-24">
-        <p className="text-xs uppercase tracking-widest text-ink/40">Flowers</p>
-        <BouquetGrid bouquets={bouquets} />
-      </div>
-
-      <div id="pantry" className="mt-16 scroll-mt-24 border-t border-ink/10 pt-10">
-        <p className="text-xs uppercase tracking-widest text-ink/40">Pantry</p>
-        <h2 className="mt-3 font-display text-4xl font-light">In stock</h2>
-        <div className="mt-10">
-          <PantryGrid items={pantryItems} />
-        </div>
+        <p className="text-xs uppercase tracking-widest text-ink/40">Flower services</p>
+        <BouquetGrid bouquets={[]} flowerProducts={flowerProducts} />
       </div>
 
       <section className="mt-16 border-t border-ink/10 pt-12 lg:mt-20 lg:pt-16" aria-label="Visit the stand">

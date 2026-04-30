@@ -70,8 +70,69 @@ export const pantryItemsQuery = groq`*[_type == "pantryItem"] | order(comingSoon
   "imageUrl": coalesce(externalImageUrl, image.asset->url)
 }`;
 
+export const flowerProductsQuery = groq`*[_type == "flowerProduct"] | order(sortOrder asc, active desc, inStock desc, _createdAt desc){
+  _id,
+  name,
+  publicName,
+  tier,
+  shortDescription,
+  displayDescription,
+  category,
+  priceCents,
+  active,
+  inStock,
+  quantity,
+  recurringItem,
+  billingLabel,
+  taxCategory,
+  internalNotes,
+  metadata,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  "vendorStripeAccountId": vendor->stripeAccountId,
+  inventoryAudit,
+  "inventoryAuditHistory": inventoryAuditHistory[0...10],
+  stripePriceId,
+  stripeProductId,
+  "imageUrl": coalesce(externalImageUrl, image.asset->url),
+  image,
+  sortOrder
+}`;
+
+export const publicFlowerProductsQuery = groq`*[_type == "flowerProduct" && active == true && inStock == true] | order(sortOrder asc, _createdAt desc){
+  _id,
+  name,
+  publicName,
+  tier,
+  shortDescription,
+  displayDescription,
+  category,
+  priceCents,
+  active,
+  inStock,
+  quantity,
+  recurringItem,
+  billingLabel,
+  taxCategory,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  "vendorStripeAccountId": vendor->stripeAccountId,
+  stripePriceId,
+  stripeProductId,
+  "imageUrl": coalesce(externalImageUrl, image.asset->url)
+}`;
+
 export const onePantryItemByIdQuery = groq`*[_type == "pantryItem" && _id == $id][0]{
   _id, name, category, priceCents, available, comingSoon, shipsAvailable,
+  stripePriceId, stripeProductId,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  "vendorStripeAccountId": vendor->stripeAccountId,
+  "imageUrl": coalesce(externalImageUrl, image.asset->url)
+}`;
+
+export const oneFlowerProductByIdQuery = groq`*[_type == "flowerProduct" && _id == $id][0]{
+  _id, name, publicName, tier, shortDescription, displayDescription, category, priceCents, active, inStock, quantity, recurringItem, billingLabel, taxCategory,
   stripePriceId, stripeProductId,
   "vendorId": vendor->_id,
   "vendorName": vendor->name,
@@ -85,8 +146,12 @@ export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
   "slug": slug.current,
   contactName,
   contactEmail,
+  phone,
   accessCode,
   active,
+  payoutMethodNotes,
+  commissionOrWholesaleNotes,
+  internalNotes,
   stripeAccountId,
   stripeOnboardingComplete,
   stripeDetailsSubmitted,
@@ -96,6 +161,21 @@ export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
   stripeRequirementsPastDue,
   stripeRequirementsDisabledReason,
   stripeComplianceLastSyncedAt
+}`;
+
+export const flowerSalesRecordsQuery = groq`*[_type == "flowerSalesRecord"] | order(date desc, _createdAt desc)[0...50]{
+  _id,
+  customerName,
+  customerEmail,
+  itemName,
+  amountCents,
+  date,
+  paymentMethod,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  notes,
+  taxCategory,
+  billingType
 }`;
 
 export const featuredReviewsQuery = groq`*[_type == "review" && featured == true] | order(displayOrder asc){

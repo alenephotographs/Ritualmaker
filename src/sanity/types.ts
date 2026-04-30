@@ -53,7 +53,7 @@ export interface PantryItem {
   shelfLocation?: string;
   comingSoon?: boolean;
   available?: boolean;
-  /** When true, show shipping on the item card (pantry has no separate PDP yet). */
+  /** When true, show local delivery language on the item card. */
   shipsAvailable?: boolean;
   inventoryAudit?: InventoryAudit;
   inventoryAuditHistory?: InventoryAuditHistoryEntry[];
@@ -62,14 +62,58 @@ export interface PantryItem {
   imageUrl?: string;
 }
 
+export type FlowerProductCategory =
+  | "bouquet"
+  | "pantry"
+  | "bundle"
+  | "wedding_event"
+  | "vendor_item"
+  | "other";
+
+export type FlowerProductTier = "small" | "standard" | "premium" | "bundle" | "custom";
+
+export interface FlowerProduct {
+  _id: string;
+  name: string;
+  slug?: string;
+  publicName?: string;
+  description?: string;
+  shortDescription?: string;
+  displayDescription?: string;
+  category: FlowerProductCategory;
+  tier?: FlowerProductTier;
+  priceCents: number;
+  active?: boolean;
+  inStock?: boolean;
+  quantity?: number;
+  recurringItem?: boolean;
+  imageUrl?: string;
+  vendorId?: string;
+  vendorName?: string;
+  vendorStripeAccountId?: string;
+  billingLabel?: string;
+  taxCategory?: string;
+  internalNotes?: string;
+  stripePriceId?: string;
+  stripeProductId?: string;
+  sortOrder?: number;
+  metadata?: Record<string, unknown>;
+  inventoryAudit?: InventoryAudit;
+  inventoryAuditHistory?: InventoryAuditHistoryEntry[];
+}
+
 export interface Vendor {
   _id: string;
   name: string;
   slug: string;
   contactName?: string;
   contactEmail?: string;
+  phone?: string;
   accessCode?: string;
   active?: boolean;
+  payoutMethodNotes?: string;
+  commissionOrWholesaleNotes?: string;
+  internalNotes?: string;
   stripeAccountId?: string;
   stripeOnboardingComplete?: boolean;
   stripeDetailsSubmitted?: boolean;
@@ -79,6 +123,23 @@ export interface Vendor {
   stripeRequirementsPastDue?: string[];
   stripeRequirementsDisabledReason?: string;
   stripeComplianceLastSyncedAt?: string;
+}
+
+export type FlowerPaymentMethod = "cash" | "venmo" | "card" | "invoice" | "other";
+
+export interface FlowerSalesRecord {
+  _id: string;
+  customerName?: string;
+  customerEmail?: string;
+  itemName: string;
+  amountCents: number;
+  date: string;
+  paymentMethod: FlowerPaymentMethod;
+  vendorId?: string;
+  vendorName?: string;
+  notes?: string;
+  taxCategory?: string;
+  billingType?: string;
 }
 
 export interface Review {

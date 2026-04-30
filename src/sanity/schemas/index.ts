@@ -7,8 +7,12 @@ import siteSettings from "./siteSettings";
 import weddingInquiry from "./weddingInquiry";
 import vendor from "./vendor";
 import uxEvent from "./uxEvent";
+import flowerProduct from "./flowerProduct";
+import flowerSalesRecord from "./flowerSalesRecord";
 
 export const schemaTypes = [
+  flowerProduct,
+  flowerSalesRecord,
   bouquet,
   pantryItem,
   review,

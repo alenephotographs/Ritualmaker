@@ -21,14 +21,14 @@ export default async function SuccessPage() {
         You&apos;re all set
       </h1>
       <p className="mt-6 max-w-md text-base text-ink/65">
-        Pick up at the stand, 38 Miller Hill Road. Wrong shelf or empty? Grab a match
-        and DM us on Instagram.
+        Pick up your local flower service at the stand, 38 Miller Hill Road. Wrong
+        shelf or empty? Grab a match and DM us on Instagram.
       </p>
       <div className="mt-6 w-full max-w-md border border-moss/25 bg-moss/10 px-4 py-4 text-left">
         <p className="text-xs uppercase tracking-widest text-moss">Pickup</p>
         <ul className="mt-2 space-y-1.5 text-sm text-ink/70">
           <li>1. Stand at 38 Miller Hill Road</li>
-          <li>2. Your bouquet, labeled shelf</li>
+          <li>2. Your seasonal flower offering, labeled shelf</li>
           <li>3. Shelf bare? Take the closest match + message us</li>
         </ul>
         <p className="mt-3 text-xs uppercase tracking-widest text-ink/40">Links</p>

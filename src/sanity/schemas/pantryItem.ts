@@ -3,10 +3,10 @@ import { externalMedia } from "../previewMedia";
 
 export default defineType({
   name: "pantryItem",
-  title: "Pantry / Goods",
+  title: "Pantry",
   type: "document",
   description:
-    "Non-bouquet goods at the stand: oils, salts, sugars, eggs, etc. Use Coming soon to list an item before it can be ordered at checkout.",
+    "Non-bouquet stand offerings: oils, salts, sugars, eggs, etc. Use Coming soon to list an item before it can be ordered at checkout.",
   fields: [
     defineField({
       name: "name",
@@ -89,7 +89,7 @@ export default defineType({
     }),
     defineField({
       name: "shipsAvailable",
-      title: "Shipping available for this item",
+      title: "Delivery available for this item",
       type: "boolean",
       initialValue: false,
       description:
