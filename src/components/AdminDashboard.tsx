@@ -1,9 +1,8 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import type { FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
 
@@ -16,32 +15,16 @@ type AdminDashboardProps = {
   userEmail?: string | null;
 };
 
-type ApiResponse<T> = {
-  ok?: boolean;
-  id?: string;
-  savedAt?: string;
-  error?: string;
-  record?: T;
-};
-
-type SaveResponse = {
-  ok?: boolean;
-  error?: string;
-  id?: string;
-  savedAt?: string;
-  product?: FlowerProduct;
-  vendor?: Vendor;
-  salesRecord?: FlowerSalesRecord;
-};
-
 type ProductFormState = {
   id?: string;
   name: string;
   publicName: string;
   shortDescription: string;
   displayDescription: string;
-  category: FlowerProduct["category"];
+  category: string;
+  customCategory: string;
   tier: string;
+  customTier: string;
   price: string;
   active: boolean;
   inStock: boolean;
@@ -50,9 +33,11 @@ type ProductFormState = {
   imageUrl: string;
   vendorId: string;
   billingLabel: string;
+  overrideBillingLabel: boolean;
   taxCategory: string;
   sortOrder: string;
   internalNotes: string;
+  showDisplayDescription: boolean;
 };
 
 type VendorFormState = {
@@ -80,19 +65,56 @@ type SalesFormState = {
   billingType: string;
 };
 
-type AdminFeedback = {
-  type: "success" | "error";
-  message: string;
-};
-
-const productCategories: { value: FlowerProduct["category"]; label: string }[] = [
+const productCategories = [
   { value: "bouquet", label: "Bouquet" },
-  { value: "pantry", label: "Pantry" },
   { value: "bundle", label: "Bundle" },
+  { value: "pantry", label: "Pantry" },
   { value: "wedding_event", label: "Wedding/event flowers" },
   { value: "vendor_item", label: "Vendor item" },
   { value: "other", label: "Other" },
 ];
+
+const tierOptions = ["small", "standard", "premium", "custom"] as const;
+const taxCategoryOptions = ["flower_service", "retail", "event_service"] as const;
+
+const skuPresets = {
+  glimmer: {
+    name: "Glimmer",
+    publicName: "Glimmer",
+    price: "12",
+    category: "bouquet",
+    tier: "small",
+    shortDescription: "Small seasonal grab bouquet.",
+    displayDescription: "A simple daily flower offering, freshly cut and easy to take home.",
+    billingLabel: "Flower Service",
+    taxCategory: "flower_service",
+    sortOrder: "10",
+  },
+  blessing: {
+    name: "Blessing",
+    publicName: "Blessing",
+    price: "18",
+    category: "bouquet",
+    tier: "standard",
+    shortDescription: "Signature Ritualmaker seasonal bouquet.",
+    displayDescription: "A fuller bouquet for the table, the week, or a thoughtful gift.",
+    billingLabel: "Flower Service",
+    taxCategory: "flower_service",
+    sortOrder: "20",
+  },
+  abundance: {
+    name: "Abundance",
+    publicName: "Abundance",
+    price: "26",
+    category: "bouquet",
+    tier: "premium",
+    shortDescription: "Larger gift-ready seasonal bouquet.",
+    displayDescription: "An abundant seasonal arrangement for sharing, gifting, or anchoring a space.",
+    billingLabel: "Flower Service",
+    taxCategory: "flower_service",
+    sortOrder: "30",
+  },
+} satisfies Record<string, Partial<ProductFormState>>;
 
 type BatchPriceOperation = "increase" | "decrease";
 type BatchPriceMode = "dollars" | "percent";
@@ -111,7 +133,9 @@ const emptyProductForm: ProductFormState = {
   shortDescription: "",
   displayDescription: "",
   category: "bouquet",
+  customCategory: "",
   tier: "",
+  customTier: "",
   price: "",
   active: true,
   inStock: true,
@@ -120,10 +144,27 @@ const emptyProductForm: ProductFormState = {
   imageUrl: "",
   vendorId: "",
   billingLabel: "Flower Service",
+  overrideBillingLabel: false,
   taxCategory: "flower_service",
   sortOrder: "100",
   internalNotes: "",
+  showDisplayDescription: false,
 };
+
+function ProductFormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="border-t border-ink/10 pt-3">
+      <p className="text-[10px] uppercase tracking-widest text-ink/40">{title}</p>
+      <div className="mt-3 space-y-3">{children}</div>
+    </section>
+  );
+}
 
 const emptyVendorForm: VendorFormState = {
   name: "",
@@ -153,11 +194,6 @@ const emptySalesForm: SalesFormState = {
 function dollarsFromCents(cents?: number) {
   if (typeof cents !== "number") return "";
   return (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
-}
-
-function centsFromPrice(value?: number) {
-  if (typeof value !== "number") return undefined;
-  return Math.round(value * 100);
 }
 
 function centsFromDollars(value: string) {
@@ -217,6 +253,9 @@ export function AdminDashboard({
   const [salesRows, setSalesRows] = useState<FlowerSalesRecord[]>(salesRecords);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [quickEdits, setQuickEdits] = useState<Record<string, { price: string; quantity: string }>>(
+    {},
+  );
 
   const visibleVendors = useMemo(
     () => vendorRows.filter((vendor) => (isOwner ? true : vendor._id === defaultVendorId)),
@@ -251,6 +290,25 @@ export function AdminDashboard({
     (product) =>
       product.active !== false && product.inStock !== false && Boolean(product.vendorId),
   ).length;
+  const coreProducts = ["glimmer", "blessing", "abundance"]
+    .map((slug) => visibleProducts.find((item) => item.slug === slug))
+    .filter(Boolean) as FlowerProduct[];
+
+  function normalizeCategory(form: ProductFormState) {
+    return form.category === "other" && form.customCategory.trim()
+      ? form.customCategory.trim()
+      : form.category;
+  }
+
+  function normalizeTier(form: ProductFormState) {
+    return form.tier === "custom" ? form.customTier.trim() : form.tier;
+  }
+
+  function normalizeBillingLabel(form: ProductFormState) {
+    return form.overrideBillingLabel && form.billingLabel.trim()
+      ? form.billingLabel.trim()
+      : "Flower Service";
+  }
 
   async function postJson<T>(url: string, payload: Record<string, unknown>) {
     setBusyId(String(payload.id ?? url));
@@ -286,14 +344,19 @@ export function AdminDashboard({
   }
 
   function editProduct(product: FlowerProduct) {
+    const categoryIsKnown = productCategories.some((item) => item.value === product.category);
+    const tierIsKnown = tierOptions.some((item) => item === product.tier);
+    const billingLabel = product.billingLabel ?? "Flower Service";
     setProductForm({
       id: product._id,
       name: product.name,
       publicName: product.publicName ?? product.name,
       shortDescription: product.shortDescription ?? "",
       displayDescription: product.displayDescription ?? product.description ?? "",
-      category: product.category,
-      tier: product.tier ?? "",
+      category: categoryIsKnown ? product.category : "other",
+      customCategory: categoryIsKnown ? "" : product.category,
+      tier: tierIsKnown ? (product.tier ?? "") : "custom",
+      customTier: tierIsKnown ? "" : (product.tier ?? ""),
       price: dollarsFromCents(product.priceCents),
       active: product.active !== false,
       inStock: product.inStock !== false,
@@ -301,10 +364,12 @@ export function AdminDashboard({
       recurringItem: product.recurringItem !== false,
       imageUrl: product.imageUrl ?? "",
       vendorId: product.vendorId ?? "",
-      billingLabel: product.billingLabel ?? "Flower Service",
+      billingLabel,
+      overrideBillingLabel: billingLabel !== "Flower Service",
       taxCategory: product.taxCategory ?? "flower_service",
       sortOrder: String(product.sortOrder ?? 100),
       internalNotes: product.internalNotes ?? "",
+      showDisplayDescription: Boolean(product.displayDescription ?? product.description),
     });
   }
 
@@ -336,16 +401,50 @@ export function AdminDashboard({
     });
   }
 
-  async function saveProduct(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
+  function newProduct() {
+    setProductForm(emptyProductForm);
+    setErrorMessage(null);
+    setStatusMessage("New product form ready.");
+  }
+
+  function applySkuPreset(key: keyof typeof skuPresets) {
+    const preset = skuPresets[key];
+    setProductForm({
+      ...emptyProductForm,
+      ...preset,
+      overrideBillingLabel: false,
+      showDisplayDescription: false,
+      active: true,
+      inStock: true,
+      recurringItem: true,
+    });
+    setStatusMessage(`Loaded ${preset.name} preset.`);
+    setErrorMessage(null);
+  }
+
+  function showNewVendorForm() {
+    setVendorForm(emptyVendorForm);
+    setStatusMessage("New vendor form ready.");
+    setErrorMessage(null);
+  }
+
+  function productPayload() {
+    const category =
+      productForm.category === "other" && productForm.customCategory
+        ? productForm.customCategory
+        : productForm.category;
+    const tier =
+      productForm.tier === "custom" && productForm.customTier
+        ? productForm.customTier
+        : productForm.tier;
+    return {
       id: productForm.id,
       name: productForm.name,
       publicName: productForm.publicName,
       shortDescription: productForm.shortDescription,
       displayDescription: productForm.displayDescription,
-      category: productForm.category,
-      tier: productForm.tier,
+      category,
+      tier,
       priceCents: centsFromDollars(productForm.price),
       active: productForm.active,
       inStock: productForm.inStock,
@@ -353,10 +452,17 @@ export function AdminDashboard({
       recurringItem: productForm.recurringItem,
       imageUrl: productForm.imageUrl,
       vendorId: productForm.vendorId,
-      billingLabel: productForm.billingLabel,
+      billingLabel: productForm.overrideBillingLabel ? productForm.billingLabel : "Flower Service",
       taxCategory: productForm.taxCategory,
       sortOrder: productForm.sortOrder ? Number(productForm.sortOrder) : 100,
       internalNotes: productForm.internalNotes,
+    };
+  }
+
+  async function saveProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
+      ...productPayload(),
     });
     if (data?.item) {
       setProductRows((current) => upsertById(current, data.item as FlowerProduct));
@@ -569,63 +675,96 @@ export function AdminDashboard({
 
       <section className="mt-6 border border-ink/10 bg-white p-4 sm:p-5">
         <p className="text-xs uppercase tracking-widest text-ink/40">Quick stock</p>
-        <div className="mt-3 grid gap-3 lg:grid-cols-3">
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-widest text-ink/40">
+              <tr>
+                <th className="border-b border-ink/10 py-2 pr-3 font-normal">Name</th>
+                <th className="border-b border-ink/10 px-3 py-2 font-normal">Price</th>
+                <th className="border-b border-ink/10 px-3 py-2 font-normal">Qty</th>
+                <th className="border-b border-ink/10 px-3 py-2 font-normal">In stock</th>
+                <th className="border-b border-ink/10 px-3 py-2 font-normal">Active</th>
+                <th className="border-b border-ink/10 pl-3 py-2 font-normal">Save</th>
+              </tr>
+            </thead>
+            <tbody>
           {["glimmer", "blessing", "abundance"].map((slug) => {
             const product = visibleProducts.find((item) => item.slug === slug);
             return product ? (
-              <div key={product._id} className="border border-ink/10 bg-cream/60 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{product.publicName ?? product.name}</p>
-                    <p className="text-xs text-ink/50">
-                      {formatUSD(product.priceCents)}
-                      {typeof product.quantity === "number" ? ` · Qty ${product.quantity}` : ""}
-                    </p>
-                    <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/40">
-                      Updated {product.updatedAt ? new Date(product.updatedAt).toLocaleString() : "—"}
-                    </p>
-                  </div>
+              <tr key={product._id} className="border-b border-ink/10 align-top">
+                <td className="py-3 pr-3">
                   <button
                     type="button"
                     onClick={() => editProduct(product)}
-                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
+                    className="font-medium underline decoration-ink/20 underline-offset-4"
                   >
-                    Edit
+                    {product.publicName ?? product.name}
                   </button>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
+                  <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/40">
+                    Updated {product.updatedAt ? new Date(product.updatedAt).toLocaleString() : "—"}
+                  </p>
+                </td>
+                <td className="px-3 py-3">
+                  <input
+                    id={`quick-price-${product._id}`}
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    defaultValue={dollarsFromCents(product.priceCents)}
+                    className="w-20 border border-ink/20 bg-white px-2 py-1.5 text-sm"
+                  />
+                </td>
+                <td className="px-3 py-3">
+                  <input
+                    id={`quick-quantity-${product._id}`}
+                    type="number"
+                    min={0}
+                    step={1}
+                    defaultValue={product.quantity ?? ""}
+                    className="w-20 border border-ink/20 bg-white px-2 py-1.5 text-sm"
+                  />
+                </td>
+                <td className="px-3 py-3">
                   <button
                     type="button"
                     disabled={busyId === product._id}
-                    onClick={() =>
-                      patchProduct(product._id, { inStock: product.inStock === false })
-                    }
-                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(
-                      product.inStock !== false,
-                    )}`}
+                    onClick={() => patchProduct(product._id, { inStock: product.inStock === false })}
+                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(product.inStock !== false)}`}
                   >
-                    {product.inStock === false ? "Out" : "In stock"}
+                    {product.inStock === false ? "Out" : "In"}
                   </button>
+                </td>
+                <td className="px-3 py-3">
                   <button
                     type="button"
                     disabled={busyId === product._id}
-                    onClick={() =>
-                      patchProduct(product._id, { active: product.active === false })
-                    }
-                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(
-                      product.active !== false,
-                    )}`}
+                    onClick={() => patchProduct(product._id, { active: product.active === false })}
+                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(product.active !== false)}`}
                   >
-                    {product.active === false ? "Inactive" : "Active"}
+                    {product.active === false ? "Off" : "On"}
                   </button>
-                </div>
-              </div>
+                </td>
+                <td className="py-3 pl-3">
+                  <button
+                    type="button"
+                    disabled={busyId === product._id}
+                    onClick={() => quickSaveProduct(product)}
+                    className="bg-ink px-3 py-1.5 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
+                  >
+                    Save
+                  </button>
+                </td>
+              </tr>
             ) : (
-              <div key={slug} className="border border-ink/10 bg-cream/60 p-3 text-sm text-ink/55">
-                {slug} not seeded yet.
-              </div>
+              <tr key={slug} className="border-b border-ink/10">
+                <td colSpan={6} className="py-3 text-sm text-ink/55">
+                  {slug} not seeded yet.
+                </td>
+              </tr>
             );
           })}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -640,7 +779,7 @@ export function AdminDashboard({
             </div>
             <button
               type="button"
-              onClick={() => setProductForm(emptyProductForm)}
+              onClick={newProduct}
               className="border border-ink/20 px-3 py-2 text-xs uppercase tracking-widest"
             >
               New
@@ -825,152 +964,233 @@ export function AdminDashboard({
           </div>
         </div>
 
-        <form onSubmit={saveProduct} className="border border-ink/10 bg-white p-4 sm:p-6">
-          <p className="text-xs uppercase tracking-widest text-ink/40">
-            {productForm.id ? "Edit offering" : "Add offering"}
-          </p>
-          <div className="mt-4 space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextInput
-                label="Internal name"
-                value={productForm.name}
-                onChange={(value) => setProductForm({ ...productForm, name: value })}
-                required
-              />
-              <TextInput
-                label="Public name"
-                value={productForm.publicName}
-                onChange={(value) => setProductForm({ ...productForm, publicName: value })}
-                required
-              />
+        <form onSubmit={saveProduct} className="border border-ink/10 bg-white p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink/40">
+                {productForm.id ? "Edit offering" : "Add offering"}
+              </p>
+              <h2 className="mt-1 font-display text-3xl font-light">Product form</h2>
             </div>
-            <TextareaInput
-              label="Short description"
-              value={productForm.shortDescription}
-              onChange={(value) =>
-                setProductForm({ ...productForm, shortDescription: value })
-              }
+            <button
+              type="submit"
+              disabled={busyId === (productForm.id ?? "/api/admin/flower-products")}
+              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
+            >
+              {busyId === (productForm.id ?? "/api/admin/flower-products")
+                ? "Saving..."
+                : "Save offering"}
+            </button>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={() => applySkuPreset("glimmer")} className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest">
+              Load Glimmer
+            </button>
+            <button type="button" onClick={() => applySkuPreset("blessing")} className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest">
+              Load Blessing
+            </button>
+            <button type="button" onClick={() => applySkuPreset("abundance")} className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest">
+              Load Abundance
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-2 border border-ink/10 bg-cream/50 p-3 sm:grid-cols-3">
+            <ToggleSwitch
+              label="Active"
+              checked={productForm.active}
+              onChange={(checked) => setProductForm({ ...productForm, active: checked })}
             />
-            <TextareaInput
-              label="Display description"
-              value={productForm.displayDescription}
-              onChange={(value) =>
-                setProductForm({ ...productForm, displayDescription: value })
-              }
+            <ToggleSwitch
+              label="In stock"
+              checked={productForm.inStock}
+              onChange={(checked) => setProductForm({ ...productForm, inStock: checked })}
             />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm text-ink/70">
-                Category
-                <select
-                  value={productForm.category}
-                  onChange={(event) =>
-                    setProductForm({
-                      ...productForm,
-                      category: event.target.value as ProductFormState["category"],
-                    })
-                  }
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                >
-                  {productCategories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
+            <ToggleSwitch
+              label="Recurring"
+              checked={productForm.recurringItem}
+              onChange={(checked) => setProductForm({ ...productForm, recurringItem: checked })}
+            />
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <FormSection title="Core">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <TextInput
+                  label="Internal name"
+                  value={productForm.name}
+                  onChange={(value) => setProductForm({ ...productForm, name: value })}
+                  required
+                />
+                <TextInput
+                  label="Public name"
+                  value={productForm.publicName}
+                  onChange={(value) => setProductForm({ ...productForm, publicName: value })}
+                  required
+                />
+              </div>
+              <SelectInput
+                label="Category"
+                value={productForm.category}
+                onChange={(value) => setProductForm({ ...productForm, category: value })}
+                options={productCategories}
+              />
+              {productForm.category === "other" && (
+                <TextInput
+                  label="Custom category"
+                  value={productForm.customCategory}
+                  onChange={(value) => setProductForm({ ...productForm, customCategory: value })}
+                />
+              )}
+              <SelectInput
+                label="Tier"
+                value={productForm.tier || "small"}
+                onChange={(value) => setProductForm({ ...productForm, tier: value })}
+                options={tierOptions.map((tier) => ({ value: tier, label: tier }))}
+              />
+              {productForm.tier === "custom" && (
+                <TextInput
+                  label="Custom tier"
+                  value={productForm.customTier}
+                  onChange={(value) => setProductForm({ ...productForm, customTier: value })}
+                />
+              )}
+              <div>
+                <p className="text-xs uppercase tracking-widest text-ink/40">Quick price</p>
+                <div className="mt-2 flex gap-2">
+                  {["12", "18", "26"].map((price) => (
+                    <button
+                      key={price}
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, price })}
+                      className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
+                    >
+                      ${price}
+                    </button>
                   ))}
-                </select>
-              </label>
+                </div>
+              </div>
               <TextInput
                 label="Price"
+                type="number"
                 value={productForm.price}
                 onChange={(value) => setProductForm({ ...productForm, price: value })}
-                placeholder="30"
+                placeholder="12"
                 required
               />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextInput
-                label="Tier"
-                value={productForm.tier}
-                onChange={(value) => setProductForm({ ...productForm, tier: value })}
-                placeholder="small, standard, premium"
-              />
-              <TextInput
-                label="Sort order"
-                value={productForm.sortOrder}
-                onChange={(value) => setProductForm({ ...productForm, sortOrder: value })}
-                placeholder="10"
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            </FormSection>
+
+            <FormSection title="Availability">
               <TextInput
                 label="Quantity optional"
+                type="number"
                 value={productForm.quantity}
                 onChange={(value) => setProductForm({ ...productForm, quantity: value })}
                 placeholder="4"
               />
-              <TextInput
-                label="Billing label"
-                value={productForm.billingLabel}
-                onChange={(value) => setProductForm({ ...productForm, billingLabel: value })}
-              />
-            </div>
-            <TextInput
-              label="Tax category"
-              value={productForm.taxCategory}
-              onChange={(value) => setProductForm({ ...productForm, taxCategory: value })}
-            />
-            <label className="text-sm text-ink/70">
-              Vendor optional
-              <select
-                value={productForm.vendorId}
-                onChange={(event) =>
-                  setProductForm({ ...productForm, vendorId: event.target.value })
+            </FormSection>
+
+            <FormSection title="Content">
+              <TextareaInput
+                label="Short description"
+                helper="Used on product cards"
+                rows={2}
+                value={productForm.shortDescription}
+                onChange={(value) =>
+                  setProductForm({ ...productForm, shortDescription: value })
                 }
-                className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setProductForm({
+                    ...productForm,
+                    showDisplayDescription: !productForm.showDisplayDescription,
+                  })
+                }
+                className="text-xs uppercase tracking-widest text-ink/60 underline decoration-ink/20 underline-offset-4"
               >
-                <option value="">Ritualmaker / no outside vendor</option>
-                {visibleVendors.map((vendor) => (
-                  <option key={vendor._id} value={vendor._id}>
-                    {vendor.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <TextInput
-              label="Image URL optional"
-              value={productForm.imageUrl}
-              onChange={(value) => setProductForm({ ...productForm, imageUrl: value })}
-              placeholder="/photos/example.jpg"
-            />
-            <TextareaInput
-              label="Internal notes"
-              value={productForm.internalNotes}
-              onChange={(value) => setProductForm({ ...productForm, internalNotes: value })}
-            />
-            <div className="grid gap-2 text-sm text-ink/70 sm:grid-cols-3">
-              <CheckboxInput
-                label="Active"
-                checked={productForm.active}
-                onChange={(checked) => setProductForm({ ...productForm, active: checked })}
-              />
-              <CheckboxInput
-                label="In stock"
-                checked={productForm.inStock}
-                onChange={(checked) => setProductForm({ ...productForm, inStock: checked })}
-              />
-              <CheckboxInput
-                label="Recurring"
-                checked={productForm.recurringItem}
+                {productForm.showDisplayDescription ? "Hide" : "Show"} display description
+              </button>
+              {productForm.showDisplayDescription && (
+                <TextareaInput
+                  label="Display description"
+                  rows={3}
+                  value={productForm.displayDescription}
+                  onChange={(value) =>
+                    setProductForm({ ...productForm, displayDescription: value })
+                  }
+                />
+              )}
+            </FormSection>
+
+            <FormSection title="Advanced">
+              <div className="flex flex-wrap items-end gap-2">
+                <label className="min-w-0 flex-1 text-sm text-ink/70">
+                  Vendor optional
+                  <select
+                    value={productForm.vendorId}
+                    onChange={(event) =>
+                      setProductForm({ ...productForm, vendorId: event.target.value })
+                    }
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  >
+                    <option value="">None</option>
+                    {visibleVendors.map((vendor) => (
+                      <option key={vendor._id} value={vendor._id}>
+                        {vendor.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  onClick={showNewVendorForm}
+                  className="border border-ink/20 px-3 py-2 text-xs uppercase tracking-widest"
+                >
+                  + New vendor
+                </button>
+              </div>
+              <ToggleSwitch
+                label="Override billing label"
+                checked={productForm.overrideBillingLabel}
                 onChange={(checked) =>
-                  setProductForm({ ...productForm, recurringItem: checked })
+                  setProductForm({ ...productForm, overrideBillingLabel: checked })
                 }
               />
-            </div>
-            <button
-              type="submit"
-              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream"
-            >
-              Save offering
-            </button>
+              {productForm.overrideBillingLabel && (
+                <TextInput
+                  label="Billing label"
+                  value={productForm.billingLabel}
+                  onChange={(value) => setProductForm({ ...productForm, billingLabel: value })}
+                />
+              )}
+              <SelectInput
+                label="Tax category"
+                value={productForm.taxCategory}
+                onChange={(value) => setProductForm({ ...productForm, taxCategory: value })}
+                options={taxCategoryOptions.map((tax) => ({ value: tax, label: tax }))}
+              />
+              <TextInput
+                label="Sort order"
+                type="number"
+                value={productForm.sortOrder}
+                onChange={(value) => setProductForm({ ...productForm, sortOrder: value })}
+                placeholder="10"
+                helper="Lower = shows first"
+              />
+              <TextInput
+                label="Image URL optional"
+                value={productForm.imageUrl}
+                onChange={(value) => setProductForm({ ...productForm, imageUrl: value })}
+                placeholder="/photos/example.jpg"
+              />
+              <TextareaInput
+                label="Internal notes"
+                value={productForm.internalNotes}
+                onChange={(value) => setProductForm({ ...productForm, internalNotes: value })}
+              />
+            </FormSection>
           </div>
         </form>
       </section>
@@ -1239,6 +1459,7 @@ function TextInput({
   required,
   placeholder,
   type = "text",
+  helper,
 }: {
   label: string;
   value: string;
@@ -1246,6 +1467,7 @@ function TextInput({
   required?: boolean;
   placeholder?: string;
   type?: string;
+  helper?: string;
 }) {
   return (
     <label className="block text-sm text-ink/70">
@@ -1258,6 +1480,7 @@ function TextInput({
         onChange={(event) => onChange(event.target.value)}
         className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
       />
+      {helper && <span className="mt-1 block text-xs text-ink/45">{helper}</span>}
     </label>
   );
 }
@@ -1266,21 +1489,99 @@ function TextareaInput({
   label,
   value,
   onChange,
+  helper,
+  rows = 3,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  helper?: string;
+  rows?: number;
 }) {
   return (
     <label className="block text-sm text-ink/70">
       {label}
       <textarea
         value={value}
-        rows={3}
+        rows={rows}
         onChange={(event) => onChange(event.target.value)}
         className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
       />
+      {helper && <span className="mt-1 block text-xs text-ink/45">{helper}</span>}
     </label>
+  );
+}
+
+function SelectInput({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <label className="block text-sm text-ink/70">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full border border-ink/20 bg-white px-3 py-2 text-sm"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ToggleSwitch({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`flex items-center justify-between gap-3 border px-3 py-2 text-sm ${
+        checked ? "border-moss/30 bg-moss/10 text-moss" : "border-ink/10 bg-white text-ink/55"
+      }`}
+    >
+      <span>{label}</span>
+      <span className={`h-5 w-9 rounded-full p-0.5 ${checked ? "bg-moss" : "bg-ink/20"}`}>
+        <span
+          className={`block h-4 w-4 rounded-full bg-white transition ${
+            checked ? "translate-x-4" : ""
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3 border border-ink/10 bg-cream/40 p-3">
+      <p className="text-xs uppercase tracking-widest text-ink/40">{title}</p>
+      {children}
+    </section>
   );
 }
 

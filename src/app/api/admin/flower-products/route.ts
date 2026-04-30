@@ -48,6 +48,7 @@ const tiers = new Set<NonNullable<FlowerProduct["tier"]>>([
   "small",
   "standard",
   "premium",
+  "custom",
 ]);
 
 function cleanString(value: unknown) {

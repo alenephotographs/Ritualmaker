@@ -60,10 +60,22 @@ export default defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "customCategory",
+      title: "Custom category",
+      type: "string",
+      hidden: ({ parent }) => parent?.category !== "other",
+    }),
+    defineField({
       name: "tier",
       title: "Tier",
       type: "string",
       options: { list: productTiers },
+    }),
+    defineField({
+      name: "customTier",
+      title: "Custom tier",
+      type: "string",
+      hidden: ({ parent }) => parent?.tier !== "custom",
     }),
     defineField({
       name: "priceCents",

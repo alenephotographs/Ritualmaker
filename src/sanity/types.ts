@@ -82,7 +82,7 @@ export interface FlowerProduct {
   shortDescription?: string;
   displayDescription?: string;
   category: FlowerProductCategory;
-  tier?: FlowerProductTier;
+  tier?: string;
   priceCents: number;
   active?: boolean;
   inStock?: boolean;
