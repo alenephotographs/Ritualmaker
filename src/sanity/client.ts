@@ -7,7 +7,8 @@ export const sanityClient = createClient({
   projectId: getSanityProjectId(),
   dataset: getSanityDataset(),
   apiVersion: getApiVersion(),
-  useCdn: true,
+  /** Direct API (not the edge CDN) so published edits show on the site right after save. */
+  useCdn: false,
   perspective: "published",
 });
 

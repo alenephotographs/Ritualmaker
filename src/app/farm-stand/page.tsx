@@ -1,5 +1,4 @@
 import { sanityClient } from "@/sanity/client";
-import { sanityServerReadClient } from "@/sanity/serverReadClient";
 import { resolveContactLinks } from "@/lib/siteContact";
 import { publicFlowerProductsQuery, siteSettingsQuery } from "@/sanity/queries";
 import type { FlowerProduct, SiteSettings } from "@/sanity/types";
@@ -18,7 +17,7 @@ export const metadata = {
 export default async function FarmStandPage() {
   const settled = await Promise.allSettled([
     sanityClient.fetch<SiteSettings | null>(siteSettingsQuery),
-    sanityServerReadClient.fetch<FlowerProduct[]>(publicFlowerProductsQuery),
+    sanityClient.fetch<FlowerProduct[]>(publicFlowerProductsQuery),
   ]);
   let settings: SiteSettings | null = null;
   if (settled[0].status === "fulfilled") settings = settled[0].value;

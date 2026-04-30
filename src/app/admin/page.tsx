@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { sanityServerReadClient } from "@/sanity/serverReadClient";
+import { sanityClient } from "@/sanity/client";
 import type {
   EventOrder,
   FlowerProduct,
@@ -39,10 +39,10 @@ export default async function AdminPage() {
   }
 
   const settled = await Promise.allSettled([
-    sanityServerReadClient.fetch<Vendor[]>(vendorsQuery),
-    sanityServerReadClient.fetch<FlowerProduct[]>(flowerProductsQuery),
-    sanityServerReadClient.fetch<FlowerSalesRecord[]>(flowerSalesRecordsQuery),
-    sanityServerReadClient.fetch<EventOrder[]>(eventOrdersQuery),
+    sanityClient.fetch<Vendor[]>(vendorsQuery),
+    sanityClient.fetch<FlowerProduct[]>(flowerProductsQuery),
+    sanityClient.fetch<FlowerSalesRecord[]>(flowerSalesRecordsQuery),
+    sanityClient.fetch<EventOrder[]>(eventOrdersQuery),
   ]);
 
   function take<T>(result: PromiseSettledResult<T>, label: string, empty: T): T {
