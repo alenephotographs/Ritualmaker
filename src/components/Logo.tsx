@@ -3,9 +3,9 @@ export const brandCategoryClassName =
   "font-display text-[0.95rem] tracking-tight text-ink/85 transition-colors hover:text-ink sm:text-base";
 
 type LogoProps = {
-  /** Tailwind class controlling the rendered height. The SVG is fluid width. */
+  /** Tailwind classes controlling the rendered text treatment. */
   className?: string;
-  /** Accessible label for the logo link/image. */
+  /** Accessible label/text for the logo. */
   title?: string;
 };
 
@@ -13,16 +13,7 @@ type LogoProps = {
  * @deprecated Prefer `Wordmark` for the site header.
  */
 export function Logo({ className = "h-7 w-auto", title = "Ritualmaker" }: LogoProps) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return (
-    <img
-      src="/brand/logo.svg"
-      alt={title}
-      width={1589}
-      height={120}
-      className={`shrink-0 object-contain ${className}`}
-    />
-  );
+  return <Wordmark text={title} className={className} />;
 }
 
 type SubMarkProps = {
@@ -47,23 +38,21 @@ export function SubMark({
 }
 
 /**
- * Brand wordmark image. Pass `h-* w-auto` (or max-h-*) via className to size.
+ * Text wordmark. This avoids raster/SVG asset backgrounds in constrained browser headers.
  */
 export function Wordmark({
-  className = "h-8 w-auto",
+  className = "text-5xl",
   text = "Ritualmaker",
 }: {
   className?: string;
   text?: string;
 }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/brand/logo.svg"
-      alt={text}
-      width={1589}
-      height={120}
-      className={`block shrink-0 object-contain object-left ${className}`}
-    />
+    <span
+      aria-label={text}
+      className={`block shrink-0 font-display font-light leading-none tracking-tight text-ink ${className}`}
+    >
+      {text}
+    </span>
   );
 }
