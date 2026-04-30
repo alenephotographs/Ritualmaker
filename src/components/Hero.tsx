@@ -40,7 +40,7 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
             href="/farm-stand#shop"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
-            Shop flowers
+            Shop
           </Link>
         </div>
       </div>

@@ -27,7 +27,7 @@ export async function Header() {
             href="/farm-stand#shop"
             className="hidden bg-ink px-4 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal md:inline-block"
           >
-            {standClosed ? "Stand closed" : "Shop flowers"}
+            {standClosed ? "Stand closed" : "Shop"}
           </Link>
           <MobileNav standClosed={standClosed} />
         </div>

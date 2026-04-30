@@ -55,20 +55,7 @@ function transferDestinationForFlowerProducts(products: FlowerProduct[]): string
   return ids[0];
 }
 
-function assertFlowerProductShips(product: FlowerProduct) {
-  if (product.shipsNationwide !== true) {
-    return NextResponse.json(
-      {
-        error:
-          "This item is not available for shipped checkout yet. Visit the farm stand or contact us for local pickup.",
-      },
-      { status: 403 },
-    );
-  }
-  return null;
-}
-
-function cleanShippingAddress(body: ShippingAddressBody | undefined): ShippoAddressInput | null {
+(body: ShippingAddressBody | undefined): ShippoAddressInput | null {
   if (!body) return null;
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const street1 = typeof body.line1 === "string" ? body.line1.trim() : "";
@@ -247,8 +234,6 @@ export async function POST(req: Request) {
             { status: 409 },
           );
         }
-        const shipErr = assertFlowerProductShips(item);
-        if (shipErr) return shipErr;
         lines.push({
           itemType: "flowerProduct",
           item,
@@ -431,11 +416,6 @@ export async function POST(req: Request) {
         { error: "This flower service is currently unavailable" },
         { status: 409 },
       );
-    }
-
-    if (itemType === "flowerProduct") {
-      const shipErr = assertFlowerProductShips(item as FlowerProduct);
-      if (shipErr) return shipErr;
     }
 
     const origin =

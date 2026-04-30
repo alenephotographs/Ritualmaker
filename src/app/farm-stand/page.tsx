@@ -9,9 +9,9 @@ import { StandStatus } from "@/components/StandStatus";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Ritualmaker — Shop pantry & infused olive oil",
+  title: "Ritualmaker — Shop flowers & garden pantry",
   description:
-    "Garden Oil, botanical sugar, herbal tea, and more from Ritualmaker — shipped within the US.",
+    "Seasonal bouquets and small-batch pantry items from Ritualmaker — shipped nationwide where marked, or visit the stand.",
 };
 
 export default async function FarmStandPage() {
@@ -26,14 +26,17 @@ export default async function FarmStandPage() {
   let flowerProducts: FlowerProduct[] = [];
   if (settled[1].status === "fulfilled") flowerProducts = settled[1].value;
   else console.error("[farm-stand] products fetch failed", settled[1].reason);
-  const shippedProducts = flowerProducts.filter((p) => p.shipsNationwide === true);
+
+  const flowersCount = flowerProducts.filter((p) => p.category !== "pantry").length;
+  const pantryCount = flowerProducts.filter((p) => p.category === "pantry").length;
   const c = resolveContactLinks(settings);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
       <p className="mt-6 max-w-xl text-sm text-ink/60">
-        Order pantry items and infused olive oil for shipping within the US. More at the stand soon.{" "}
+        Browse bouquets and garden pantry items. Items marked for nationwide shipping can check out with
+        USPS rates; everything else is for local pickup or the stand.{" "}
         <a
           href="#visit"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"
@@ -51,11 +54,21 @@ export default async function FarmStandPage() {
 
       <div id="shop" className="mt-12 scroll-mt-[calc(5.5rem+env(safe-area-inset-top))]">
         <p className="text-xs uppercase tracking-widest text-ink/40">Shop</p>
-        <BouquetGrid
-          bouquets={[]}
-          flowerProducts={shippedProducts}
-          shopMode="shipped"
-        />
+        {flowersCount === 0 && pantryCount > 0 ? (
+          <div
+            className="mt-4 border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-ink/80"
+            role="status"
+          >
+            <p className="font-medium text-ink">No flower or bouquet SKUs are live in the shop right now.</p>
+            <p className="mt-1 text-ink/70">
+              In Sanity, add or turn on{" "}
+              <strong className="font-medium">active</strong> and{" "}
+              <strong className="font-medium">in stock</strong> for flower products with category{" "}
+              <strong className="font-medium">Bouquet</strong> (or bundle), not only Pantry.
+            </p>
+          </div>
+        ) : null}
+        <BouquetGrid bouquets={[]} flowerProducts={flowerProducts} shopMode="shipped" />
       </div>
 
       <section

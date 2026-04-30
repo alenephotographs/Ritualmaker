@@ -16,6 +16,8 @@ async function readJsonSafe(response: Response) {
   }
 }
 
+type ShopCategoryFilter = "all" | "flowers" | "pantry";
+
 type BouquetGridProps = {
   bouquets: Bouquet[];
   flowerProducts?: FlowerProduct[];
@@ -33,6 +35,7 @@ export function BouquetGrid({
   flowerProducts = [],
   shopMode = "stand",
 }: BouquetGridProps) {
+  const [shopFilter, setShopFilter] = useState<ShopCategoryFilter>("all");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastBouquetId, setLastBouquetId] = useState<string | null>(null);
@@ -46,6 +49,16 @@ export function BouquetGrid({
   const [shipZip, setShipZip] = useState("");
   const [shipPhone, setShipPhone] = useState("");
   const [shipEmail, setShipEmail] = useState("");
+
+  const filteredFlowerProducts = useMemo(() => {
+    if (shopFilter === "flowers") {
+      return flowerProducts.filter((item) => item.category !== "pantry");
+    }
+    if (shopFilter === "pantry") {
+      return flowerProducts.filter((item) => item.category === "pantry");
+    }
+    return flowerProducts;
+  }, [flowerProducts, shopFilter]);
 
   const availableBouquets = useMemo(
     () => bouquets.filter((bouquet) => bouquet.available),
@@ -185,14 +198,18 @@ export function BouquetGrid({
       return;
     }
     if (shopMode === "shipped") {
+      const needsShipForm = cart.some((line) => line.item.shipsNationwide === true);
       if (
-        !shipName.trim() ||
-        !shipLine1.trim() ||
-        !shipCity.trim() ||
-        !shipState.trim() ||
-        !shipZip.trim()
+        needsShipForm &&
+        (!shipName.trim() ||
+          !shipLine1.trim() ||
+          !shipCity.trim() ||
+          !shipState.trim() ||
+          !shipZip.trim())
       ) {
-        setError("Enter your full shipping address (name, street, city, state, ZIP) to continue.");
+        setError(
+          "Enter your full shipping address (name, street, city, state, ZIP) for items that ship nationwide.",
+        );
         return;
       }
     }
@@ -272,6 +289,43 @@ export function BouquetGrid({
           {error}
         </div>
       )}
+      {shopMode === "shipped" && flowerProducts.length > 0 ? (
+        <div
+          className="mb-6 flex flex-wrap gap-2"
+          role="tablist"
+          aria-label="Shop category"
+        >
+          {(
+            [
+              { id: "all" as const, label: "All" },
+              { id: "flowers" as const, label: "Flowers" },
+              { id: "pantry" as const, label: "Pantry" },
+            ] as const
+          ).map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={shopFilter === id}
+              onClick={() => setShopFilter(id)}
+              className={`border px-4 py-2 text-xs uppercase tracking-widest transition-colors ${
+                shopFilter === id
+                  ? "border-ink bg-ink text-cream"
+                  : "border-ink/20 bg-white text-ink/70 hover:border-ink/40 hover:text-ink"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {shopMode === "shipped" &&
+      flowerProducts.length > 0 &&
+      filteredFlowerProducts.length === 0 ? (
+        <p className="mb-6 text-sm text-ink/60">
+          No products in this category. Try <strong>All</strong> or another filter.
+        </p>
+      ) : null}
       {lastBouquet && lastBouquet.available && (
         <div className="mb-6 border border-moss/30 bg-moss/10 px-4 py-4">
           <p className="text-xs uppercase tracking-widest text-moss">
@@ -301,7 +355,7 @@ export function BouquetGrid({
           </div>
         </div>
       )}
-      {flowerProducts.length > 0 && (
+      {filteredFlowerProducts.length > 0 && (
         <div className="mb-8">
           {shopMode === "stand" && (
             <div className="mb-6 border border-moss/25 bg-moss/10 px-4 py-4">
@@ -317,19 +371,19 @@ export function BouquetGrid({
             {
               label:
                 shopMode === "shipped"
-                  ? "Ships nationwide (US)"
+                  ? "Flowers & pantry"
                   : "Seasonal flower offerings",
               items:
                 shopMode === "shipped"
-                  ? flowerProducts
-                  : flowerProducts.filter((item) => item.category !== "pantry"),
+                  ? filteredFlowerProducts
+                  : filteredFlowerProducts.filter((item) => item.category !== "pantry"),
             },
             ...(shopMode === "shipped"
               ? []
               : [
                   {
                     label: "Seasonal garden offerings",
-                    items: flowerProducts.filter((item) => item.category === "pantry"),
+                    items: filteredFlowerProducts.filter((item) => item.category === "pantry"),
                   },
                 ]),
           ].map((group) =>
@@ -349,7 +403,7 @@ export function BouquetGrid({
                       key={item._id}
                       item={item}
                       onAdd={addToCart}
-                      shipped={shopMode === "shipped"}
+                      shipped={shopMode === "shipped" && item.shipsNationwide === true}
                     />
                   ))}
                 </div>
@@ -398,14 +452,16 @@ export function BouquetGrid({
               <span>Total</span>
               <span>{formatUSD(cartTotal)}</span>
             </div>
-            {shopMode === "shipped" && (
-              <p className="text-xs text-ink/55">
-                Product subtotal above. USPS shipping is calculated next and shown on the payment
-                page.
-              </p>
-            )}
+            {shopMode === "shipped" &&
+              cart.some((line) => line.item.shipsNationwide === true) && (
+                <p className="text-xs text-ink/55">
+                  Product subtotal above. USPS shipping is calculated next and shown on the payment
+                  page.
+                </p>
+              )}
           </div>
-          {shopMode === "shipped" && (
+          {shopMode === "shipped" &&
+            cart.some((line) => line.item.shipsNationwide === true) && (
             <div className="mt-6 space-y-3 border-t border-ink/10 pt-6">
               <p className="text-xs uppercase tracking-widest text-ink/40">Ship to (US)</p>
               <label className="block text-sm text-ink/70">
@@ -496,7 +552,9 @@ export function BouquetGrid({
             {loadingId === "cart"
               ? "Starting..."
               : shopMode === "shipped"
-                ? "Checkout with shipping"
+                ? cart.some((line) => line.item.shipsNationwide === true)
+                  ? "Checkout with shipping"
+                  : "Checkout"
                 : "Pay for stand items"}
           </button>
         </div>
@@ -647,9 +705,13 @@ function FlowerProductCard({
             {item.quantity} available at the stand
           </p>
         )}
-        {shipped && (
+        {shipped ? (
           <p className="mt-3 text-xs uppercase tracking-widest text-moss/80">
             Ships within the US · Card checkout
+          </p>
+        ) : (
+          <p className="mt-3 text-xs uppercase tracking-widest text-ink/50">
+            Local / stand · Contact us for pickup or visit the stand
           </p>
         )}
         <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-4">

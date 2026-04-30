@@ -38,7 +38,7 @@ export function MobileNav({ standClosed }: MobileNavProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
 
-  const cta = standClosed ? "Stand closed" : "Shop flowers";
+  const cta = standClosed ? "Stand closed" : "Shop";
   const ctaHref = "/farm-stand#shop";
 
   return (
