@@ -114,6 +114,45 @@ const skuPresets = {
     taxCategory: "flower_service",
     sortOrder: "30",
   },
+  gardenOil: {
+    name: "Garden Oil",
+    publicName: "Garden Oil",
+    price: "14",
+    category: "pantry",
+    tier: "",
+    shortDescription: "Seasonal botanical-infused garden oil.",
+    displayDescription:
+      "A small-batch garden oil infused with seasonal herbs and botanicals, made as a simple kitchen ritual.",
+    billingLabel: "Flower Service",
+    taxCategory: "flower_service",
+    sortOrder: "70",
+  },
+  botanicalSugar: {
+    name: "Botanical Sugar",
+    publicName: "Botanical Sugar",
+    price: "10",
+    category: "pantry",
+    tier: "",
+    shortDescription: "Seasonal flower and herb sugar.",
+    displayDescription:
+      "A fragrant botanical sugar for tea, baking, fruit, cocktails, and small daily rituals.",
+    billingLabel: "Flower Service",
+    taxCategory: "flower_service",
+    sortOrder: "80",
+  },
+  herbalTea: {
+    name: "Herbal Tea",
+    publicName: "Herbal Tea",
+    price: "12",
+    category: "pantry",
+    tier: "",
+    shortDescription: "Seasonal herbal tea blend.",
+    displayDescription:
+      "A small-batch herbal tea blend made with garden-grown and seasonal botanicals.",
+    billingLabel: "Flower Service",
+    taxCategory: "flower_service",
+    sortOrder: "90",
+  },
 } satisfies Record<string, Partial<ProductFormState>>;
 
 type BatchPriceOperation = "increase" | "decrease";

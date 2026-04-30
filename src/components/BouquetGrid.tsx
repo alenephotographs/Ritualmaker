@@ -211,19 +211,34 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
       )}
       {flowerProducts.length > 0 && (
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-widest text-ink/40">
-            Seasonal flower offerings
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {flowerProducts.map((item) => (
-              <FlowerProductCard
-                key={item._id}
-                item={item}
-                loading={loadingId === item._id}
-                onBuy={buyFlowerProduct}
-              />
-            ))}
-          </div>
+          {[
+            {
+              label: "Seasonal flower offerings",
+              items: flowerProducts.filter((item) => item.category !== "pantry"),
+            },
+            {
+              label: "Seasonal garden offerings",
+              items: flowerProducts.filter((item) => item.category === "pantry"),
+            },
+          ].map((group) =>
+            group.items.length ? (
+              <div key={group.label} className="mb-8 last:mb-0">
+                <p className="text-xs uppercase tracking-widest text-ink/40">
+                  {group.label}
+                </p>
+                <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {group.items.map((item) => (
+                    <FlowerProductCard
+                      key={item._id}
+                      item={item}
+                      loading={loadingId === item._id}
+                      onBuy={buyFlowerProduct}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null,
+          )}
         </div>
       )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
