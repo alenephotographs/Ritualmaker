@@ -71,41 +71,97 @@ const CANON = {
     {
       _id: "preprod.faq.01",
       displayOrder: 10,
-      question: "How do I pay for flowers?",
+      question: "How do I buy flowers?",
       answer: oneLine(
-        "Stop by the self-serve stand and buy what is fresh on the shelf. Inventory changes through the day.",
+        "We offer self-serve flowers at our roadside stand. Bouquets and pantry items are refreshed regularly — stop by and take what you need.",
       ),
     },
     {
       _id: "preprod.faq.02",
       displayOrder: 20,
-      question: "Where is the farm stand?",
+      question: "What’s available today?",
       answer: oneLine(
-        "38 Miller Hill Road, Hudson Valley, NY. Use Maps or the Google link in the footer for hours and photos.",
+        "Availability changes daily based on what’s in bloom and what has been harvested. If the stand is open, there are fresh flowers, pantry items, and seasonal offerings out. Popular sizes may sell out — check back often.",
       ),
     },
     {
       _id: "preprod.faq.03",
       displayOrder: 30,
-      question: "What if the shelf is empty?",
+      question: "Which payments can I use?",
       answer: oneLine(
-        "If something looks sold through, take the closest match and message us on Instagram so we can make it right.",
+        "Cash and Venmo are accepted at the stand.",
       ),
     },
     {
       _id: "preprod.faq.04",
       displayOrder: 40,
-      question: "Do you do weddings or on-location work?",
+      question: "Can I reserve a bouquet?",
       answer: oneLine(
-        "Yes — see On location for event florals, pop-up bars, hospitality, and Live Collage™.",
+        "We do not hold bouquets at the stand, but you can reach out for custom or event orders.",
       ),
     },
     {
       _id: "preprod.faq.05",
       displayOrder: 50,
-      question: "When are you open?",
+      question: "Are your flowers grown with pesticides?",
       answer: oneLine(
-        "The self-serve stand is available around the clock when the season and stand status are open. Check the status pill on the home page; Google has hours and updates.",
+        "No. Our flowers are not grown with pesticides.",
+      ),
+    },
+    {
+      _id: "preprod.faq.06",
+      displayOrder: 60,
+      question: "Do you sell anything besides flowers?",
+      answer: oneLine(
+        "Yes. Our garden pantry includes seasonal items like Garden Oil, Botanical Sugar, and Herbal Tea. In summer, we also sell seasonal organic heirloom vegetables when available.",
+      ),
+    },
+    {
+      _id: "preprod.faq.07",
+      displayOrder: 70,
+      question: "Do you offer weddings and events?",
+      answer: oneLine(
+        "Yes. We design florals for weddings, gatherings, and installations — everything from personal flowers to full event styling. Use the inquiry form on the On Location page to get in touch.",
+      ),
+    },
+    {
+      _id: "preprod.faq.08",
+      displayOrder: 80,
+      question: "What types of event work do you do?",
+      answer: oneLine(
+        "We offer weddings, personal flowers, ceremony flowers, reception flowers, pop-up flower bars, restaurants and hotels, custom installs, and seasonal floral work.",
+      ),
+    },
+    {
+      _id: "preprod.faq.09",
+      displayOrder: 90,
+      question: "Can I order custom flowers?",
+      answer: oneLine(
+        "Yes. We take custom orders for events and special requests depending on availability.",
+      ),
+    },
+    {
+      _id: "preprod.faq.10",
+      displayOrder: 100,
+      question: "Can I purchase flowers in bulk?",
+      answer: oneLine(
+        "Yes — reach out for bulk stems, event prep, or large orders.",
+      ),
+    },
+    {
+      _id: "preprod.faq.11",
+      displayOrder: 110,
+      question: "Can we take photos in the flower field?",
+      answer: oneLine(
+        "Yes, when the season and schedule allow. See the Photography section or reach out to confirm availability.",
+      ),
+    },
+    {
+      _id: "preprod.faq.12",
+      displayOrder: 120,
+      question: "How can we get in touch?",
+      answer: oneLine(
+        "Use the contact form or email ritualmakerny@gmail.com.",
       ),
     },
   ],

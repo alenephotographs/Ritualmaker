@@ -20,6 +20,9 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
         >
           Quick answers
         </h2>
+        <p className="mt-3 text-sm leading-relaxed text-ink/60">
+          Flowers, pantry, summer vegetables, events, and custom work — quick answers below.
+        </p>
 
         <div className="mt-12 divide-y divide-ink/10 border-t border-ink/10">
           {faqs.map((f) => (
