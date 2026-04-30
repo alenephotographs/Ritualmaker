@@ -25,6 +25,21 @@ type CheckoutBody = {
   ctaVariant?: "buy" | "checkout";
 };
 
+const US_SHIPPING_COUNTRIES = ["US"] as const;
+
+function assertFlowerProductShips(product: FlowerProduct) {
+  if (product.shipsNationwide !== true) {
+    return NextResponse.json(
+      {
+        error:
+          "This item is not available for shipped checkout yet. Visit the farm stand or contact us for local pickup.",
+      },
+      { status: 403 },
+    );
+  }
+  return null;
+}
+
 type CheckoutLine =
   | { itemType: "bouquet"; item: Bouquet; quantity: number }
   | { itemType: "pantryItem"; item: PantryItem; quantity: number }
@@ -138,6 +153,8 @@ export async function POST(req: Request) {
             { status: 409 },
           );
         }
+        const shipErr = assertFlowerProductShips(item);
+        if (shipErr) return shipErr;
         lines.push({
           itemType: "flowerProduct",
           item,
@@ -223,6 +240,7 @@ export async function POST(req: Request) {
         cancel_url: `${origin}/checkout/cancel`,
         line_items: lineItems,
         automatic_tax: { enabled: false },
+        shipping_address_collection: { allowed_countries: [...US_SHIPPING_COUNTRIES] },
         metadata: {
           itemType: "cart",
           itemId: lines.map((line) => line.item._id).join(","),
@@ -273,6 +291,11 @@ export async function POST(req: Request) {
       );
     }
 
+    if (itemType === "flowerProduct") {
+      const shipErr = assertFlowerProductShips(item as FlowerProduct);
+      if (shipErr) return shipErr;
+    }
+
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
 
@@ -283,7 +306,7 @@ export async function POST(req: Request) {
     const taxCategory = itemTaxCategory(itemType, item);
     const productCategory = itemCategory(itemType, item);
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout/cancel`,
@@ -326,7 +349,15 @@ export async function POST(req: Request) {
         vendorName: item.vendorName ?? "",
         ctaVariant: body.ctaVariant ?? "",
       },
-    });
+    };
+
+    if (itemType === "flowerProduct") {
+      sessionParams.shipping_address_collection = {
+        allowed_countries: [...US_SHIPPING_COUNTRIES],
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     if (!session.url) {
       return NextResponse.json(

@@ -19,6 +19,8 @@ async function readJsonSafe(response: Response) {
 type BouquetGridProps = {
   bouquets: Bouquet[];
   flowerProducts?: FlowerProduct[];
+  /** Shipped US checkout: hide stand-only promos and adjust copy. */
+  shopMode?: "stand" | "shipped";
 };
 
 type CartLine = {
@@ -26,7 +28,11 @@ type CartLine = {
   quantity: number;
 };
 
-export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps) {
+export function BouquetGrid({
+  bouquets,
+  flowerProducts = [],
+  shopMode = "stand",
+}: BouquetGridProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastBouquetId, setLastBouquetId] = useState<string | null>(null);
@@ -217,7 +223,9 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
   if (!bouquets.length && !flowerProducts.length) {
     return (
       <p className="text-sm text-ink/50">
-        Nothing listed yet — check back.
+        {shopMode === "shipped"
+          ? "Online shipping is not available yet — check back soon."
+          : "Nothing listed yet — check back."}
       </p>
     );
   }
@@ -260,30 +268,51 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
       )}
       {flowerProducts.length > 0 && (
         <div className="mb-8">
-          <div className="mb-6 border border-moss/25 bg-moss/10 px-4 py-4">
-            <p className="text-xs uppercase tracking-widest text-moss">
-              Make it a Ritual Bundle
-            </p>
-            <p className="mt-1 text-sm text-ink/70">
-              $5 off any pantry item with a bouquet.
-            </p>
-          </div>
+          {shopMode === "stand" && (
+            <div className="mb-6 border border-moss/25 bg-moss/10 px-4 py-4">
+              <p className="text-xs uppercase tracking-widest text-moss">
+                Make it a Ritual Bundle
+              </p>
+              <p className="mt-1 text-sm text-ink/70">
+                $5 off any pantry item with a bouquet.
+              </p>
+            </div>
+          )}
+          {shopMode === "shipped" ? (
+            <div className="mb-6 rounded-lg border border-ink/15 bg-cream/60 px-4 py-4">
+              <p className="text-xs uppercase tracking-widest text-ink/50">Shipping</p>
+              <p className="mt-2 max-w-2xl text-sm text-ink/70">
+                Checkout collects your US shipping address. Shipping cost and carrier are set at
+                fulfillment — we&apos;ll email you if anything changes.
+              </p>
+            </div>
+          ) : null}
           {[
             {
-              label: "Seasonal flower offerings",
-              items: flowerProducts.filter((item) => item.category !== "pantry"),
+              label:
+                shopMode === "shipped"
+                  ? "Ships nationwide (US)"
+                  : "Seasonal flower offerings",
+              items:
+                shopMode === "shipped"
+                  ? flowerProducts
+                  : flowerProducts.filter((item) => item.category !== "pantry"),
             },
-            {
-              label: "Seasonal garden offerings",
-              items: flowerProducts.filter((item) => item.category === "pantry"),
-            },
+            ...(shopMode === "shipped"
+              ? []
+              : [
+                  {
+                    label: "Seasonal garden offerings",
+                    items: flowerProducts.filter((item) => item.category === "pantry"),
+                  },
+                ]),
           ].map((group) =>
             group.items.length ? (
               <div key={group.label} className="mb-8 last:mb-0">
                 <p className="text-xs uppercase tracking-widest text-ink/40">
                   {group.label}
                 </p>
-                {group.label === "Seasonal garden offerings" && (
+                {group.label === "Seasonal garden offerings" && shopMode === "stand" && (
                   <p className="mt-2 max-w-2xl text-sm text-ink/60">
                     Small-batch pantry items grown here and built to pair with your flowers.
                   </p>
@@ -294,6 +323,7 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
                       key={item._id}
                       item={item}
                       onAdd={addToCart}
+                      shipped={shopMode === "shipped"}
                     />
                   ))}
                 </div>
@@ -349,7 +379,11 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
             onClick={checkoutCart}
             className="mt-5 bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
           >
-            {loadingId === "cart" ? "Starting..." : "Pay for stand items"}
+            {loadingId === "cart"
+              ? "Starting..."
+              : shopMode === "shipped"
+                ? "Checkout with shipping"
+                : "Pay for stand items"}
           </button>
         </div>
       )}
@@ -455,9 +489,11 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
 function FlowerProductCard({
   item,
   onAdd,
+  shipped = false,
 }: {
   item: FlowerProduct;
   onAdd: (item: FlowerProduct) => void;
+  shipped?: boolean;
 }) {
   return (
     <article className="flex flex-col border border-ink/10 bg-cream">
@@ -492,9 +528,14 @@ function FlowerProductCard({
             {item.displayDescription ?? item.description}
           </p>
         )}
-        {typeof item.quantity === "number" && (
+        {typeof item.quantity === "number" && !shipped && (
           <p className="mt-3 text-xs uppercase tracking-widest text-ink/45">
             {item.quantity} available at the stand
+          </p>
+        )}
+        {shipped && (
+          <p className="mt-3 text-xs uppercase tracking-widest text-moss/80">
+            Ships within the US · Card checkout
           </p>
         )}
         <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-4">

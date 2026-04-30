@@ -45,6 +45,7 @@ type ProductFormState = {
   inStock: boolean;
   quantity: string;
   recurringItem: boolean;
+  shipsNationwide: boolean;
   imageUrl: string;
   vendorId: string;
   billingLabel: string;
@@ -161,6 +162,7 @@ const skuPresets = {
     billingLabel: "Flower Service",
     taxCategory: "flower_service",
     sortOrder: "70",
+    shipsNationwide: true,
   },
   botanicalSugar: {
     name: "Botanical Sugar",
@@ -215,6 +217,7 @@ const emptyProductForm: ProductFormState = {
   inStock: true,
   quantity: "",
   recurringItem: true,
+  shipsNationwide: false,
   imageUrl: "",
   vendorId: "",
   billingLabel: "Flower Service",
@@ -477,6 +480,7 @@ export function AdminDashboard({
       inStock: product.inStock !== false,
       quantity: typeof product.quantity === "number" ? String(product.quantity) : "",
       recurringItem: product.recurringItem !== false,
+      shipsNationwide: product.shipsNationwide === true,
       imageUrl: product.imageUrl ?? "",
       vendorId: product.vendorId ?? "",
       billingLabel,
@@ -565,6 +569,7 @@ export function AdminDashboard({
       inStock: productForm.inStock,
       quantity: productForm.quantity ? Number(productForm.quantity) : undefined,
       recurringItem: productForm.recurringItem,
+      shipsNationwide: productForm.shipsNationwide,
       imageUrl: productForm.imageUrl,
       vendorId: productForm.vendorId,
       billingLabel: productForm.overrideBillingLabel ? productForm.billingLabel : "Flower Service",
@@ -1374,6 +1379,7 @@ export function AdminDashboard({
                             : ""}
                           {" · "}
                           {product.recurringItem === false ? "one-off" : "recurring"}
+                          {product.shipsNationwide ? " · ships US" : ""}
                         </p>
                       </div>
                     </div>
@@ -1530,7 +1536,7 @@ export function AdminDashboard({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 border border-ink/10 bg-cream/50 p-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 border border-ink/10 bg-cream/50 p-3 sm:grid-cols-2 lg:grid-cols-4">
             <ToggleSwitch
               label="Active"
               checked={productForm.active}
@@ -1546,7 +1552,18 @@ export function AdminDashboard({
               checked={productForm.recurringItem}
               onChange={(checked) => setProductForm({ ...productForm, recurringItem: checked })}
             />
+            <ToggleSwitch
+              label="Ships nationwide (US)"
+              checked={productForm.shipsNationwide}
+              onChange={(checked) =>
+                setProductForm({ ...productForm, shipsNationwide: checked })
+              }
+            />
           </div>
+          <p className="mt-2 text-xs text-ink/50">
+            Only products with <strong>Ships nationwide</strong> on appear on the public shop with
+            address collection at checkout.
+          </p>
 
           <div className="mt-4 space-y-4">
             <FormSection title="Core">

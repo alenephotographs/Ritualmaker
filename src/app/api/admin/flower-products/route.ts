@@ -27,6 +27,7 @@ type RequestBody = {
   inStock?: boolean;
   quantity?: number | null;
   recurringItem?: boolean;
+  shipsNationwide?: boolean;
   imageUrl?: string;
   vendorId?: string;
   billingLabel?: string;
@@ -141,6 +142,7 @@ const productProjection = `{
   inStock,
   quantity,
   recurringItem,
+  shipsNationwide,
   billingLabel,
   taxCategory,
   internalNotes,
@@ -214,6 +216,9 @@ function validateProductInput(body: RequestBody, partial = false) {
   if (!partial || body.recurringItem !== undefined) {
     data.recurringItem = body.recurringItem === true;
   }
+  if (!partial || body.shipsNationwide !== undefined) {
+    data.shipsNationwide = body.shipsNationwide === true;
+  }
   if (!partial || body.quantity !== undefined) {
     data.quantity =
       body.quantity === null
@@ -253,6 +258,7 @@ async function duplicateProduct(
       inStock,
       quantity,
       recurringItem,
+      shipsNationwide,
       imageUrl,
       vendor,
       billingLabel,

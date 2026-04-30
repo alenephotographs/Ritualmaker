@@ -85,6 +85,7 @@ export const flowerProductsQuery = groq`*[_type == "flowerProduct"] | order(sort
   inStock,
   quantity,
   recurringItem,
+  shipsNationwide,
   billingLabel,
   taxCategory,
   internalNotes,
@@ -116,6 +117,7 @@ export const publicFlowerProductsQuery = groq`*[_type == "flowerProduct" && acti
   inStock,
   quantity,
   recurringItem,
+  shipsNationwide,
   billingLabel,
   taxCategory,
   "vendorId": vendor->_id,
@@ -136,7 +138,7 @@ export const onePantryItemByIdQuery = groq`*[_type == "pantryItem" && _id == $id
 }`;
 
 export const oneFlowerProductByIdQuery = groq`*[_type == "flowerProduct" && _id == $id][0]{
-  _id, name, publicName, tier, shortDescription, displayDescription, category, priceCents, active, inStock, quantity, recurringItem, billingLabel, taxCategory,
+  _id, name, publicName, tier, shortDescription, displayDescription, category, priceCents, active, inStock, quantity, recurringItem, shipsNationwide, billingLabel, taxCategory,
   stripePriceId, stripeProductId,
   "vendorId": vendor->_id,
   "vendorName": vendor->name,

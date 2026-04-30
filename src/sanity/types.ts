@@ -98,6 +98,8 @@ export interface FlowerProduct {
   stripePriceId?: string;
   stripeProductId?: string;
   sortOrder?: number;
+  /** When true, product may be sold on the public shop with shipped checkout. */
+  shipsNationwide?: boolean;
   metadata?: Record<string, unknown>;
   inventoryAudit?: InventoryAudit;
   inventoryAuditHistory?: InventoryAuditHistoryEntry[];

@@ -111,6 +111,14 @@ export default defineType({
       description: "Use for offerings that come in and out of availability.",
     }),
     defineField({
+      name: "shipsNationwide",
+      title: "Available for online purchase with shipping",
+      type: "boolean",
+      initialValue: false,
+      description:
+        "When on, this SKU can appear on the public shop and checkout will collect a shipping address. Leave off for stand-only or local pickup items.",
+    }),
+    defineField({
       name: "imageUrl",
       title: "Image URL",
       type: "string",

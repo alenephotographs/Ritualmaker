@@ -9,9 +9,9 @@ import { StandStatus } from "@/components/StandStatus";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Ritualmaker — Flowers & pantry",
+  title: "Ritualmaker — Shop infused olive oil",
   description:
-    "Flower services at 38 Miller Hill Road — self-serve, restocked often.",
+    "Botanical-infused extra virgin olive oil from Ritualmaker, shipped within the US.",
 };
 
 export default async function FarmStandPage() {
@@ -19,13 +19,14 @@ export default async function FarmStandPage() {
     sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
     sanityClient.fetch<FlowerProduct[]>(publicFlowerProductsQuery).catch(() => []),
   ]);
+  const shippedProducts = flowerProducts.filter((p) => p.shipsNationwide === true);
   const c = resolveContactLinks(settings);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
       <p className="mt-6 max-w-xl text-sm text-ink/60">
-        Flowers and pantry, same stop.{" "}
+        Order our infused olive oil for shipping within the US. More offerings at the stand soon.{" "}
         <a
           href="#visit"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"
@@ -41,9 +42,13 @@ export default async function FarmStandPage() {
         </a>
       </p>
 
-      <div id="flowers" className="mt-12 scroll-mt-24">
-        <p className="text-xs uppercase tracking-widest text-ink/40">Flower services</p>
-        <BouquetGrid bouquets={[]} flowerProducts={flowerProducts} />
+      <div id="shop" className="mt-12 scroll-mt-24">
+        <p className="text-xs uppercase tracking-widest text-ink/40">Shop</p>
+        <BouquetGrid
+          bouquets={[]}
+          flowerProducts={shippedProducts}
+          shopMode="shipped"
+        />
       </div>
 
       <section className="mt-16 border-t border-ink/10 pt-12 lg:mt-20 lg:pt-16" aria-label="Visit the stand">

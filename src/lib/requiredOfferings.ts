@@ -13,6 +13,7 @@ export type RequiredOffering = {
   active: boolean;
   inStock: boolean;
   recurringItem: boolean;
+  shipsNationwide?: boolean;
   billingLabel: "Flower Service";
   taxCategory: "flower_service";
   sortOrder: number;
@@ -123,6 +124,7 @@ export const requiredOfferings: RequiredOffering[] = [
     active: true,
     inStock: true,
     recurringItem: true,
+    shipsNationwide: true,
     billingLabel: "Flower Service",
     taxCategory: "flower_service",
     sortOrder: 90,
