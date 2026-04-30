@@ -51,7 +51,7 @@ export function Wordmark({
     <span
       role="img"
       aria-label={title}
-      className={`block shrink-0 bg-ink [aspect-ratio:1589/120] [-webkit-mask-image:url('/brand/logo.svg')] [mask-image:url('/brand/logo.svg')] [-webkit-mask-position:left_center] [mask-position:left_center] [-webkit-mask-repeat:no-repeat] [mask-repeat:no-repeat] [-webkit-mask-size:contain] [mask-size:contain] ${className}`}
+      className={`block max-w-full shrink-0 bg-ink [aspect-ratio:1589/120] [-webkit-mask-image:url('/brand/logo.svg')] [mask-image:url('/brand/logo.svg')] [-webkit-mask-position:left_center] [mask-position:left_center] [-webkit-mask-repeat:no-repeat] [mask-repeat:no-repeat] [-webkit-mask-size:contain] [mask-size:contain] ${className}`}
     />
   );
 }

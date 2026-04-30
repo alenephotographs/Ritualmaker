@@ -28,9 +28,46 @@ function clean(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+const vendorProjection = `{
+  _id,
+  name,
+  "slug": slug.current,
+  contactName,
+  contactEmail,
+  phone,
+  accessCode,
+  active,
+  payoutMethodNotes,
+  commissionOrWholesaleNotes,
+  internalNotes,
+  stripeAccountId,
+  stripeOnboardingComplete,
+  stripeDetailsSubmitted,
+  stripeChargesEnabled,
+  stripePayoutsEnabled,
+  stripeRequirementsCurrentlyDue,
+  stripeRequirementsPastDue,
+  stripeRequirementsDisabledReason,
+  stripeComplianceLastSyncedAt
+}`;
+
+async function fetchVendor(id: string) {
+  return sanityWriteClient.fetch(`*[_type == "vendor" && _id == $id][0]${vendorProjection}`, {
+    id,
+  });
+}
+
+function success(vendor: unknown) {
+  return NextResponse.json({
+    ok: true,
+    vendor,
+    savedAt: new Date().toISOString(),
+  });
+}
+
 export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+async function saveVendor(req: Request) {
   const access = await requireAdminAccess();
   if ("error" in access) return access.error;
   if (!access.isOwner) {
@@ -55,7 +92,7 @@ export async function POST(req: Request) {
     if (action === "delete") {
       if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
       await sanityWriteClient.patch(body.id).set({ active: false }).commit();
-      return NextResponse.json({ ok: true });
+      return success(await fetchVendor(body.id));
     }
 
     const name = clean(body.name);
@@ -78,16 +115,17 @@ export async function POST(req: Request) {
         _type: "vendor",
         ...doc,
       });
-      return NextResponse.json({ ok: true, id: created._id });
+      return success(await fetchVendor(created._id));
     }
 
     if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     await sanityWriteClient.patch(body.id).set(doc).commit();
-    return NextResponse.json({ ok: true, id: body.id });
+    return success(await fetchVendor(body.id));
   } catch (error) {
     console.error("[admin/vendors] failed", error);
     return NextResponse.json({ error: "Could not save vendor" }, { status: 500 });
   }
 }
 
-export const PATCH = POST;
+export const POST = saveVendor;
+export const PATCH = saveVendor;

@@ -3,6 +3,7 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import type { FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
 
@@ -13,6 +14,24 @@ type AdminDashboardProps = {
   flowerProducts: FlowerProduct[];
   salesRecords: FlowerSalesRecord[];
   userEmail?: string | null;
+};
+
+type ApiResponse<T> = {
+  ok?: boolean;
+  id?: string;
+  savedAt?: string;
+  error?: string;
+  record?: T;
+};
+
+type SaveResponse = {
+  ok?: boolean;
+  error?: string;
+  id?: string;
+  savedAt?: string;
+  product?: FlowerProduct;
+  vendor?: Vendor;
+  salesRecord?: FlowerSalesRecord;
 };
 
 type ProductFormState = {
@@ -59,6 +78,11 @@ type SalesFormState = {
   vendorId: string;
   notes: string;
   billingType: string;
+};
+
+type AdminFeedback = {
+  type: "success" | "error";
+  message: string;
 };
 
 const productCategories: { value: FlowerProduct["category"]; label: string }[] = [
@@ -146,9 +170,26 @@ function statusClassName(on: boolean) {
   return on ? "bg-moss/15 text-moss" : "bg-ink/10 text-ink/55";
 }
 
-async function readJson(response: Response) {
+type ApiResult<T> = {
+  error?: string;
+  id?: string;
+  item?: T;
+  vendor?: Vendor;
+  record?: FlowerSalesRecord;
+  savedAt?: string;
+};
+
+function upsertById<T extends { _id: string }>(rows: T[], next: T) {
+  const exists = rows.some((row) => row._id === next._id);
+  const merged = exists
+    ? rows.map((row) => (row._id === next._id ? next : row))
+    : [next, ...rows];
+  return merged;
+}
+
+async function readJson<T>(response: Response) {
   try {
-    return (await response.json()) as { error?: string };
+    return (await response.json()) as ApiResult<T>;
   } catch {
     return {};
   }
@@ -171,24 +212,29 @@ export function AdminDashboard({
     useState<BatchPriceOperation>("increase");
   const [batchPriceMode, setBatchPriceMode] = useState<BatchPriceMode>("dollars");
   const [batchPriceValue, setBatchPriceValue] = useState("");
+  const [productRows, setProductRows] = useState<FlowerProduct[]>(flowerProducts);
+  const [vendorRows, setVendorRows] = useState<Vendor[]>(vendors);
+  const [salesRows, setSalesRows] = useState<FlowerSalesRecord[]>(salesRecords);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const visibleVendors = useMemo(
-    () => vendors.filter((vendor) => (isOwner ? true : vendor._id === defaultVendorId)),
-    [defaultVendorId, isOwner, vendors],
+    () => vendorRows.filter((vendor) => (isOwner ? true : vendor._id === defaultVendorId)),
+    [defaultVendorId, isOwner, vendorRows],
   );
   const visibleProducts = useMemo(
     () =>
-      flowerProducts.filter((product) =>
+      productRows.filter((product) =>
         isOwner ? true : !defaultVendorId || product.vendorId === defaultVendorId,
       ),
-    [defaultVendorId, flowerProducts, isOwner],
+    [defaultVendorId, isOwner, productRows],
   );
   const visibleSales = useMemo(
     () =>
-      salesRecords.filter((record) =>
+      salesRows.filter((record) =>
         isOwner ? true : !defaultVendorId || record.vendorId === defaultVendorId,
       ),
-    [defaultVendorId, isOwner, salesRecords],
+    [defaultVendorId, isOwner, salesRows],
   );
   const selectedProducts = useMemo(
     () => visibleProducts.filter((product) => selectedProductIds.includes(product._id)),
@@ -206,21 +252,37 @@ export function AdminDashboard({
       product.active !== false && product.inStock !== false && Boolean(product.vendorId),
   ).length;
 
-  async function postJson(url: string, payload: Record<string, unknown>) {
+  async function postJson<T>(url: string, payload: Record<string, unknown>) {
     setBusyId(String(payload.id ?? url));
+    setErrorMessage(null);
+    setStatusMessage(null);
     const response = await fetch(url, {
       method: payload.id ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await readJson(response);
+    const data = await readJson<T>(response);
     setBusyId(null);
     if (!response.ok) {
-      alert(data.error ?? "Could not save changes");
-      return false;
+      setErrorMessage(data.error ?? "Could not save changes");
+      return null;
     }
-    window.location.reload();
-    return true;
+    setStatusMessage(
+      data.savedAt
+        ? `Saved ${new Date(data.savedAt).toLocaleString()}`
+        : "Saved.",
+    );
+    return data;
+  }
+
+  async function patchProduct(id: string, payload: Record<string, unknown>) {
+    const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
+      id,
+      ...payload,
+    });
+    if (data?.item) {
+      setProductRows((current) => upsertById(current, data.item as FlowerProduct));
+    }
   }
 
   function editProduct(product: FlowerProduct) {
@@ -276,7 +338,7 @@ export function AdminDashboard({
 
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await postJson("/api/admin/flower-products", {
+    const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
       id: productForm.id,
       name: productForm.name,
       publicName: productForm.publicName,
@@ -296,12 +358,19 @@ export function AdminDashboard({
       sortOrder: productForm.sortOrder ? Number(productForm.sortOrder) : 100,
       internalNotes: productForm.internalNotes,
     });
+    if (data?.item) {
+      setProductRows((current) => upsertById(current, data.item as FlowerProduct));
+      setProductForm(emptyProductForm);
+    }
   }
 
   async function duplicateProduct(product: FlowerProduct) {
-    await postJson("/api/admin/flower-products", {
+    const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
       duplicateId: product._id,
     });
+    if (data?.item) {
+      setProductRows((current) => upsertById(current, data.item as FlowerProduct));
+    }
   }
 
   function toggleSelectedProduct(productId: string) {
@@ -314,17 +383,19 @@ export function AdminDashboard({
 
   async function applyBatchPriceChange() {
     if (!selectedProducts.length) {
-      alert("Select at least one product first.");
+      setErrorMessage("Select at least one product first.");
       return;
     }
 
     const rawValue = Number(batchPriceValue);
     if (!Number.isFinite(rawValue) || rawValue <= 0) {
-      alert("Enter a positive dollar amount or percentage.");
+      setErrorMessage("Enter a positive dollar amount or percentage.");
       return;
     }
 
     setBusyId("batch-prices");
+    setErrorMessage(null);
+    setStatusMessage(null);
     const updates = selectedProducts.map(async (product) => {
       const adjustment =
         batchPriceMode === "percent"
@@ -347,25 +418,37 @@ export function AdminDashboard({
       if (!response.ok) {
         throw new Error(data.error ?? `Could not update ${product.name}`);
       }
+      return data.item as FlowerProduct | undefined;
     });
 
     try {
-      await Promise.all(updates);
-      window.location.reload();
+      const updated = (await Promise.all(updates)).filter(Boolean) as FlowerProduct[];
+      setProductRows((current) =>
+        updated.reduce((rows, item) => upsertById(rows, item), current),
+      );
+      setSelectedProductIds([]);
+      setStatusMessage(`Updated ${updated.length} product price(s).`);
+      setBusyId(null);
     } catch (error) {
       setBusyId(null);
-      alert(error instanceof Error ? error.message : "Could not apply batch price change");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Could not apply batch price change",
+      );
     }
   }
 
   async function saveVendor(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await postJson("/api/admin/vendors", vendorForm);
+    const data = await postJson<Vendor>("/api/admin/vendors", vendorForm);
+    if (data?.vendor) {
+      setVendorRows((current) => upsertById(current, data.vendor as Vendor));
+      setVendorForm(emptyVendorForm);
+    }
   }
 
   async function saveSalesRecord(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await postJson("/api/admin/sales-records", {
+    const data = await postJson<FlowerSalesRecord>("/api/admin/sales-records", {
       id: salesForm.id,
       customerName: salesForm.customerName,
       customerEmail: salesForm.customerEmail,
@@ -377,10 +460,33 @@ export function AdminDashboard({
       notes: salesForm.notes,
       billingType: salesForm.billingType,
     });
+    if (data?.record) {
+      setSalesRows((current) => upsertById(current, data.record as FlowerSalesRecord));
+      setSalesForm(emptySalesForm);
+    }
+  }
+
+  async function quickSaveProduct(product: FlowerProduct) {
+    const priceInput = document.getElementById(
+      `quick-price-${product._id}`,
+    ) as HTMLInputElement | null;
+    const quantityInput = document.getElementById(
+      `quick-quantity-${product._id}`,
+    ) as HTMLInputElement | null;
+    const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
+      id: product._id,
+      priceCents: centsFromDollars(priceInput?.value ?? dollarsFromCents(product.priceCents)),
+      quantity: quantityInput?.value ? Number(quantityInput.value) : undefined,
+    });
+    if (data?.item) {
+      setProductRows((current) => upsertById(current, data.item as FlowerProduct));
+    }
   }
 
   async function openConnectLink(vendorId: string) {
     setBusyId(vendorId);
+    setErrorMessage(null);
+    setStatusMessage(null);
     const response = await fetch("/api/stripe/connect/account-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -389,7 +495,7 @@ export function AdminDashboard({
     const data = (await readJson(response)) as { error?: string; url?: string };
     setBusyId(null);
     if (!response.ok || !data.url) {
-      alert(data.error ?? "Could not create onboarding link");
+      setErrorMessage(data.error ?? "Could not create onboarding link");
       return;
     }
     window.location.href = data.url;
@@ -397,6 +503,8 @@ export function AdminDashboard({
 
   async function openDashboard(vendorId: string) {
     setBusyId(vendorId);
+    setErrorMessage(null);
+    setStatusMessage(null);
     const response = await fetch("/api/stripe/connect/login-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -405,15 +513,15 @@ export function AdminDashboard({
     const data = (await readJson(response)) as { error?: string; url?: string };
     setBusyId(null);
     if (!response.ok || !data.url) {
-      alert(data.error ?? "Could not open Stripe dashboard");
+      setErrorMessage(data.error ?? "Could not open Stripe dashboard");
       return;
     }
     window.location.href = data.url;
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-widest text-ink/40">Admin</p>
           <h1 className="mt-2 font-display text-4xl font-light sm:text-5xl">
@@ -432,6 +540,19 @@ export function AdminDashboard({
         </button>
       </div>
 
+      {(statusMessage || errorMessage) && (
+        <div
+          className={`mb-5 border px-4 py-3 text-sm ${
+            errorMessage
+              ? "border-magenta/30 bg-bloom/10 text-magenta"
+              : "border-moss/30 bg-moss/10 text-moss"
+          }`}
+          role={errorMessage ? "alert" : "status"}
+        >
+          {errorMessage ?? statusMessage}
+        </div>
+      )}
+
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Active in-stock", activeInStock],
@@ -446,7 +567,69 @@ export function AdminDashboard({
         ))}
       </section>
 
-      <section className="mt-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="mt-6 border border-ink/10 bg-white p-4 sm:p-5">
+        <p className="text-xs uppercase tracking-widest text-ink/40">Quick stock</p>
+        <div className="mt-3 grid gap-3 lg:grid-cols-3">
+          {["glimmer", "blessing", "abundance"].map((slug) => {
+            const product = visibleProducts.find((item) => item.slug === slug);
+            return product ? (
+              <div key={product._id} className="border border-ink/10 bg-cream/60 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{product.publicName ?? product.name}</p>
+                    <p className="text-xs text-ink/50">
+                      {formatUSD(product.priceCents)}
+                      {typeof product.quantity === "number" ? ` · Qty ${product.quantity}` : ""}
+                    </p>
+                    <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/40">
+                      Updated {product.updatedAt ? new Date(product.updatedAt).toLocaleString() : "—"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => editProduct(product)}
+                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
+                  >
+                    Edit
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={busyId === product._id}
+                    onClick={() =>
+                      patchProduct(product._id, { inStock: product.inStock === false })
+                    }
+                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(
+                      product.inStock !== false,
+                    )}`}
+                  >
+                    {product.inStock === false ? "Out" : "In stock"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busyId === product._id}
+                    onClick={() =>
+                      patchProduct(product._id, { active: product.active === false })
+                    }
+                    className={`px-3 py-1.5 text-xs uppercase tracking-widest ${statusClassName(
+                      product.active !== false,
+                    )}`}
+                  >
+                    {product.active === false ? "Inactive" : "Active"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div key={slug} className="border border-ink/10 bg-cream/60 p-3 text-sm text-ink/55">
+                {slug} not seeded yet.
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="border border-ink/10 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -792,7 +975,7 @@ export function AdminDashboard({
         </form>
       </section>
 
-      <section className="mt-10 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="mt-6 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <form onSubmit={saveVendor} className="border border-ink/10 bg-white p-4 sm:p-6">
           <p className="text-xs uppercase tracking-widest text-ink/40">
             {vendorForm.id ? "Edit vendor" : "Add vendor"}
@@ -889,8 +1072,9 @@ export function AdminDashboard({
                   <button
                     type="button"
                     onClick={() => openConnectLink(vendor._id)}
-                    disabled={busyId === vendor._id}
-                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
+                    disabled={busyId === vendor._id || !vendor.contactEmail}
+                    className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest disabled:opacity-40"
+                    title={vendor.contactEmail ? undefined : "Add vendor email before Stripe setup"}
                   >
                     Stripe setup
                   </button>
@@ -903,13 +1087,23 @@ export function AdminDashboard({
                     Stripe
                   </button>
                 </div>
+                {!vendor.contactEmail && (
+                  <p className="mt-2 text-xs text-ink/45">
+                    Add vendor email before Stripe setup.
+                  </p>
+                )}
+                {!vendor.stripeAccountId && (
+                  <p className="mt-2 text-xs text-ink/45">
+                    Stripe dashboard is not connected yet.
+                  </p>
+                )}
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mt-10 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="mt-6 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <form onSubmit={saveSalesRecord} className="border border-ink/10 bg-white p-4 sm:p-6">
           <p className="text-xs uppercase tracking-widest text-ink/40">Billing record</p>
           <h2 className="mt-2 font-display text-3xl font-light">Record sale</h2>

@@ -72,7 +72,9 @@ export const pantryItemsQuery = groq`*[_type == "pantryItem"] | order(comingSoon
 
 export const flowerProductsQuery = groq`*[_type == "flowerProduct"] | order(sortOrder asc, active desc, inStock desc, _createdAt desc){
   _id,
+  _updatedAt,
   name,
+  "slug": slug.current,
   publicName,
   tier,
   shortDescription,
@@ -101,7 +103,9 @@ export const flowerProductsQuery = groq`*[_type == "flowerProduct"] | order(sort
 
 export const publicFlowerProductsQuery = groq`*[_type == "flowerProduct" && active == true && inStock == true] | order(sortOrder asc, _createdAt desc){
   _id,
+  _updatedAt,
   name,
+  "slug": slug.current,
   publicName,
   tier,
   shortDescription,
@@ -142,6 +146,7 @@ export const oneFlowerProductByIdQuery = groq`*[_type == "flowerProduct" && _id 
 
 export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
   _id,
+  _updatedAt,
   name,
   "slug": slug.current,
   contactName,
@@ -165,6 +170,7 @@ export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
 
 export const flowerSalesRecordsQuery = groq`*[_type == "flowerSalesRecord"] | order(saleDate desc, _createdAt desc)[0...50]{
   _id,
+  _updatedAt,
   customerName,
   customerEmail,
   itemName,

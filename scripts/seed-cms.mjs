@@ -231,11 +231,11 @@ async function seedFlowerProducts() {
       category: "bouquet",
       tier: "small",
       priceCents: 1200,
-      shortDescription: "A small seasonal grab bouquet.",
+      shortDescription: "Small seasonal grab bouquet.",
       displayDescription:
         "A simple daily flower offering, freshly cut and easy to take home.",
       active: true,
-      inStock: false,
+      inStock: true,
       recurringItem: true,
       billingLabel: "Flower Service",
       taxCategory: "flower_service",
@@ -249,11 +249,11 @@ async function seedFlowerProducts() {
       category: "bouquet",
       tier: "standard",
       priceCents: 1800,
-      shortDescription: "The signature Ritualmaker seasonal bouquet.",
+      shortDescription: "Signature Ritualmaker seasonal bouquet.",
       displayDescription:
         "A fuller bouquet for the table, the week, or a thoughtful gift.",
       active: true,
-      inStock: false,
+      inStock: true,
       recurringItem: true,
       billingLabel: "Flower Service",
       taxCategory: "flower_service",
@@ -267,11 +267,11 @@ async function seedFlowerProducts() {
       category: "bouquet",
       tier: "premium",
       priceCents: 2600,
-      shortDescription: "A larger gift-ready seasonal bouquet.",
+      shortDescription: "Larger gift-ready seasonal bouquet.",
       displayDescription:
         "An abundant seasonal arrangement for sharing, gifting, or anchoring a space.",
       active: true,
-      inStock: false,
+      inStock: true,
       recurringItem: true,
       billingLabel: "Flower Service",
       taxCategory: "flower_service",
@@ -331,13 +331,22 @@ async function seedFlowerProducts() {
   ];
 
   for (const product of products) {
-    const { slug, ...rest } = product;
-    await client.createOrReplace({
+    const { _id, slug, ...rest } = product;
+    const existing = await client.fetch(
+      `*[_type == "flowerProduct" && slug.current == $slug][0]{_id}`,
+      { slug },
+    );
+    const doc = {
       ...rest,
       _type: "flowerProduct",
       slug: { _type: "slug", current: slug },
       vendor: { _type: "reference", _ref: "vendor.ritualmaker" },
-    });
+    };
+    if (existing?._id) {
+      await client.patch(existing._id).set(doc).commit();
+    } else {
+      await client.create({ _id, ...doc });
+    }
   }
   console.log(`Flower service products upserted: ${products.length}`);
 }

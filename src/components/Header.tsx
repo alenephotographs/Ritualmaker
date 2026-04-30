@@ -20,7 +20,7 @@ export async function Header() {
           className="flex items-center"
           aria-label="Ritualmaker, home"
         >
-          <Wordmark className="h-9 w-auto sm:h-10 lg:h-11" />
+          <Wordmark className="h-9 w-[18rem] max-w-[58vw] sm:h-10 sm:w-[22rem] lg:h-11 lg:w-[28rem]" />
         </Link>
         <div className="flex items-center gap-2">
           <Link

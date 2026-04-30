@@ -116,6 +116,51 @@ async function ensureVendorVisible(vendorId: string | undefined) {
   }
 }
 
+async function success(id?: string) {
+  return NextResponse.json({
+    ok: true,
+    id,
+    item: id ? await fetchProduct(id) : undefined,
+    savedAt: new Date().toISOString(),
+  });
+}
+
+const productProjection = `{
+  _id,
+  _updatedAt,
+  name,
+  "slug": slug.current,
+  publicName,
+  tier,
+  shortDescription,
+  displayDescription,
+  category,
+  priceCents,
+  active,
+  inStock,
+  quantity,
+  recurringItem,
+  billingLabel,
+  taxCategory,
+  internalNotes,
+  metadata,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  "vendorStripeAccountId": vendor->stripeAccountId,
+  inventoryAudit,
+  "inventoryAuditHistory": inventoryAuditHistory[0...10],
+  stripePriceId,
+  stripeProductId,
+  "imageUrl": coalesce(imageUrl, externalImageUrl, image.asset->url),
+  sortOrder
+}`;
+
+async function fetchProduct(id: string) {
+  return sanityWriteClient.fetch(`*[_type == "flowerProduct" && _id == $id][0]${productProjection}`, {
+    id,
+  });
+}
+
 function validateProductInput(body: RequestBody, partial = false) {
   const data: Record<string, unknown> = {};
   const name = cleanString(body.name);
@@ -264,12 +309,40 @@ async function saveProduct(req: Request) {
     const vendorId = access.isOwner ? cleanString(body.vendorId) : access.vendorId;
     await ensureVendorVisible(vendorId);
     setVendorField(data, vendorId);
+    const slug = (data.slug as { current?: string } | undefined)?.current;
+    const existing = slug
+      ? await sanityWriteClient.fetch<{
+          _id: string;
+          inventoryAuditHistory?: InventoryAuditHistoryEntry[];
+        } | null>(
+          `*[_type == "flowerProduct" && slug.current == $slug][0]{_id, inventoryAuditHistory}`,
+          { slug },
+        )
+      : null;
+
+    if (existing?._id) {
+      await sanityWriteClient
+        .patch(existing._id)
+        .set({
+          ...data,
+          ...auditPatch(
+            existing,
+            access.session,
+            access.isOwner,
+            access.vendorId,
+            "updated product",
+          ),
+        })
+        .commit();
+      return await success(existing._id);
+    }
+
     const doc = await sanityWriteClient.create({
       _type: "flowerProduct",
       ...data,
       ...auditPatch({}, access.session, access.isOwner, access.vendorId, "created product"),
     });
-    return NextResponse.json({ ok: true, id: doc._id });
+    return await success(doc._id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not create product";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -327,7 +400,7 @@ export async function PATCH(req: Request) {
         ...auditPatch(doc, access.session, access.isOwner, access.vendorId, "updated product"),
       })
       .commit();
-    return NextResponse.json({ ok: true });
+    return await success(doc._id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not update product";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -349,5 +422,5 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
 
   await sanityWriteClient.patch(id).set({ active: false, inStock: false }).commit();
-  return NextResponse.json({ ok: true });
+  return await success(id);
 }

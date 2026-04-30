@@ -74,6 +74,7 @@ export type FlowerProductTier = "small" | "standard" | "premium" | "bundle" | "c
 
 export interface FlowerProduct {
   _id: string;
+  updatedAt?: string;
   name: string;
   slug?: string;
   publicName?: string;

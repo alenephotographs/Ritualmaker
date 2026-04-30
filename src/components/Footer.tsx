@@ -15,8 +15,8 @@ export async function Footer() {
     <footer className="border-t border-ink/10 bg-stone/40">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <Link href="/" className="inline-block" aria-label="Ritualmaker, home">
-            <Wordmark className="h-8 w-auto lg:h-9" />
+          <Link href="/" className="inline-block max-w-full" aria-label="Ritualmaker, home">
+            <Wordmark className="h-8 max-w-full lg:h-9" />
           </Link>
           <p className="mt-4 text-sm text-ink/60">
             {s?.tagline ?? "Fresh flowers in the neighborhood, 24/7."}

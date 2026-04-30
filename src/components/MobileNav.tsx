@@ -113,7 +113,7 @@ export function MobileNav({ standClosed }: MobileNavProps) {
               </button>
               </div>
               <div className="mt-3">
-                <Wordmark className="h-8 w-auto" />
+                <Wordmark className="h-8 w-[16rem] max-w-full" />
               </div>
             </div>
             <nav className="flex flex-1 flex-col gap-0 overflow-y-auto px-2 py-2" aria-label="Ritualmaker categories">
