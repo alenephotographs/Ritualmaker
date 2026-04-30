@@ -1,4 +1,5 @@
 import { sanityClient } from "@/sanity/client";
+import { sanityServerReadClient } from "@/sanity/serverReadClient";
 import { resolveContactLinks } from "@/lib/siteContact";
 import { publicFlowerProductsQuery, siteSettingsQuery } from "@/sanity/queries";
 import type { FlowerProduct, SiteSettings } from "@/sanity/types";
@@ -15,10 +16,17 @@ export const metadata = {
 };
 
 export default async function FarmStandPage() {
-  const [settings, flowerProducts] = await Promise.all([
-    sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
-    sanityClient.fetch<FlowerProduct[]>(publicFlowerProductsQuery).catch(() => []),
+  const settled = await Promise.allSettled([
+    sanityClient.fetch<SiteSettings | null>(siteSettingsQuery),
+    sanityServerReadClient.fetch<FlowerProduct[]>(publicFlowerProductsQuery),
   ]);
+  let settings: SiteSettings | null = null;
+  if (settled[0].status === "fulfilled") settings = settled[0].value;
+  else console.error("[farm-stand] settings fetch failed", settled[0].reason);
+
+  let flowerProducts: FlowerProduct[] = [];
+  if (settled[1].status === "fulfilled") flowerProducts = settled[1].value;
+  else console.error("[farm-stand] products fetch failed", settled[1].reason);
   const shippedProducts = flowerProducts.filter((p) => p.shipsNationwide === true);
   const c = resolveContactLinks(settings);
 

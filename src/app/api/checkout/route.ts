@@ -42,6 +42,19 @@ type CheckoutBody = {
 
 const US_SHIPPING_COUNTRIES = ["US"] as const;
 
+/** Stripe Connect: only set transfer_data when exactly one destination account applies. */
+function transferDestinationForFlowerProducts(products: FlowerProduct[]): string | undefined {
+  const ids = [
+    ...new Set(
+      products
+        .map((p) => (typeof p.vendorStripeAccountId === "string" ? p.vendorStripeAccountId.trim() : ""))
+        .filter(Boolean),
+    ),
+  ];
+  if (ids.length !== 1) return undefined;
+  return ids[0];
+}
+
 function assertFlowerProductShips(product: FlowerProduct) {
   if (product.shipsNationwide !== true) {
     return NextResponse.json(
@@ -332,6 +345,10 @@ export async function POST(req: Request) {
         ctaVariant: body.ctaVariant ?? "",
       };
 
+      const transferDestination = transferDestinationForFlowerProducts(
+        lines.map((line) => line.item as FlowerProduct),
+      );
+
       const sessionCreate: Stripe.Checkout.SessionCreateParams = {
         mode: "payment",
         success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -339,6 +356,10 @@ export async function POST(req: Request) {
         line_items: lineItems,
         automatic_tax: { enabled: false },
         metadata: sessionMetadata,
+        payment_method_types: ["card"],
+        payment_intent_data: transferDestination
+          ? { transfer_data: { destination: transferDestination } }
+          : undefined,
       };
 
       if (allShippedNationwide) {
@@ -450,6 +471,14 @@ export async function POST(req: Request) {
       ctaVariant: body.ctaVariant ?? "",
     };
 
+    const transferDestinationSingle =
+      itemType === "flowerProduct"
+        ? transferDestinationForFlowerProducts([item as FlowerProduct])
+        : (() => {
+            const dest = (item as Bouquet | PantryItem).vendorStripeAccountId?.trim();
+            return dest || undefined;
+          })();
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -457,12 +486,8 @@ export async function POST(req: Request) {
       line_items: lineItemsSingle,
       automatic_tax: { enabled: false },
       payment_method_types: ["card"],
-      payment_intent_data: item.vendorStripeAccountId
-        ? {
-            transfer_data: {
-              destination: item.vendorStripeAccountId,
-            },
-          }
+      payment_intent_data: transferDestinationSingle
+        ? { transfer_data: { destination: transferDestinationSingle } }
         : undefined,
       metadata: sessionMetadataSingle,
     };
@@ -504,6 +529,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("[checkout] failed", error);
-    return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
+    const message =
+      error instanceof Error && error.message.trim()
+        ? error.message.trim()
+        : "Could not start checkout";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
