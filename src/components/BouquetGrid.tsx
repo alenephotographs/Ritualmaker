@@ -183,7 +183,7 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
       {lastBouquet && lastBouquet.available && (
         <div className="mb-6 border border-moss/30 bg-moss/10 px-4 py-4">
           <p className="text-xs uppercase tracking-widest text-moss">
-            Order again
+            Last stand favorite
           </p>
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-sm text-ink/75">
@@ -195,16 +195,16 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
               disabled={loadingId === lastBouquet._id}
               aria-label={
                 loadingId === lastBouquet._id
-                  ? "Starting checkout"
-                  : `${ctaVariant === "checkout" ? "Checkout" : "Order"} for ${lastBouquet.name}`
+                  ? "Starting payment"
+                  : `Pay for ${lastBouquet.name} at the stand`
               }
               className="bg-ink px-4 py-2 text-xs uppercase tracking-widest text-cream hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/30"
             >
               {loadingId === lastBouquet._id
                 ? "Starting..."
                 : ctaVariant === "checkout"
-                  ? "Checkout"
-                  : "Order"}
+                  ? "Pay now"
+                  : "Pay for stand item"}
             </button>
           </div>
         </div>
@@ -307,8 +307,8 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
                     !b.available
                       ? `${b.name} is out today`
                       : loadingId === b._id
-                        ? `Starting checkout for ${b.name}`
-                        : `${ctaVariant === "checkout" ? "Checkout" : "Order"} for ${b.name}`
+                        ? `Starting payment for ${b.name}`
+                        : `Pay for ${b.name} at the stand`
                   }
                   className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
                 >
@@ -317,8 +317,8 @@ export function BouquetGrid({ bouquets, flowerProducts = [] }: BouquetGridProps)
                     : loadingId === b._id
                       ? "Starting..."
                       : ctaVariant === "checkout"
-                        ? "Checkout"
-                        : "Order"}
+                        ? "Pay now"
+                        : "Pay for stand item"}
                 </button>
               </div>
               {!b.available && availableBouquets.length > 0 && (
@@ -384,7 +384,7 @@ function FlowerProductCard({
         )}
         {typeof item.quantity === "number" && (
           <p className="mt-3 text-xs uppercase tracking-widest text-ink/45">
-            {item.quantity} available for local pickup
+            {item.quantity} available at the stand
           </p>
         )}
         <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-4">
@@ -397,7 +397,7 @@ function FlowerProductCard({
             onClick={() => onBuy(item)}
             className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
           >
-            {loading ? "Starting..." : "Checkout"}
+            {loading ? "Starting..." : "Pay for stand item"}
           </button>
         </div>
       </div>

@@ -26,7 +26,7 @@ export default defineType({
       type: "text",
       rows: 3,
       initialValue:
-        "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Order online for pickup or pay cash at the stand.",
+        "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Stop by and buy what is fresh at the stand.",
     }),
     defineField({
       name: "standStatus",

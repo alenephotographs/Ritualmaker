@@ -21,15 +21,15 @@ export default async function SuccessPage() {
         You&apos;re all set
       </h1>
       <p className="mt-6 max-w-md text-base text-ink/65">
-        Pick up your local flower service at the stand, 38 Miller Hill Road. Wrong
-        shelf or empty? Grab a match and DM us on Instagram.
+        Thanks. Stop by the stand at 38 Miller Hill Road and take the matching
+        seasonal offering from today&apos;s inventory.
       </p>
       <div className="mt-6 w-full max-w-md border border-moss/25 bg-moss/10 px-4 py-4 text-left">
-        <p className="text-xs uppercase tracking-widest text-moss">Pickup</p>
+        <p className="text-xs uppercase tracking-widest text-moss">At the stand</p>
         <ul className="mt-2 space-y-1.5 text-sm text-ink/70">
           <li>1. Stand at 38 Miller Hill Road</li>
-          <li>2. Your seasonal flower offering, labeled shelf</li>
-          <li>3. Shelf bare? Take the closest match + message us</li>
+          <li>2. Take the matching seasonal offering from the shelf</li>
+          <li>3. Shelf changed? Choose what is available + message us</li>
         </ul>
         <p className="mt-3 text-xs uppercase tracking-widest text-ink/40">Links</p>
         <ul className="mt-1.5 space-y-1 text-sm text-ink/75">
@@ -89,7 +89,7 @@ export default async function SuccessPage() {
           href="/farm-stand"
           className="inline-flex border border-ink/20 px-5 py-3 text-xs uppercase tracking-widest text-ink/85 hover:bg-ink hover:text-cream"
         >
-          Order again
+          See stand inventory
         </Link>
       </div>
     </div>

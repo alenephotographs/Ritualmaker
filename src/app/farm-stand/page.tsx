@@ -11,7 +11,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "Ritualmaker — Flowers & pantry",
   description:
-    "Flower services and local pickup at 38 Miller Hill Road — self-serve, restocked often.",
+    "Flower services at 38 Miller Hill Road — self-serve, restocked often.",
 };
 
 export default async function FarmStandPage() {

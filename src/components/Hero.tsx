@@ -32,7 +32,7 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
         </h1>
 
         <p className="mt-5 max-w-xl text-base font-light text-cream/85 sm:text-lg">
-          38 Miller Hill Road — grab stems at the stand (cash) or order below for pickup.
+          38 Miller Hill Road — stop by the stand and buy what is fresh in inventory.
         </p>
 
         <div className="mt-8">

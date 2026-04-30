@@ -31,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
     "Ritualmaker — Farm stand, pantry, and on-location flowers";
   const description =
     settings?.description ??
-    "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Order online for pickup or pay cash at the stand.";
+    "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Stop by and buy what is fresh at the stand.";
 
   return {
     metadataBase: new URL(

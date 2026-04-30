@@ -61,7 +61,7 @@ const CANON = {
     title: "Ritualmaker",
     tagline: "Fresh flowers in the neighborhood, 24/7",
     description:
-      "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Order online for pickup or pay cash at the stand.",
+      "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Stop by and buy what is fresh at the stand.",
     standStatus: "open",
     standMessage: "Restocked through the day",
     address: "38 Miller Hill Road, Hudson Valley, NY",
@@ -73,7 +73,7 @@ const CANON = {
       displayOrder: 10,
       question: "How do I pay for flowers?",
       answer: oneLine(
-        "Order online on this site for pickup at the stand, or pay cash at the self-serve stand. Pantry item cards say if an item is stand-only or can also ship.",
+        "Stop by the self-serve stand and buy what is fresh on the shelf. Inventory changes through the day.",
       ),
     },
     {
@@ -87,9 +87,9 @@ const CANON = {
     {
       _id: "preprod.faq.03",
       displayOrder: 30,
-      question: "What if the shelf I ordered is empty?",
+      question: "What if the shelf is empty?",
       answer: oneLine(
-        "Take the closest same-size bundle and message us on Instagram so we can make it right.",
+        "If something looks sold through, take the closest match and message us on Instagram so we can make it right.",
       ),
     },
     {
@@ -185,7 +185,7 @@ async function seedBouquets() {
     available: true,
     displayOrder,
     description:
-      "Grown and bundled for the self-serve stand. Order for pickup, or pay cash at the stand.",
+      "Grown and bundled for the self-serve stand. Stop by and buy what is available.",
     highlights: ["Cut on the farm", "At the stand 24/7 when open", "Hudson Valley–grown"],
     externalImageUrl: heroPath,
   });
@@ -209,7 +209,7 @@ async function seedPantry() {
     category: "other",
     vendor: { _type: "reference", _ref: "vendor.ritualmaker" },
     description:
-      "Replace this card with a real seasonal garden offering. Use shelf notes for local pickup details.",
+      "Replace this card with a real seasonal garden offering. Use shelf notes for stand details.",
     priceCents: 1200,
     shelfLocation: "Pantry shelf (sample)",
     available: true,
