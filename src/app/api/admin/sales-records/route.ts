@@ -2,6 +2,27 @@ import { NextResponse } from "next/server";
 import { requireAdminAccess } from "@/lib/adminAccess";
 import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
 
+const salesRecordProjection = `{
+  _id,
+  customerName,
+  customerEmail,
+  itemName,
+  amountCents,
+  saleDate,
+  paymentMethod,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  notes,
+  taxCategory,
+  billingType,
+  checkoutSessionId,
+  paymentIntentId,
+  itemType,
+  itemId,
+  productCategory,
+  billingLabel
+}`;
+
 type SalesRecordBody = {
   id?: string;
   checkoutSessionId?: string;
@@ -40,6 +61,22 @@ function cleanPaymentMethod(value: unknown) {
     value === "other"
     ? value
     : "other";
+}
+
+async function fetchSalesRecord(id: string) {
+  return sanityWriteClient.fetch(
+    `*[_type == "flowerSalesRecord" && _id == $id][0]${salesRecordProjection}`,
+    { id },
+  );
+}
+
+async function success(id: string) {
+  return NextResponse.json({
+    ok: true,
+    id,
+    record: await fetchSalesRecord(id),
+    savedAt: new Date().toISOString(),
+  });
 }
 
 export async function POST(req: Request) {
@@ -103,11 +140,11 @@ export async function POST(req: Request) {
 
     if (body.id) {
       await sanityWriteClient.patch(body.id).set(doc).commit();
-      return NextResponse.json({ ok: true, id: body.id });
+      return success(body.id);
     }
 
     const created = await sanityWriteClient.create(doc);
-    return NextResponse.json({ ok: true, id: created._id });
+    return success(created._id);
   } catch (error) {
     console.error("[admin/sales-records] failed", error);
     return NextResponse.json(

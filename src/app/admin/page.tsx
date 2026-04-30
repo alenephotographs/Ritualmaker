@@ -12,6 +12,7 @@ import {
   vendorsQuery,
 } from "@/sanity/queries";
 import { AdminDashboard } from "@/components/AdminDashboard";
+import { ensureRequiredOfferings } from "@/lib/requiredOfferings";
 
 export const metadata = {
   title: "Admin",
@@ -27,6 +28,12 @@ export default async function AdminPage() {
   const vendorId = session.user.vendorId;
   if (!isOwner && !vendorId) {
     redirect("/admin/sign-in");
+  }
+
+  if (isOwner) {
+    await ensureRequiredOfferings().catch((error) => {
+      console.error("[admin] failed ensuring required offerings", error);
+    });
   }
 
   const [vendors, flowerProducts, salesRecords] = await Promise.all([

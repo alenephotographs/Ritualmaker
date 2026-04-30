@@ -251,6 +251,7 @@ type ApiResult<T> = {
   item?: T;
   vendor?: Vendor;
   record?: FlowerSalesRecord;
+  salesRecord?: FlowerSalesRecord;
   savedAt?: string;
 };
 
@@ -605,8 +606,9 @@ export function AdminDashboard({
       notes: salesForm.notes,
       billingType: salesForm.billingType,
     });
-    if (data?.record) {
-      setSalesRows((current) => upsertById(current, data.record as FlowerSalesRecord));
+    const record = data?.record ?? data?.salesRecord;
+    if (record) {
+      setSalesRows((current) => upsertById(current, record as FlowerSalesRecord));
       setSalesForm(emptySalesForm);
     }
   }

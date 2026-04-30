@@ -151,7 +151,7 @@ export async function POST(req: Request) {
           line.itemType === "flowerProduct" && line.item.category === "pantry",
       );
       const lowestPantryPrice = pantryLines.length
-        ? Math.min(...pantryLines.map((line) => line.item.priceCents))
+        ? Math.min(...pantryLines.map((line) => itemPriceCents(line.item) ?? 0))
         : 0;
       const discountCents =
         hasBouquet && pantryLines.length
@@ -164,7 +164,9 @@ export async function POST(req: Request) {
       const discountTarget =
         discountCents > 0
           ? pantryLines.reduce((lowest, line) =>
-              line.item.priceCents < lowest.item.priceCents ? line : lowest,
+              (itemPriceCents(line.item) ?? 0) < (itemPriceCents(lowest.item) ?? 0)
+                ? line
+                : lowest,
             )
           : null;
 
