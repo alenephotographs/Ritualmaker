@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { sanityClient } from "@/sanity/client";
 import type {
+  EventOrder,
   FlowerProduct,
   FlowerSalesRecord,
   Vendor,
 } from "@/sanity/types";
 import {
+  eventOrdersQuery,
   flowerProductsQuery,
   flowerSalesRecordsQuery,
   vendorsQuery,
@@ -36,10 +38,11 @@ export default async function AdminPage() {
     });
   }
 
-  const [vendors, flowerProducts, salesRecords] = await Promise.all([
+  const [vendors, flowerProducts, salesRecords, eventOrders] = await Promise.all([
     sanityClient.fetch<Vendor[]>(vendorsQuery).catch(() => []),
     sanityClient.fetch<FlowerProduct[]>(flowerProductsQuery).catch(() => []),
     sanityClient.fetch<FlowerSalesRecord[]>(flowerSalesRecordsQuery).catch(() => []),
+    sanityClient.fetch<EventOrder[]>(eventOrdersQuery).catch(() => []),
   ]);
 
   return (
@@ -49,6 +52,7 @@ export default async function AdminPage() {
       vendors={vendors}
       flowerProducts={flowerProducts}
       salesRecords={salesRecords}
+      eventOrders={eventOrders}
       userEmail={session.user.email}
     />
   );

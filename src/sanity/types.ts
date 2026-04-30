@@ -150,6 +150,46 @@ export interface FlowerSalesRecord {
   createdByEmail?: string;
 }
 
+export type EventOrderStatus = "new" | "replied" | "booked" | "declined";
+
+export interface EventOrder {
+  _id: string;
+  _createdAt?: string;
+  _updatedAt?: string;
+  name?: string;
+  email?: string;
+  formType?: "on-location" | "photography";
+  services?: string[];
+  eventType?: string;
+  eventDate?: string;
+  eventLocation?: string;
+  venue?: string;
+  guestCount?: number;
+  notes?: string;
+  status?: EventOrderStatus | string;
+  proposalScope?: string;
+  proposalTotalCents?: number;
+  depositAmountCents?: number;
+  balanceAmountCents?: number;
+  balanceDueDate?: string;
+  proposalPdfGeneratedAt?: string;
+  proposalPdfFileName?: string;
+  depositPaymentLinkId?: string;
+  depositPaymentLinkUrl?: string;
+  balancePaymentLinkId?: string;
+  balancePaymentLinkUrl?: string;
+  stripeInvoiceId?: string;
+  stripeInvoiceUrl?: string;
+  stripeInvoicePdfUrl?: string;
+  stripeInvoiceStatus?: string;
+  stripeInvoiceCreatedAt?: string;
+  depositPaid?: boolean;
+  balancePaid?: boolean;
+  paidInFull?: boolean;
+  paymentStatusUpdatedAt?: string;
+  internalNotes?: string;
+}
+
 export interface Review {
   _id: string;
   name: string;

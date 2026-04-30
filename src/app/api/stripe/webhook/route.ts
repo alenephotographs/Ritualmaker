@@ -6,6 +6,22 @@ import { trackUxEvent } from "@/lib/uxAnalytics";
 
 export const runtime = "nodejs";
 
+async function syncInvoiceStatusToEventOrder(invoice: Stripe.Invoice) {
+  const eventOrderId = typeof invoice.metadata?.event_order_id === "string" ? invoice.metadata.event_order_id : "";
+  if (!eventOrderId || !hasSanityWriteClient()) return;
+
+  const paidInFull = invoice.status === "paid";
+  await sanityWriteClient
+    .patch(eventOrderId)
+    .set({
+      stripeInvoiceStatus: invoice.status ?? "",
+      paidInFull,
+      balancePaid: paidInFull,
+      paymentStatusUpdatedAt: new Date().toISOString(),
+    })
+    .commit();
+}
+
 export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature");
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -38,6 +54,29 @@ export async function POST(req: Request) {
           amountTotal: session.amount_total ?? undefined,
         });
         if (hasSanityWriteClient()) {
+          const eventOrderId = session.metadata?.event_order_id;
+          const paymentType = session.metadata?.payment_type;
+          if (
+            eventOrderId &&
+            (paymentType === "deposit" || paymentType === "balance" || paymentType === "invoice")
+          ) {
+            const depositPaid = paymentType === "deposit" ? true : undefined;
+            const balancePaid = paymentType === "balance" ? true : undefined;
+            const paidInFull = paymentType === "balance" || paymentType === "invoice";
+            await sanityWriteClient
+              .patch(eventOrderId)
+              .set({
+                ...(typeof depositPaid === "boolean" ? { depositPaid } : {}),
+                ...(typeof balancePaid === "boolean" ? { balancePaid } : {}),
+                ...(paidInFull ? { paidInFull: true } : {}),
+                paymentStatusUpdatedAt: new Date().toISOString(),
+              })
+              .commit()
+              .catch((error) => {
+                console.error("[stripe] failed syncing event-order checkout payment", error);
+              });
+          }
+
           const vendorId = session.metadata?.vendorId;
           const checkoutSessionId = session.id;
           const existingRecord = await sanityWriteClient.fetch<{ _id: string } | null>(
@@ -120,6 +159,21 @@ export async function POST(req: Request) {
         }
       } catch (error) {
         console.error("[stripe] failed handling account.updated", error);
+      }
+      break;
+    }
+    case "invoice.created":
+    case "invoice.finalized":
+    case "invoice.payment_succeeded":
+    case "invoice.payment_failed":
+    case "invoice.updated":
+    case "invoice.voided":
+    case "invoice.marked_uncollectible": {
+      try {
+        const invoice = event.data.object as Stripe.Invoice;
+        await syncInvoiceStatusToEventOrder(invoice);
+      } catch (error) {
+        console.error("[stripe] failed syncing invoice status", error);
       }
       break;
     }

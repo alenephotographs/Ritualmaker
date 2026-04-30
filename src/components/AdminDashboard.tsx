@@ -3,7 +3,7 @@
 import type { FormEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
-import type { FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
+import type { EventOrder, FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
 
 type AdminDashboardProps = {
@@ -12,6 +12,7 @@ type AdminDashboardProps = {
   vendors: Vendor[];
   flowerProducts: FlowerProduct[];
   salesRecords: FlowerSalesRecord[];
+  eventOrders: EventOrder[];
   userEmail?: string | null;
 };
 
@@ -63,6 +64,19 @@ type SalesFormState = {
   vendorId: string;
   notes: string;
   billingType: string;
+};
+
+type EventOrderFormState = {
+  id?: string;
+  eventType: string;
+  eventDate: string;
+  eventLocation: string;
+  proposalScope: string;
+  proposalTotal: string;
+  depositAmount: string;
+  balanceAmount: string;
+  balanceDueDate: string;
+  internalNotes: string;
 };
 
 const productCategories = [
@@ -230,6 +244,18 @@ const emptySalesForm: SalesFormState = {
   billingType: "flower service",
 };
 
+const emptyEventOrderForm: EventOrderFormState = {
+  eventType: "Wedding",
+  eventDate: "",
+  eventLocation: "",
+  proposalScope: "",
+  proposalTotal: "",
+  depositAmount: "",
+  balanceAmount: "",
+  balanceDueDate: "",
+  internalNotes: "",
+};
+
 function dollarsFromCents(cents?: number) {
   if (typeof cents !== "number") return "";
   return (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
@@ -241,6 +267,30 @@ function centsFromDollars(value: string) {
   return Math.round(amount * 100);
 }
 
+function inferEventType(order: EventOrder) {
+  const services = order.services ?? [];
+  if (services.includes("commercial-account")) return "Corporate";
+  if (services.includes("wedding-event-florals") || services.includes("florals")) return "Wedding";
+  if (services.includes("restaurant-hotel")) return "Corporate";
+  return "Event";
+}
+
+function badgeClassName(on: boolean) {
+  return on ? "bg-moss/15 text-moss border-moss/30" : "bg-ink/5 text-ink/45 border-ink/15";
+}
+
+function badgesForOrder(order: EventOrder) {
+  return [
+    { label: "Proposal PDF generated", active: Boolean(order.proposalPdfGeneratedAt) },
+    { label: "Deposit link created", active: Boolean(order.depositPaymentLinkUrl) },
+    { label: "Balance link created", active: Boolean(order.balancePaymentLinkUrl) },
+    { label: "Stripe invoice created", active: Boolean(order.stripeInvoiceId) },
+    { label: "Deposit paid", active: Boolean(order.depositPaid) },
+    { label: "Balance paid", active: Boolean(order.balancePaid) },
+    { label: "Paid in full", active: Boolean(order.paidInFull) },
+  ];
+}
+
 function statusClassName(on: boolean) {
   return on ? "bg-moss/15 text-moss" : "bg-ink/10 text-ink/55";
 }
@@ -249,9 +299,16 @@ type ApiResult<T> = {
   error?: string;
   id?: string;
   item?: T;
+  order?: EventOrder;
   vendor?: Vendor;
   record?: FlowerSalesRecord;
   salesRecord?: FlowerSalesRecord;
+  paymentLinkId?: string;
+  paymentLinkUrl?: string;
+  invoiceId?: string;
+  hostedInvoiceUrl?: string;
+  invoicePdfUrl?: string;
+  status?: string;
   savedAt?: string;
 };
 
@@ -271,12 +328,25 @@ async function readJson<T>(response: Response) {
   }
 }
 
+function eventBadges(order: EventOrder) {
+  return [
+    { label: "Proposal PDF generated", on: Boolean(order.proposalPdfGeneratedAt) },
+    { label: "Deposit link created", on: Boolean(order.depositPaymentLinkUrl) },
+    { label: "Balance link created", on: Boolean(order.balancePaymentLinkUrl) },
+    { label: "Stripe invoice created", on: Boolean(order.stripeInvoiceId) },
+    { label: "Deposit paid", on: Boolean(order.depositPaid) },
+    { label: "Balance paid", on: Boolean(order.balancePaid) },
+    { label: "Paid in full", on: Boolean(order.paidInFull) },
+  ];
+}
+
 export function AdminDashboard({
   isOwner,
   defaultVendorId,
   vendors,
   flowerProducts,
   salesRecords,
+  eventOrders,
   userEmail,
 }: AdminDashboardProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -291,11 +361,11 @@ export function AdminDashboard({
   const [productRows, setProductRows] = useState<FlowerProduct[]>(flowerProducts);
   const [vendorRows, setVendorRows] = useState<Vendor[]>(vendors);
   const [salesRows, setSalesRows] = useState<FlowerSalesRecord[]>(salesRecords);
+  const [eventOrderRows, setEventOrderRows] = useState<EventOrder[]>(eventOrders);
+  const [eventOrderForm, setEventOrderForm] = useState<EventOrderFormState>(emptyEventOrderForm);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [quickEdits, setQuickEdits] = useState<Record<string, { price: string; quantity: string }>>(
-    {},
-  );
 
   const visibleVendors = useMemo(
     () => vendorRows.filter((vendor) => (isOwner ? true : vendor._id === defaultVendorId)),
@@ -315,6 +385,7 @@ export function AdminDashboard({
       ),
     [defaultVendorId, isOwner, salesRows],
   );
+  const visibleEventOrders = useMemo(() => (isOwner ? eventOrderRows : []), [eventOrderRows, isOwner]);
   const selectedProducts = useMemo(
     () => visibleProducts.filter((product) => selectedProductIds.includes(product._id)),
     [selectedProductIds, visibleProducts],
@@ -330,26 +401,6 @@ export function AdminDashboard({
     (product) =>
       product.active !== false && product.inStock !== false && Boolean(product.vendorId),
   ).length;
-  const coreProducts = ["glimmer", "blessing", "abundance"]
-    .map((slug) => visibleProducts.find((item) => item.slug === slug))
-    .filter(Boolean) as FlowerProduct[];
-
-  function normalizeCategory(form: ProductFormState) {
-    return form.category === "other" && form.customCategory.trim()
-      ? form.customCategory.trim()
-      : form.category;
-  }
-
-  function normalizeTier(form: ProductFormState) {
-    return form.tier === "custom" ? form.customTier.trim() : form.tier;
-  }
-
-  function normalizeBillingLabel(form: ProductFormState) {
-    return form.overrideBillingLabel && form.billingLabel.trim()
-      ? form.billingLabel.trim()
-      : "Flower Service";
-  }
-
   async function postJson<T>(url: string, payload: Record<string, unknown>) {
     setBusyId(String(payload.id ?? url));
     setErrorMessage(null);
@@ -666,6 +717,157 @@ export function AdminDashboard({
     window.location.href = data.url;
   }
 
+  function openEventOrder(order: EventOrder) {
+    setEventOrderForm({
+      id: order._id,
+      eventType: order.eventType || inferEventType(order),
+      eventDate: order.eventDate || "",
+      eventLocation: order.eventLocation || order.venue || "",
+      proposalScope: order.proposalScope || "",
+      proposalTotal: dollarsFromCents(order.proposalTotalCents),
+      depositAmount: dollarsFromCents(order.depositAmountCents),
+      balanceAmount: dollarsFromCents(order.balanceAmountCents),
+      balanceDueDate: order.balanceDueDate || "",
+      internalNotes: order.internalNotes || "",
+    });
+  }
+
+  async function saveEventOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!eventOrderForm.id) {
+      setErrorMessage("Select an event order first.");
+      return;
+    }
+    const data = await postJson<EventOrder>("/api/admin/event-orders", {
+      id: eventOrderForm.id,
+      eventType: eventOrderForm.eventType,
+      eventDate: eventOrderForm.eventDate,
+      eventLocation: eventOrderForm.eventLocation,
+      proposalScope: eventOrderForm.proposalScope,
+      proposalTotalCents: centsFromDollars(eventOrderForm.proposalTotal),
+      depositAmountCents: centsFromDollars(eventOrderForm.depositAmount),
+      balanceAmountCents: centsFromDollars(eventOrderForm.balanceAmount),
+      balanceDueDate: eventOrderForm.balanceDueDate,
+      internalNotes: eventOrderForm.internalNotes,
+    });
+    if (data?.order) {
+      setEventOrderRows((current) => upsertById(current, data.order as EventOrder));
+      openEventOrder(data.order as EventOrder);
+    }
+  }
+
+  async function copyToClipboard(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedText(label);
+      setStatusMessage(`${label} copied.`);
+      setTimeout(() => setCopiedText(null), 1200);
+    } catch {
+      setErrorMessage(`Could not copy ${label.toLowerCase()}`);
+    }
+  }
+
+  async function generateProposalPdf(order: EventOrder) {
+    setBusyId(`proposal-${order._id}`);
+    setErrorMessage(null);
+    setStatusMessage(null);
+    try {
+      const response = await fetch(`/api/admin/event-orders/${order._id}/proposal-pdf`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const data = await readJson(response);
+        throw new Error(data.error ?? "Could not generate proposal PDF");
+      }
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `ritualmaker-proposal-${order._id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(downloadUrl);
+      setEventOrderRows((current) =>
+        current.map((row) =>
+          row._id === order._id
+            ? {
+                ...row,
+                proposalPdfGeneratedAt: new Date().toISOString(),
+              }
+            : row,
+        ),
+      );
+      setStatusMessage("Proposal PDF generated.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Could not generate proposal PDF");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function createEventPaymentLink(order: EventOrder, paymentType: "deposit" | "balance") {
+    setBusyId(`${paymentType}-link-${order._id}`);
+    setErrorMessage(null);
+    setStatusMessage(null);
+    try {
+      const response = await fetch(`/api/admin/event-orders/${order._id}/create-payment-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentType }),
+      });
+      const data = await readJson(response);
+      if (!response.ok) {
+        throw new Error(data.error ?? `Could not create ${paymentType} payment link`);
+      }
+      setEventOrderRows((current) =>
+        current.map((row) =>
+          row._id !== order._id
+            ? row
+            : paymentType === "deposit"
+              ? { ...row, depositPaymentLinkId: data.paymentLinkId, depositPaymentLinkUrl: data.paymentLinkUrl }
+              : { ...row, balancePaymentLinkId: data.paymentLinkId, balancePaymentLinkUrl: data.paymentLinkUrl },
+        ),
+      );
+      setStatusMessage(`${paymentType === "deposit" ? "Deposit" : "Balance"} payment link created.`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Could not create payment link");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function createEventInvoice(order: EventOrder) {
+    setBusyId(`invoice-${order._id}`);
+    setErrorMessage(null);
+    setStatusMessage(null);
+    try {
+      const response = await fetch(`/api/admin/event-orders/${order._id}/create-invoice`, {
+        method: "POST",
+      });
+      const data = await readJson(response);
+      if (!response.ok) {
+        throw new Error(data.error ?? "Could not create Stripe invoice");
+      }
+      setEventOrderRows((current) =>
+        current.map((row) =>
+          row._id === order._id
+            ? {
+                ...row,
+                stripeInvoiceId: data.invoiceId,
+                stripeInvoiceUrl: data.hostedInvoiceUrl,
+                stripeInvoicePdfUrl: data.invoicePdfUrl,
+                stripeInvoiceStatus: data.status,
+              }
+            : row,
+        ),
+      );
+      setStatusMessage("Stripe invoice created.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Could not create Stripe invoice");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
@@ -807,6 +1009,247 @@ export function AdminDashboard({
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="border border-ink/10 bg-white p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-ink/40">
+                Event / Wedding / Corporate Orders
+              </p>
+              <h2 className="mt-2 font-display text-3xl font-light">Client output actions</h2>
+              <p className="mt-1 text-sm text-ink/60">
+                Keep this flow inline: proposal PDF, payment links, and Stripe invoice.
+              </p>
+            </div>
+            <span className="border border-ink/15 px-2 py-1 text-[10px] uppercase tracking-widest text-ink/55">
+              {visibleEventOrders.length} orders
+            </span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {visibleEventOrders.length ? (
+              visibleEventOrders.map((order) => {
+                const badges = badgesForOrder(order);
+                return (
+                  <article key={order._id} className="border border-ink/10 bg-cream/50 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => openEventOrder(order)}
+                          className="font-medium underline decoration-ink/20 underline-offset-4"
+                        >
+                          {order.name || "Unnamed client"}
+                        </button>
+                        <p className="mt-1 text-sm text-ink/60">
+                          {order.email || "No email"} · {order.eventType || inferEventType(order)} ·{" "}
+                          {order.eventDate || "No date"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => generateProposalPdf(order)}
+                          disabled={busyId === `proposal-${order._id}`}
+                          className="border border-ink/20 px-2.5 py-1.5 text-[10px] uppercase tracking-widest disabled:opacity-40"
+                        >
+                          {busyId === `proposal-${order._id}` ? "Generating..." : "Generate proposal PDF"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createEventPaymentLink(order, "deposit")}
+                          disabled={busyId === `deposit-link-${order._id}`}
+                          className="border border-ink/20 px-2.5 py-1.5 text-[10px] uppercase tracking-widest disabled:opacity-40"
+                        >
+                          {busyId === `deposit-link-${order._id}` ? "Creating..." : "Create deposit payment link"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createEventPaymentLink(order, "balance")}
+                          disabled={busyId === `balance-link-${order._id}`}
+                          className="border border-ink/20 px-2.5 py-1.5 text-[10px] uppercase tracking-widest disabled:opacity-40"
+                        >
+                          {busyId === `balance-link-${order._id}` ? "Creating..." : "Create balance payment link"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createEventInvoice(order)}
+                          disabled={busyId === `invoice-${order._id}`}
+                          className="bg-ink px-2.5 py-1.5 text-[10px] uppercase tracking-widest text-cream disabled:bg-ink/30"
+                        >
+                          {busyId === `invoice-${order._id}` ? "Creating..." : "Create Stripe invoice"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {badges.map((badge) => (
+                        <span
+                          key={`${order._id}-${badge.label}`}
+                          className={`rounded border px-2 py-1 text-[10px] uppercase tracking-widest ${badgeClassName(badge.active)}`}
+                        >
+                          {badge.label}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                      {order.depositPaymentLinkUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => window.open(order.depositPaymentLinkUrl, "_blank", "noopener,noreferrer")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            Open deposit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copyToClipboard(order.depositPaymentLinkUrl!, "Deposit link")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            {copiedText === "Deposit link" ? "Copied" : "Copy deposit"}
+                          </button>
+                        </>
+                      )}
+                      {order.balancePaymentLinkUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => window.open(order.balancePaymentLinkUrl, "_blank", "noopener,noreferrer")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            Open balance
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copyToClipboard(order.balancePaymentLinkUrl!, "Balance link")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            {copiedText === "Balance link" ? "Copied" : "Copy balance"}
+                          </button>
+                        </>
+                      )}
+                      {order.stripeInvoiceUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => window.open(order.stripeInvoiceUrl, "_blank", "noopener,noreferrer")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            Open invoice
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copyToClipboard(order.stripeInvoiceUrl!, "Invoice URL")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            {copiedText === "Invoice URL" ? "Copied" : "Copy invoice"}
+                          </button>
+                        </>
+                      )}
+                      {order.stripeInvoicePdfUrl && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => window.open(order.stripeInvoicePdfUrl, "_blank", "noopener,noreferrer")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            Open invoice PDF
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copyToClipboard(order.stripeInvoicePdfUrl!, "Invoice PDF URL")}
+                            className="border border-ink/20 px-2 py-1 uppercase tracking-widest"
+                          >
+                            {copiedText === "Invoice PDF URL" ? "Copied" : "Copy invoice PDF"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              <p className="text-sm text-ink/55">No event orders yet.</p>
+            )}
+          </div>
+        </div>
+        <form onSubmit={saveEventOrder} className="border border-ink/10 bg-white p-4 sm:p-5">
+          <p className="text-xs uppercase tracking-widest text-ink/40">
+            {eventOrderForm.id ? "Edit selected order" : "Select an order to edit"}
+          </p>
+          <h2 className="mt-2 font-display text-3xl font-light">Order details</h2>
+          <div className="mt-4 space-y-3">
+            <SelectInput
+              label="Event type"
+              value={eventOrderForm.eventType}
+              onChange={(value) => setEventOrderForm({ ...eventOrderForm, eventType: value })}
+              options={[
+                { value: "Wedding", label: "Wedding" },
+                { value: "Event", label: "Event" },
+                { value: "Corporate", label: "Corporate" },
+              ]}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <TextInput
+                label="Event date"
+                type="date"
+                value={eventOrderForm.eventDate}
+                onChange={(value) => setEventOrderForm({ ...eventOrderForm, eventDate: value })}
+              />
+              <TextInput
+                label="Balance due date"
+                type="date"
+                value={eventOrderForm.balanceDueDate}
+                onChange={(value) => setEventOrderForm({ ...eventOrderForm, balanceDueDate: value })}
+              />
+            </div>
+            <TextInput
+              label="Event location"
+              value={eventOrderForm.eventLocation}
+              onChange={(value) => setEventOrderForm({ ...eventOrderForm, eventLocation: value })}
+            />
+            <TextareaInput
+              label="Proposal notes / scope"
+              value={eventOrderForm.proposalScope}
+              onChange={(value) => setEventOrderForm({ ...eventOrderForm, proposalScope: value })}
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <TextInput
+                label="Proposal total"
+                type="number"
+                value={eventOrderForm.proposalTotal}
+                onChange={(value) => setEventOrderForm({ ...eventOrderForm, proposalTotal: value })}
+              />
+              <TextInput
+                label="Deposit amount"
+                type="number"
+                value={eventOrderForm.depositAmount}
+                onChange={(value) => setEventOrderForm({ ...eventOrderForm, depositAmount: value })}
+              />
+              <TextInput
+                label="Balance amount"
+                type="number"
+                value={eventOrderForm.balanceAmount}
+                onChange={(value) => setEventOrderForm({ ...eventOrderForm, balanceAmount: value })}
+              />
+            </div>
+            <TextareaInput
+              label="Internal notes (never on client PDF)"
+              value={eventOrderForm.internalNotes}
+              onChange={(value) => setEventOrderForm({ ...eventOrderForm, internalNotes: value })}
+            />
+            <button
+              type="submit"
+              disabled={!eventOrderForm.id || busyId === (eventOrderForm.id ?? "/api/admin/event-orders")}
+              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
+            >
+              {busyId === (eventOrderForm.id ?? "/api/admin/event-orders")
+                ? "Saving..."
+                : "Save event order"}
+            </button>
+          </div>
+        </form>
       </section>
 
       <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
