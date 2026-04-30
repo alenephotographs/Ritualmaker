@@ -19,15 +19,6 @@ export function ContactOutreachBlock({ links, id }: ContactOutreachBlockProps) {
       <p className="mt-2 font-display text-2xl font-light text-ink/90 sm:text-3xl">
         {links.addressLine}
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-ink/60">
-        <Link
-          href="/on-location#inquiry"
-          className="font-medium text-ink underline decoration-ink/25 underline-offset-4 hover:decoration-ink/60"
-        >
-          Event florals &amp; travel
-        </Link>
-        {" — separate from the stand."}
-      </p>
       <ul className="mt-5 space-y-2.5 text-sm text-ink/80">
         <li>
           <a
