@@ -72,6 +72,11 @@ export type FlowerProductCategory =
 
 export type FlowerProductTier = "small" | "standard" | "premium" | "bundle" | "custom";
 
+export type FlowerProductGalleryImage = {
+  assetId?: string;
+  url?: string | null;
+};
+
 export interface FlowerProduct {
   _id: string;
   updatedAt?: string;
@@ -88,7 +93,12 @@ export interface FlowerProduct {
   inStock?: boolean;
   quantity?: number;
   recurringItem?: boolean;
+  /** Resolved main image URL (gallery first, then fallbacks). */
   imageUrl?: string;
+  /** All gallery image URLs in display order (derived in GROQ). */
+  imageUrls?: string[];
+  /** Gallery entries with asset id + URL for admin thumbnails and saves. */
+  gallery?: FlowerProductGalleryImage[];
   vendorId?: string;
   vendorName?: string;
   vendorStripeAccountId?: string;

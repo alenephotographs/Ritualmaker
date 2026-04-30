@@ -49,6 +49,10 @@ type ProductFormState = {
   recurringItem: boolean;
   shipsNationwide: boolean;
   imageUrl: string;
+  /** Sanity image asset ids in display order; first = main image. */
+  galleryAssetIds: string[];
+  /** Public URLs for thumbnails (from CMS or after upload). */
+  galleryPreviewUrls: string[];
   vendorId: string;
   billingLabel: string;
   overrideBillingLabel: boolean;
@@ -221,6 +225,8 @@ const emptyProductForm: ProductFormState = {
   recurringItem: true,
   shipsNationwide: false,
   imageUrl: "",
+  galleryAssetIds: [],
+  galleryPreviewUrls: [],
   vendorId: "",
   billingLabel: "Flower Service",
   overrideBillingLabel: false,
@@ -386,6 +392,7 @@ export function AdminDashboard({
   cmsLoadError,
 }: AdminDashboardProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [galleryUploading, setGalleryUploading] = useState(false);
   const [productForm, setProductForm] = useState<ProductFormState>(emptyProductForm);
   const [vendorForm, setVendorForm] = useState<VendorFormState>(emptyVendorForm);
   const [salesForm, setSalesForm] = useState<SalesFormState>(emptySalesForm);
@@ -461,7 +468,58 @@ export function AdminDashboard({
     (product) =>
       product.active !== false && product.inStock !== false && Boolean(product.vendorId),
   ).length;
-  async function postJson<T>(url: string, payload: Record<string, unknown>) {
+  async function uploadProductGalleryFiles(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    setGalleryUploading(true);
+    setErrorMessage(null);
+    const newIds: string[] = [];
+    const newUrls: string[] = [];
+    try {
+      for (const file of Array.from(fileList)) {
+        const body = new FormData();
+        body.set("file", file);
+        const res = await fetch("/api/admin/flower-products/upload-image", {
+          method: "POST",
+          body,
+        });
+        const data = (await res.json()) as { error?: string; assetId?: string; url?: string };
+        if (!res.ok || !data.assetId) {
+          setErrorMessage(data.error ?? "Image upload failed");
+          return;
+        }
+        newIds.push(data.assetId);
+        newUrls.push(data.url ?? "");
+      }
+      setProductForm((prev) => ({
+        ...prev,
+        galleryAssetIds: [...prev.galleryAssetIds, ...newIds],
+        galleryPreviewUrls: [...prev.galleryPreviewUrls, ...newUrls],
+      }));
+      setStatusMessage(`Uploaded ${newIds.length} image${newIds.length === 1 ? "" : "s"}. Save offering to persist.`);
+    } finally {
+      setGalleryUploading(false);
+    }
+  }
+
+  function removeGalleryImage(index: number) {
+    setProductForm((prev) => ({
+      ...prev,
+      galleryAssetIds: prev.galleryAssetIds.filter((_, i) => i !== index),
+      galleryPreviewUrls: prev.galleryPreviewUrls.filter((_, i) => i !== index),
+    }));
+  }
+
+  function moveGalleryImage(index: number, direction: -1 | 1) {
+    const next = index + direction;
+    if (next < 0 || next >= productForm.galleryAssetIds.length) return;
+    setProductForm((prev) => {
+      const ids = [...prev.galleryAssetIds];
+      const urls = [...prev.galleryPreviewUrls];
+      [ids[index], ids[next]] = [ids[next], ids[index]];
+      [urls[index], urls[next]] = [urls[next], urls[index]];
+      return { ...prev, galleryAssetIds: ids, galleryPreviewUrls: urls };
+    });
+  }
     setBusyId(String(payload.id ?? url));
     setErrorMessage(null);
     setStatusMessage(null);
@@ -515,6 +573,10 @@ export function AdminDashboard({
       recurringItem: product.recurringItem !== false,
       shipsNationwide: product.shipsNationwide === true,
       imageUrl: product.imageUrl ?? "",
+      galleryAssetIds: (product.gallery ?? [])
+        .map((g) => g.assetId)
+        .filter((id): id is string => Boolean(id)),
+      galleryPreviewUrls: (product.gallery ?? []).map((g) => g.url ?? ""),
       vendorId: product.vendorId ?? "",
       billingLabel,
       overrideBillingLabel: billingLabel !== "Flower Service",
@@ -604,6 +666,7 @@ export function AdminDashboard({
       recurringItem: productForm.recurringItem,
       shipsNationwide: productForm.shipsNationwide,
       imageUrl: productForm.imageUrl,
+      galleryAssetIds: productForm.galleryAssetIds,
       vendorId: productForm.vendorId,
       billingLabel: productForm.overrideBillingLabel ? productForm.billingLabel : "Flower Service",
       taxCategory: productForm.taxCategory,
@@ -1402,6 +1465,20 @@ export function AdminDashboard({
                         aria-label={`Select ${product.name}`}
                         className="mt-1"
                       />
+                      <div className="h-14 w-14 shrink-0 overflow-hidden border border-ink/15 bg-stone/30">
+                        {product.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={product.imageUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[8px] uppercase tracking-widest text-ink/35">
+                            —
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <p className="font-medium">{product.name}</p>
                         <p className="mt-1 text-xs uppercase tracking-widest text-ink/40">
@@ -1770,11 +1847,86 @@ export function AdminDashboard({
                 onChange={(value) => setProductForm({ ...productForm, sortOrder: value })}
                 helper="Lower numbers appear first in admin lists and on the site where sort is used."
               />
+              <div className="space-y-2">
+                <p className={adminLabelClass}>Upload product images</p>
+                <p className={`${adminHelperClass} mb-2`}>
+                  First image is the main photo on the shop and in Stripe Checkout. JPEG, PNG, WebP, or GIF,
+                  up to 8 MB each. Save offering after uploading to store the gallery in Sanity.
+                </p>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  disabled={galleryUploading || Boolean(busyId)}
+                  onChange={(e) => {
+                    void uploadProductGalleryFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                  className="block w-full max-w-md text-sm text-ink/80 file:mr-3 file:border file:border-ink/20 file:bg-white file:px-3 file:py-2 file:text-xs file:uppercase file:tracking-widest"
+                />
+                {galleryUploading ? (
+                  <p className="text-xs uppercase tracking-widest text-ink/45">Uploading…</p>
+                ) : null}
+                {productForm.galleryAssetIds.length > 0 ? (
+                  <ul className="mt-3 flex flex-wrap gap-3">
+                    {productForm.galleryAssetIds.map((assetId, index) => {
+                      const preview = productForm.galleryPreviewUrls[index];
+                      return (
+                        <li
+                          key={`${assetId}-${index}`}
+                          className="relative w-24 shrink-0 border border-ink/15 bg-white"
+                        >
+                          {index === 0 ? (
+                            <span className="absolute left-1 top-1 z-10 bg-ink px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-cream">
+                              Main
+                            </span>
+                          ) : null}
+                          <div className="aspect-square w-full overflow-hidden bg-stone/30">
+                            {preview ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={preview} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center p-2 text-center text-[9px] uppercase tracking-widest text-ink/40">
+                                Saved
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1 border-t border-ink/10 p-1">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => moveGalleryImage(index, -1)}
+                              className="flex-1 border border-ink/15 px-1 py-1 text-[10px] uppercase tracking-widest disabled:opacity-30"
+                            >
+                              Up
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index >= productForm.galleryAssetIds.length - 1}
+                              onClick={() => moveGalleryImage(index, 1)}
+                              className="flex-1 border border-ink/15 px-1 py-1 text-[10px] uppercase tracking-widest disabled:opacity-30"
+                            >
+                              Down
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeGalleryImage(index)}
+                              className="w-full border border-ink/15 px-1 py-1 text-[10px] uppercase tracking-widest text-red-800"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+              </div>
               <TextInput
-                label="Image URL (optional)"
+                label="Image URL (optional fallback)"
                 value={productForm.imageUrl}
                 onChange={(value) => setProductForm({ ...productForm, imageUrl: value })}
-                helper="Path or full URL to a hosted image for this product."
+                helper="Used when no uploaded gallery images are saved, or as an extra legacy field."
               />
               <TextareaInput
                 label="Internal notes"
@@ -1797,6 +1949,22 @@ export function AdminDashboard({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {bouquetProducts.map((product) => (
               <AdminCard key={product._id} className="!p-4">
+                <div className="flex gap-3">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden border border-ink/10 bg-stone/30">
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[9px] uppercase tracking-widest text-ink/35">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
                 <p className="font-medium text-ink">{product.publicName ?? product.name}</p>
                 <p className="mt-1 text-sm text-ink/60">{formatUSD(product.priceCents)}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/45">
@@ -1814,6 +1982,8 @@ export function AdminDashboard({
                   >
                     Record sale
                   </button>
+                </div>
+                  </div>
                 </div>
               </AdminCard>
             ))}
@@ -1835,6 +2005,22 @@ export function AdminDashboard({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {pantryProducts.map((product) => (
               <AdminCard key={product._id} className="!p-4">
+                <div className="flex gap-3">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden border border-ink/10 bg-stone/30">
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[9px] uppercase tracking-widest text-ink/35">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
                 <p className="font-medium text-ink">{product.publicName ?? product.name}</p>
                 <p className="mt-1 text-sm text-ink/60">{formatUSD(product.priceCents)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1848,6 +2034,8 @@ export function AdminDashboard({
                   >
                     Duplicate
                   </button>
+                </div>
+                  </div>
                 </div>
               </AdminCard>
             ))}

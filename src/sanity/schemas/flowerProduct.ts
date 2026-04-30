@@ -119,10 +119,30 @@ export default defineType({
         "When on, this SKU can appear on the public shop and checkout will collect a shipping address. Leave off for stand-only or local pickup items.",
     }),
     defineField({
-      name: "imageUrl",
-      title: "Image URL",
+      name: "image",
+      title: "Image (uploaded)",
+      type: "image",
+      options: { hotspot: true },
+      description: "Optional single upload (legacy). Prefer Product images below; first gallery image is the main photo on the site.",
+    }),
+    defineField({
+      name: "gallery",
+      title: "Product images",
+      type: "array",
+      of: [{ type: "image", options: { hotspot: true } }],
+      description: "Upload multiple images. The first image is the main product image; order matters on the storefront.",
+    }),
+    defineField({
+      name: "externalImageUrl",
+      title: "External image URL (fallback)",
       type: "string",
-      description: "Optional image URL or /photos/... path.",
+      description: "Optional full URL or /photos/... path when you are not using uploads above.",
+    }),
+    defineField({
+      name: "imageUrl",
+      title: "Image URL (fallback)",
+      type: "string",
+      description: "Optional pasted URL (legacy). Uploads in Product images take priority.",
     }),
     defineField({
       name: "vendor",

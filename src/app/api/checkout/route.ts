@@ -296,7 +296,16 @@ export async function POST(req: Request) {
             product_data: {
               name: `${itemDisplayName(line.itemType, line.item)}${label ? ` — ${label}` : ""}`,
               description,
-              images: line.item.imageUrl ? [line.item.imageUrl] : undefined,
+              images: (() => {
+                const urls =
+                  line.item.imageUrls?.filter((u) => /^https?:\/\//i.test(u)) ?? [];
+                const fromList = urls.length ? urls.slice(0, 8) : undefined;
+                const fallback =
+                  line.item.imageUrl && /^https?:\/\//i.test(line.item.imageUrl)
+                    ? [line.item.imageUrl]
+                    : undefined;
+                return fromList ?? fallback;
+              })(),
             },
           },
           quantity,
@@ -452,7 +461,16 @@ export async function POST(req: Request) {
                     ? `${itemName} — ${description}`
                     : item.name,
                 description,
-                images: item.imageUrl ? [item.imageUrl] : undefined,
+                images: (() => {
+                  const urls =
+                    item.imageUrls?.filter((u) => /^https?:\/\//i.test(u)) ?? [];
+                  const fromList = urls.length ? urls.slice(0, 8) : undefined;
+                  const fallback =
+                    item.imageUrl && /^https?:\/\//i.test(item.imageUrl)
+                      ? [item.imageUrl]
+                      : undefined;
+                  return fromList ?? fallback;
+                })(),
               },
             },
             quantity: 1,

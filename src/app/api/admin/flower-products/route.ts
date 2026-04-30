@@ -30,6 +30,8 @@ type RequestBody = {
   recurringItem?: boolean;
   shipsNationwide?: boolean;
   imageUrl?: string;
+  /** Sanity image asset ids (`image-…`) in display order; first = main product image. */
+  galleryAssetIds?: string[];
   vendorId?: string;
   billingLabel?: string;
   taxCategory?: string;
@@ -55,6 +57,26 @@ const tiers = new Set<NonNullable<FlowerProduct["tier"]>>([
 
 function cleanString(value: unknown) {
   return typeof value === "string" ? value.trim() : undefined;
+}
+
+function normalizeGalleryAssetIds(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) return undefined;
+  const out: string[] = [];
+  for (const id of value) {
+    if (typeof id !== "string") continue;
+    const t = id.trim();
+    if (t.startsWith("image-")) out.push(t);
+  }
+  return out;
+}
+
+function galleryBlocksFromAssetIds(assetIds: string[]) {
+  return assetIds.map((ref, index) => ({
+    _type: "image" as const,
+    _key: `g-${index}-${ref.replace("image-", "").slice(0, 12)}`,
+    asset: { _type: "reference" as const, _ref: ref },
+  }));
 }
 
 function numberOrUndefined(value: unknown) {
@@ -168,7 +190,12 @@ const productProjection = `{
   "inventoryAuditHistory": inventoryAuditHistory[0...10],
   stripePriceId,
   stripeProductId,
-  "imageUrl": coalesce(imageUrl, externalImageUrl, image.asset->url),
+  "gallery": gallery[]{
+    "assetId": asset._ref,
+    "url": asset->url
+  },
+  "imageUrls": coalesce(gallery[].asset->url, []),
+  "imageUrl": coalesce(gallery[0].asset->url, image.asset->url, imageUrl, externalImageUrl),
   sortOrder
 }`;
 
@@ -225,6 +252,13 @@ function validateProductInput(body: RequestBody, partial = false) {
     }
   }
 
+  const galleryIds = normalizeGalleryAssetIds(body.galleryAssetIds);
+  if (!partial || body.galleryAssetIds !== undefined) {
+    if (galleryIds !== undefined) {
+      data.gallery = galleryIds.length ? galleryBlocksFromAssetIds(galleryIds) : [];
+    }
+  }
+
   if (!partial || body.active !== undefined) data.active = body.active !== false;
   if (!partial || body.inStock !== undefined) data.inStock = body.inStock === true;
   if (!partial || body.recurringItem !== undefined) {
@@ -274,6 +308,7 @@ async function duplicateProduct(
       recurringItem,
       shipsNationwide,
       imageUrl,
+      gallery,
       vendor,
       billingLabel,
       taxCategory,

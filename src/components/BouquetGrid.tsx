@@ -313,15 +313,6 @@ export function BouquetGrid({
               </p>
             </div>
           )}
-          {shopMode === "shipped" ? (
-            <div className="mb-6 rounded-lg border border-ink/15 bg-cream/60 px-4 py-4">
-              <p className="text-xs uppercase tracking-widest text-ink/50">Shipping</p>
-              <p className="mt-2 max-w-2xl text-sm text-ink/70">
-                Enter your address below. We quote <strong>USPS</strong> rates via Shippo and add
-                shipping as its own line in Stripe Checkout (alongside the product).
-              </p>
-            </div>
-          ) : null}
           {[
             {
               label:

@@ -97,7 +97,12 @@ export const flowerProductsQuery = groq`*[_type == "flowerProduct"] | order(sort
   "inventoryAuditHistory": inventoryAuditHistory[0...10],
   stripePriceId,
   stripeProductId,
-  "imageUrl": coalesce(externalImageUrl, image.asset->url),
+  "gallery": gallery[]{
+    "assetId": asset._ref,
+    "url": asset->url
+  },
+  "imageUrls": coalesce(gallery[].asset->url, []),
+  "imageUrl": coalesce(gallery[0].asset->url, image.asset->url, imageUrl, externalImageUrl),
   image,
   sortOrder
 }`;
@@ -125,7 +130,8 @@ export const publicFlowerProductsQuery = groq`*[_type == "flowerProduct" && acti
   "vendorStripeAccountId": vendor->stripeAccountId,
   stripePriceId,
   stripeProductId,
-  "imageUrl": coalesce(externalImageUrl, image.asset->url)
+  "imageUrls": coalesce(gallery[].asset->url, []),
+  "imageUrl": coalesce(gallery[0].asset->url, image.asset->url, imageUrl, externalImageUrl)
 }`;
 
 export const onePantryItemByIdQuery = groq`*[_type == "pantryItem" && _id == $id][0]{
@@ -143,7 +149,8 @@ export const oneFlowerProductByIdQuery = groq`*[_type == "flowerProduct" && _id 
   "vendorId": vendor->_id,
   "vendorName": vendor->name,
   "vendorStripeAccountId": vendor->stripeAccountId,
-  "imageUrl": coalesce(externalImageUrl, image.asset->url)
+  "imageUrls": coalesce(gallery[].asset->url, []),
+  "imageUrl": coalesce(gallery[0].asset->url, image.asset->url, imageUrl, externalImageUrl)
 }`;
 
 export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
