@@ -38,6 +38,14 @@ export function BouquetGrid({
   const [lastBouquetId, setLastBouquetId] = useState<string | null>(null);
   const [ctaVariant, setCtaVariant] = useState<"buy" | "checkout">("buy");
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [shipName, setShipName] = useState("");
+  const [shipLine1, setShipLine1] = useState("");
+  const [shipLine2, setShipLine2] = useState("");
+  const [shipCity, setShipCity] = useState("");
+  const [shipState, setShipState] = useState("");
+  const [shipZip, setShipZip] = useState("");
+  const [shipPhone, setShipPhone] = useState("");
+  const [shipEmail, setShipEmail] = useState("");
 
   const availableBouquets = useMemo(
     () => bouquets.filter((bouquet) => bouquet.available),
@@ -176,6 +184,18 @@ export function BouquetGrid({
       setError("Add at least one stand item first.");
       return;
     }
+    if (shopMode === "shipped") {
+      if (
+        !shipName.trim() ||
+        !shipLine1.trim() ||
+        !shipCity.trim() ||
+        !shipState.trim() ||
+        !shipZip.trim()
+      ) {
+        setError("Enter your full shipping address (name, street, city, state, ZIP) to continue.");
+        return;
+      }
+    }
     setError(null);
     setLoadingId("cart");
     try {
@@ -206,6 +226,21 @@ export function BouquetGrid({
             quantity: line.quantity,
           })),
           ctaVariant,
+          ...(shopMode === "shipped"
+            ? {
+                shippingAddress: {
+                  name: shipName.trim(),
+                  line1: shipLine1.trim(),
+                  line2: shipLine2.trim() || undefined,
+                  city: shipCity.trim(),
+                  state: shipState.trim(),
+                  zip: shipZip.trim(),
+                  country: "US",
+                  phone: shipPhone.trim() || undefined,
+                  email: shipEmail.trim() || undefined,
+                },
+              }
+            : {}),
         }),
       });
       const data = await readJsonSafe(res);
@@ -282,8 +317,8 @@ export function BouquetGrid({
             <div className="mb-6 rounded-lg border border-ink/15 bg-cream/60 px-4 py-4">
               <p className="text-xs uppercase tracking-widest text-ink/50">Shipping</p>
               <p className="mt-2 max-w-2xl text-sm text-ink/70">
-                Checkout collects your US shipping address. Shipping cost and carrier are set at
-                fulfillment — we&apos;ll email you if anything changes.
+                Enter your address below. We quote <strong>USPS</strong> rates via Shippo and add
+                shipping as its own line in Stripe Checkout (alongside the product).
               </p>
             </div>
           ) : null}
@@ -372,7 +407,95 @@ export function BouquetGrid({
               <span>Total</span>
               <span>{formatUSD(cartTotal)}</span>
             </div>
+            {shopMode === "shipped" && (
+              <p className="text-xs text-ink/55">
+                Product subtotal above. USPS shipping is calculated next and shown on the payment
+                page.
+              </p>
+            )}
           </div>
+          {shopMode === "shipped" && (
+            <div className="mt-6 space-y-3 border-t border-ink/10 pt-6">
+              <p className="text-xs uppercase tracking-widest text-ink/40">Ship to (US)</p>
+              <label className="block text-sm text-ink/70">
+                Full name
+                <input
+                  value={shipName}
+                  onChange={(e) => setShipName(e.target.value)}
+                  autoComplete="shipping name"
+                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="block text-sm text-ink/70">
+                Street address
+                <input
+                  value={shipLine1}
+                  onChange={(e) => setShipLine1(e.target.value)}
+                  autoComplete="shipping address-line1"
+                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="block text-sm text-ink/70">
+                Apt / suite (optional)
+                <input
+                  value={shipLine2}
+                  onChange={(e) => setShipLine2(e.target.value)}
+                  autoComplete="shipping address-line2"
+                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm text-ink/70">
+                  City
+                  <input
+                    value={shipCity}
+                    onChange={(e) => setShipCity(e.target.value)}
+                    autoComplete="shipping address-level2"
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="block text-sm text-ink/70">
+                  State
+                  <input
+                    value={shipState}
+                    onChange={(e) => setShipState(e.target.value)}
+                    autoComplete="shipping address-level1"
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  />
+                </label>
+              </div>
+              <label className="block text-sm text-ink/70">
+                ZIP code
+                <input
+                  value={shipZip}
+                  onChange={(e) => setShipZip(e.target.value)}
+                  autoComplete="shipping postal-code"
+                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm text-ink/70">
+                  Phone (optional)
+                  <input
+                    value={shipPhone}
+                    onChange={(e) => setShipPhone(e.target.value)}
+                    autoComplete="shipping tel"
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="block text-sm text-ink/70">
+                  Email (optional)
+                  <input
+                    type="email"
+                    value={shipEmail}
+                    onChange={(e) => setShipEmail(e.target.value)}
+                    autoComplete="shipping email"
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
           <button
             type="button"
             disabled={loadingId === "cart"}
