@@ -279,9 +279,10 @@ async function seedFlowerProducts() {
     },
     {
       _id: "flower-product.table-ritual-set",
-      name: "Table Ritual Set",
-      slug: "table-ritual-set",
-      publicName: "Table Ritual Set",
+      name: "Glimmer + Pantry add-on",
+      slug: "glimmer-pantry-add-on",
+      legacySlugs: ["table-ritual-set"],
+      publicName: "Glimmer + Pantry add-on",
       category: "bundle",
       tier: "",
       priceCents: 2200,
@@ -296,9 +297,10 @@ async function seedFlowerProducts() {
     },
     {
       _id: "flower-product.kitchen-ritual-set",
-      name: "Kitchen Ritual Set",
-      slug: "kitchen-ritual-set",
-      publicName: "Kitchen Ritual Set",
+      name: "Blessing + Pantry add-on",
+      slug: "blessing-pantry-add-on",
+      legacySlugs: ["kitchen-ritual-set"],
+      publicName: "Blessing + Pantry add-on",
       category: "bundle",
       tier: "",
       priceCents: 3200,
@@ -313,9 +315,10 @@ async function seedFlowerProducts() {
     },
     {
       _id: "flower-product.gift-ritual",
-      name: "Gift Ritual",
-      slug: "gift-ritual",
-      publicName: "Gift Ritual",
+      name: "Abundance + Pantry add-on",
+      slug: "abundance-pantry-add-on",
+      legacySlugs: ["gift-ritual"],
+      publicName: "Abundance + Pantry add-on",
       category: "bundle",
       tier: "",
       priceCents: 4200,
@@ -331,10 +334,17 @@ async function seedFlowerProducts() {
   ];
 
   for (const product of products) {
-    const { _id, slug, ...rest } = product;
+    const { _id, slug, legacySlugs = [], ...rest } = product;
     const existing = await client.fetch(
-      `*[_type == "flowerProduct" && slug.current == $slug][0]{_id}`,
-      { slug },
+      `*[
+        _type == "flowerProduct" &&
+        (
+          slug.current == $slug ||
+          slug.current in $legacySlugs ||
+          _id == $id
+        )
+      ][0]{_id}`,
+      { id: _id, slug, legacySlugs },
     );
     const doc = {
       ...rest,
