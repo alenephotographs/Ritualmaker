@@ -83,6 +83,18 @@ export async function POST(req: Request) {
             `*[_type == "flowerSalesRecord" && checkoutSessionId == $checkoutSessionId][0]{_id}`,
             { checkoutSessionId },
           );
+          const ritualBundleDiscountCentsRaw = session.metadata?.ritualBundleDiscountCents;
+          const ritualBundleDiscountCents =
+            typeof ritualBundleDiscountCentsRaw === "string" && /^\d+$/.test(ritualBundleDiscountCentsRaw)
+              ? Number(ritualBundleDiscountCentsRaw)
+              : 0;
+          const ritualBundleDiscountApplied =
+            typeof session.metadata?.ritualBundleDiscountApplied === "string"
+              ? session.metadata.ritualBundleDiscountApplied
+              : ritualBundleDiscountCents > 0
+                ? "yes"
+                : "";
+
           const salesRecord = {
             _type: "flowerSalesRecord",
             customerName: session.customer_details?.name ?? "",
@@ -102,6 +114,8 @@ export async function POST(req: Request) {
             itemId: session.metadata?.itemId ?? "",
             productCategory: session.metadata?.productCategory ?? "",
             billingLabel: session.metadata?.billingLabel ?? "",
+            ritualBundleDiscountCents: ritualBundleDiscountCents > 0 ? ritualBundleDiscountCents : undefined,
+            ritualBundleDiscountApplied: ritualBundleDiscountApplied || undefined,
             notes: `Stripe checkout session ${session.id}`,
             ...(vendorId
               ? { vendor: { _type: "reference" as const, _ref: vendorId } }

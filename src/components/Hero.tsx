@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { SiteSettings } from "@/sanity/types";
 import { StandStatus } from "./StandStatus";
+import { RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
 
 export function Hero({ settings }: { settings: SiteSettings | null }) {
   const heroUrl = "/photos/field-mixed-tulips-cluster.jpg";
@@ -35,13 +36,14 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
           38 Miller Hill Road — stop by the stand and buy what is fresh in inventory.
         </p>
 
-        <div className="mt-8">
+        <div className="mt-8 space-y-3">
           <Link
             href="/farm-stand#shop"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
             Shop
           </Link>
+          <p className="max-w-md text-xs text-cream/70">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
         </div>
       </div>
     </section>

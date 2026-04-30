@@ -2773,6 +2773,12 @@ export function AdminDashboard({
                     {record.saleDate} · {record.paymentMethod} ·{" "}
                     {record.billingType ?? "flower service"}
                   </p>
+                  {typeof record.ritualBundleDiscountCents === "number" &&
+                  record.ritualBundleDiscountCents > 0 ? (
+                    <p className="mt-2 text-sm text-moss">
+                      Bundle discount applied · -{formatUSD(record.ritualBundleDiscountCents)}
+                    </p>
+                  ) : null}
                   {isOwner ? (
                     <div className="mt-3">
                       <button

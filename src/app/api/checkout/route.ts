@@ -10,6 +10,10 @@ import {
   onePantryItemByIdQuery,
 } from "@/sanity/queries";
 import { getCheapestUspsRateCents, isShippoConfigured, type ShippoAddressInput } from "@/lib/shippo";
+import {
+  computeRitualBundleDiscountCents,
+  RITUAL_BUNDLE_DISCOUNT_PER_UNIT_CENTS,
+} from "@/lib/ritualBundle";
 
 export const runtime = "nodejs";
 
@@ -55,7 +59,7 @@ function transferDestinationForFlowerProducts(products: FlowerProduct[]): string
   return ids[0];
 }
 
-(body: ShippingAddressBody | undefined): ShippoAddressInput | null {
+function cleanShippingAddress(body: ShippingAddressBody | undefined): ShippoAddressInput | null {
   if (!body) return null;
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const street1 = typeof body.line1 === "string" ? body.line1.trim() : "";
@@ -126,7 +130,7 @@ type CheckoutLine =
   | { itemType: "pantryItem"; item: PantryItem; quantity: number }
   | { itemType: "flowerProduct"; item: FlowerProduct; quantity: number };
 
-const RITUAL_BUNDLE_DISCOUNT_CENTS = 500;
+const RITUAL_BUNDLE_LINE_LABEL = "Bundle discount";
 
 function isUnavailable(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
   const isComingSoon = "comingSoon" in item ? Boolean(item.comingSoon) : false;
@@ -180,6 +184,16 @@ function itemCategory(itemType: CheckoutLine["itemType"], item: CheckoutLine["it
 
 function itemPriceCents(item: CheckoutLine["item"]) {
   return typeof item.priceCents === "number" ? item.priceCents : undefined;
+}
+
+function flowerProductPantryDiscountedUnitCents(
+  item: FlowerProduct,
+  applyBundle: boolean,
+): number | null {
+  const unit = itemPriceCents(item);
+  if (unit === undefined) return null;
+  if (!applyBundle || item.category !== "pantry") return unit;
+  return Math.max(0, unit - Math.min(RITUAL_BUNDLE_DISCOUNT_PER_UNIT_CENTS, unit));
 }
 
 async function fetchLine(itemType: CheckoutLine["itemType"], itemId: string) {
@@ -242,34 +256,22 @@ export async function POST(req: Request) {
       }
 
       const hasBouquet = lines.some((line) => itemCategory(line.itemType, line.item) === "bouquet");
-      const pantryLines = lines.filter(
-        (line): line is Extract<CheckoutLine, { itemType: "flowerProduct" }> =>
-          line.itemType === "flowerProduct" && line.item.category === "pantry",
-      );
-      const lowestPantryPrice = pantryLines.length
-        ? Math.min(...pantryLines.map((line) => itemPriceCents(line.item) ?? 0))
-        : 0;
-      const discountCents =
-        hasBouquet && pantryLines.length
-          ? Math.min(RITUAL_BUNDLE_DISCOUNT_CENTS, lowestPantryPrice)
-          : 0;
+      const applyBundleDiscount = hasBouquet && lines.some((line) => line.item.category === "pantry");
+
+      const bundlePricedLines = lines.map((line) => ({
+        category: itemCategory(line.itemType, line.item),
+        quantity: line.quantity,
+        unitPriceCents: itemPriceCents(line.item) ?? 0,
+      }));
+      const discountCents = computeRitualBundleDiscountCents(bundlePricedLines);
 
       const origin =
         process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
       const stripe = getStripe();
-      const discountTarget =
-        discountCents > 0
-          ? pantryLines.reduce((lowest, line) =>
-              (itemPriceCents(line.item) ?? 0) < (itemPriceCents(lowest.item) ?? 0)
-                ? line
-                : lowest,
-            )
-          : null;
 
       const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
       for (const line of lines) {
         const description = itemDescription(line.itemType, line.item);
-        const isDiscountTarget = discountTarget?.item._id === line.item._id;
         const lineItemFor = (
           unitAmount: number,
           quantity: number,
@@ -296,29 +298,29 @@ export async function POST(req: Request) {
           quantity,
         });
 
-        if (isDiscountTarget) {
-          const unitAmount = itemPriceCents(line.item);
-          if (unitAmount === undefined) {
-            return NextResponse.json({ error: "Cart item is missing a price" }, { status: 400 });
-          }
-          const discountedAmount = Math.max(0, unitAmount - discountCents);
-          lineItems.push(lineItemFor(discountedAmount, 1, "Ritual Bundle Discount"));
-          if (line.quantity > 1) {
-            lineItems.push(lineItemFor(unitAmount, line.quantity - 1));
-          }
-          continue;
-        }
-
         if (line.item.stripePriceId) {
-          lineItems.push({ price: line.item.stripePriceId, quantity: line.quantity });
+          if (applyBundleDiscount && line.item.category === "pantry") {
+            const unit = flowerProductPantryDiscountedUnitCents(line.item, true);
+            if (unit === null) {
+              return NextResponse.json({ error: "Cart item is missing a price" }, { status: 400 });
+            }
+            lineItems.push(lineItemFor(unit, line.quantity, RITUAL_BUNDLE_LINE_LABEL));
+          } else {
+            lineItems.push({ price: line.item.stripePriceId, quantity: line.quantity });
+          }
           continue;
         }
 
-        const unitAmount = itemPriceCents(line.item);
-        if (unitAmount === undefined) {
+        const unitAmount = flowerProductPantryDiscountedUnitCents(
+          line.item,
+          applyBundleDiscount,
+        );
+        if (unitAmount === null) {
           return NextResponse.json({ error: "Cart item is missing a price" }, { status: 400 });
         }
-        lineItems.push(lineItemFor(unitAmount, line.quantity));
+        const suffix =
+          applyBundleDiscount && line.item.category === "pantry" ? RITUAL_BUNDLE_LINE_LABEL : undefined;
+        lineItems.push(lineItemFor(unitAmount, line.quantity, suffix));
       }
 
       const firstLine = lines[0];
@@ -336,6 +338,7 @@ export async function POST(req: Request) {
         billingLabel: itemBillingLabel(firstLine.itemType, firstLine.item),
         taxCategory: itemTaxCategory(firstLine.itemType, firstLine.item),
         ritualBundleDiscountCents: String(discountCents),
+        ritualBundleDiscountApplied: discountCents > 0 ? "yes" : "no",
         ctaVariant: body.ctaVariant ?? "",
       };
 

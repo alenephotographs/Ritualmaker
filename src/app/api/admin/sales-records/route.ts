@@ -20,7 +20,9 @@ const salesRecordProjection = `{
   itemType,
   itemId,
   productCategory,
-  billingLabel
+  billingLabel,
+  ritualBundleDiscountCents,
+  ritualBundleDiscountApplied
 }`;
 
 type SalesRecordBody = {
@@ -39,6 +41,9 @@ type SalesRecordBody = {
   notes?: string;
   taxCategory?: string;
   billingType?: string;
+  billingLabel?: string;
+  ritualBundleDiscountCents?: number;
+  ritualBundleDiscountApplied?: string;
   delete?: boolean;
 };
 
@@ -133,7 +138,14 @@ export async function POST(req: Request) {
       notes: cleanText(body.notes),
       taxCategory: cleanText(body.taxCategory) || "flower service",
       billingType: cleanText(body.billingType) || "flower service",
-      ...(vendorId
+      billingLabel: cleanText(body.billingLabel),
+      ...(typeof body.ritualBundleDiscountCents === "number" &&
+      Number.isFinite(body.ritualBundleDiscountCents)
+        ? { ritualBundleDiscountCents: Math.round(body.ritualBundleDiscountCents) }
+        : {}),
+      ...(cleanText(body.ritualBundleDiscountApplied)
+        ? { ritualBundleDiscountApplied: cleanText(body.ritualBundleDiscountApplied) }
+        : {}),
         ? { vendor: { _type: "reference" as const, _ref: vendorId } }
         : {}),
     };

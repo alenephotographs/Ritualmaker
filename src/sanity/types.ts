@@ -159,6 +159,8 @@ export interface FlowerSalesRecord {
   taxCategory?: string;
   billingType?: string;
   billingLabel?: string;
+  ritualBundleDiscountCents?: number;
+  ritualBundleDiscountApplied?: string;
   createdByEmail?: string;
 }
 

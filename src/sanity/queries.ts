@@ -153,6 +153,32 @@ export const oneFlowerProductByIdQuery = groq`*[_type == "flowerProduct" && _id 
   "imageUrl": coalesce(gallery[0].asset->url, image.asset->url, imageUrl, externalImageUrl)
 }`;
 
+export const oneFlowerProductBySlugQuery = groq`*[_type == "flowerProduct" && slug.current == $slug][0]{
+  _id,
+  "slug": slug.current,
+  name,
+  publicName,
+  tier,
+  shortDescription,
+  displayDescription,
+  category,
+  priceCents,
+  active,
+  inStock,
+  quantity,
+  recurringItem,
+  shipsNationwide,
+  billingLabel,
+  taxCategory,
+  stripePriceId,
+  stripeProductId,
+  "vendorId": vendor->_id,
+  "vendorName": vendor->name,
+  "vendorStripeAccountId": vendor->stripeAccountId,
+  "imageUrls": coalesce(gallery[].asset->url, []),
+  "imageUrl": coalesce(gallery[0].asset->url, image.asset->url, imageUrl, externalImageUrl)
+}`;
+
 export const vendorsQuery = groq`*[_type == "vendor"] | order(name asc){
   _id,
   _updatedAt,
@@ -197,7 +223,9 @@ export const flowerSalesRecordsQuery = groq`*[_type == "flowerSalesRecord"] | or
   itemType,
   itemId,
   productCategory,
-  billingLabel
+  billingLabel,
+  ritualBundleDiscountCents,
+  ritualBundleDiscountApplied
 }`;
 
 export const eventOrdersQuery = groq`*[_type == "weddingInquiry"] | order(_createdAt desc)[0...120]{

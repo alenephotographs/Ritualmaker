@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Bouquet, FlowerProduct } from "@/sanity/types";
 import { farmLabel, formatUSD, sizeLabel } from "@/lib/format";
-
-const RITUAL_BUNDLE_DISCOUNT_CENTS = 500;
+import {
+  computeRitualBundleDiscountCents,
+  RITUAL_BUNDLE_CUSTOMER_NOTE,
+} from "@/lib/ritualBundle";
 
 async function readJsonSafe(response: Response) {
   const text = await response.text();
@@ -70,16 +73,13 @@ export function BouquetGrid({
     (total, line) => total + line.item.priceCents * line.quantity,
     0,
   );
-  const hasBouquetInCart = cart.some((line) => line.item.category === "bouquet");
-  const pantryLines = cart.filter((line) => line.item.category === "pantry");
-  const hasPantryInCart = pantryLines.length > 0;
-  const lowestPantryPrice = pantryLines.length
-    ? Math.min(...pantryLines.map((line) => line.item.priceCents))
-    : 0;
-  const ritualBundleDiscount =
-    hasBouquetInCart && hasPantryInCart
-      ? Math.min(RITUAL_BUNDLE_DISCOUNT_CENTS, lowestPantryPrice)
-      : 0;
+  const ritualBundleDiscount = computeRitualBundleDiscountCents(
+    cart.map((line) => ({
+      category: line.item.category,
+      quantity: line.quantity,
+      unitPriceCents: line.item.priceCents,
+    })),
+  );
   const cartTotal = Math.max(0, cartSubtotal - ritualBundleDiscount);
 
   useEffect(() => {
@@ -290,11 +290,13 @@ export function BouquetGrid({
         </div>
       )}
       {shopMode === "shipped" && flowerProducts.length > 0 ? (
-        <div
-          className="mb-6 flex flex-wrap gap-2"
-          role="tablist"
-          aria-label="Shop category"
-        >
+        <>
+          <p className="mb-4 text-sm text-ink/65">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
+          <div
+            className="mb-6 flex flex-wrap gap-2"
+            role="tablist"
+            aria-label="Shop category"
+          >
           {(
             [
               { id: "all" as const, label: "All" },
@@ -318,6 +320,7 @@ export function BouquetGrid({
             </button>
           ))}
         </div>
+        </>
       ) : null}
       {shopMode === "shipped" &&
       flowerProducts.length > 0 &&
@@ -362,9 +365,7 @@ export function BouquetGrid({
               <p className="text-xs uppercase tracking-widest text-moss">
                 Make it a Ritual Bundle
               </p>
-              <p className="mt-1 text-sm text-ink/70">
-                $5 off any pantry item with a bouquet.
-              </p>
+              <p className="mt-1 text-sm text-ink/70">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
             </div>
           )}
           {[
@@ -444,7 +445,7 @@ export function BouquetGrid({
             </div>
             {ritualBundleDiscount > 0 && (
               <div className="flex justify-between text-moss">
-                <span>Ritual Bundle Discount</span>
+                <span>Bundle discount applied</span>
                 <span>-{formatUSD(ritualBundleDiscount)}</span>
               </div>
             )}
@@ -667,29 +668,57 @@ function FlowerProductCard({
   onAdd: (item: FlowerProduct) => void;
   shipped?: boolean;
 }) {
+  const slug = item.slug?.trim();
+  const detailHref = slug ? `/farm-stand/product/${encodeURIComponent(slug)}` : null;
+
   return (
     <article className="flex flex-col border border-ink/10 bg-cream">
-      <div className="aspect-[3/4] overflow-hidden bg-stone/40">
-        {item.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.imageUrl}
-            alt={item.name}
-            className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-xs uppercase tracking-widest text-ink/30">
-            Seasonal flowers
-          </div>
-        )}
-      </div>
+      {detailHref ? (
+        <Link href={detailHref} className="block aspect-[3/4] overflow-hidden bg-stone/40">
+          {item.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs uppercase tracking-widest text-ink/30">
+              Seasonal flowers
+            </div>
+          )}
+        </Link>
+      ) : (
+        <div className="aspect-[3/4] overflow-hidden bg-stone/40">
+          {item.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs uppercase tracking-widest text-ink/30">
+              Seasonal flowers
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex flex-1 flex-col p-5">
         <p className="text-[10px] uppercase tracking-widest text-ink/40">
           {item.billingLabel ?? "Flower Service"}
         </p>
-        <h3 className="mt-2 font-display text-2xl font-light">
-          {item.publicName ?? item.name}
-        </h3>
+        {detailHref ? (
+          <h3 className="mt-2 font-display text-2xl font-light">
+            <Link href={detailHref} className="hover:text-ink/80">
+              {item.publicName ?? item.name}
+            </Link>
+          </h3>
+        ) : (
+          <h3 className="mt-2 font-display text-2xl font-light">
+            {item.publicName ?? item.name}
+          </h3>
+        )}
         {item.shortDescription && (
           <p className="mt-2 text-sm font-medium text-ink/70">
             {item.shortDescription}

@@ -100,6 +100,28 @@ export default defineType({
       description: 'Defaults to "flower service" for sole-proprietor billing records.',
     }),
     defineField({
+      name: "billingType",
+      title: "Billing type (legacy)",
+      type: "string",
+    }),
+    defineField({
+      name: "billingLabel",
+      title: "Billing label",
+      type: "string",
+    }),
+    defineField({
+      name: "ritualBundleDiscountCents",
+      title: "Bundle discount (USD cents)",
+      type: "number",
+      description: "Total Ritual Bundle discount from Stripe checkout (bouquet + pantry cart).",
+    }),
+    defineField({
+      name: "ritualBundleDiscountApplied",
+      title: "Bundle discount applied",
+      type: "string",
+      description: 'Set to "yes" when checkout metadata recorded a bundle discount.',
+    }),
+    defineField({
       name: "createdByEmail",
       title: "Created by email",
       type: "string",
