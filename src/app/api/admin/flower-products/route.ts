@@ -6,6 +6,7 @@ import {
   requireOwner,
   requireWritableAdmin,
 } from "@/lib/adminAccess";
+import { formatSanityWriteError } from "@/lib/sanityWriteErrors";
 import { sanityWriteClient } from "@/sanity/writeClient";
 import type { FlowerProduct, InventoryAuditHistoryEntry } from "@/sanity/types";
 
@@ -351,8 +352,10 @@ async function saveProduct(req: Request) {
     });
     return await success(doc._id);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not create product";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: formatSanityWriteError(error, "Could not create product") },
+      { status: 400 },
+    );
   }
 }
 
@@ -409,8 +412,10 @@ export async function PATCH(req: Request) {
       .commit();
     return await success(doc._id);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not update product";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: formatSanityWriteError(error, "Could not update product") },
+      { status: 400 },
+    );
   }
 }
 

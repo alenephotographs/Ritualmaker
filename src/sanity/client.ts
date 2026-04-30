@@ -1,12 +1,12 @@
 import { createClient } from "next-sanity";
 import imageUrlBuilder from "@sanity/image-url";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
-import { apiVersion, dataset, projectId } from "./env";
+import { getApiVersion, getSanityDataset, getSanityProjectId } from "./env";
 
 export const sanityClient = createClient({
-  projectId,
-  dataset,
-  apiVersion,
+  projectId: getSanityProjectId(),
+  dataset: getSanityDataset(),
+  apiVersion: getApiVersion(),
   useCdn: true,
   perspective: "published",
 });

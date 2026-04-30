@@ -350,6 +350,29 @@ async function readJson<T>(response: Response) {
   }
 }
 
+const coreBouquetSlugs = ["glimmer", "blessing", "abundance"] as const;
+const coreBouquetPresetLabel: Record<(typeof coreBouquetSlugs)[number], string> = {
+  glimmer: "Glimmer",
+  blessing: "Blessing",
+  abundance: "Abundance",
+};
+
+function findQuickStockProduct(
+  products: FlowerProduct[],
+  coreSlug: (typeof coreBouquetSlugs)[number],
+): FlowerProduct | undefined {
+  const bySlug = products.find((p) => p.slug === coreSlug);
+  if (bySlug) return bySlug;
+  const label = coreSlug.charAt(0).toUpperCase() + coreSlug.slice(1);
+  const lower = label.toLowerCase();
+  return products.find(
+    (p) =>
+      p.category === "bouquet" &&
+      (p.publicName?.trim().toLowerCase() === lower ||
+        p.name.trim().toLowerCase() === lower),
+  );
+}
+
 export function AdminDashboard({
   isOwner,
   defaultVendorId,
@@ -1181,8 +1204,8 @@ export function AdminDashboard({
               </tr>
             </thead>
             <tbody>
-          {["glimmer", "blessing", "abundance"].map((slug) => {
-            const product = visibleProducts.find((item) => item.slug === slug);
+          {coreBouquetSlugs.map((slug) => {
+            const product = findQuickStockProduct(visibleProducts, slug);
             return product ? (
               <tr key={product._id} className="border-b border-ink/10 align-top">
                 <td className="py-3 pr-3">
@@ -1251,7 +1274,10 @@ export function AdminDashboard({
             ) : (
               <tr key={slug} className="border-b border-ink/10">
                 <td colSpan={6} className="py-3 text-sm text-ink/55">
-                  {slug} not seeded yet.
+                  <span className="capitalize">{slug}</span> not in quick stock (no matching slug or bouquet
+                  name). Use <strong>Load {coreBouquetPresetLabel[slug]}</strong> then{" "}
+                  <strong>Save offering</strong>, or seed the{" "}
+                  <code className="text-xs">{slug}</code> slug in Sanity.
                 </td>
               </tr>
             );

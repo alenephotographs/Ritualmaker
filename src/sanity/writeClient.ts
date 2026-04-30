@@ -1,12 +1,12 @@
 import { createClient } from "@sanity/client";
-import { apiVersion, dataset, projectId } from "./env";
+import { getApiVersion, getWriteDataset, getWriteProjectId } from "./env";
 
-const writeToken = process.env.SANITY_API_WRITE_TOKEN;
+const writeToken = process.env.SANITY_API_WRITE_TOKEN?.trim();
 
 export const sanityWriteClient = createClient({
-  projectId,
-  dataset,
-  apiVersion,
+  projectId: getWriteProjectId(),
+  dataset: getWriteDataset(),
+  apiVersion: getApiVersion(),
   useCdn: false,
   token: writeToken,
 });
