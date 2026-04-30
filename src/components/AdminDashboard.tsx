@@ -2,9 +2,11 @@
 
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { signOut } from "next-auth/react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { EventOrder, FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
+import { RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
 import {
   AdminCard,
   AdminEmptyState,
@@ -20,13 +22,24 @@ import {
   btnUtility,
 } from "@/components/admin/AdminPrimitives";
 
+export type AdminDashboardSection =
+  | "dashboard"
+  | "orders"
+  | "products"
+  | "events"
+  | "payments"
+  | "media"
+  | "settings";
+
 type AdminDashboardProps = {
+  section: AdminDashboardSection;
   isOwner: boolean;
   defaultVendorId?: string;
   vendors: Vendor[];
   flowerProducts: FlowerProduct[];
   salesRecords: FlowerSalesRecord[];
   eventOrders: EventOrder[];
+  /** @deprecated Layout shows signed-in email */
   userEmail?: string | null;
   /** Server-side hint when CMS lists could not be loaded (logged on server). */
   cmsLoadError?: string | null;
@@ -382,17 +395,21 @@ function findQuickStockProduct(
 }
 
 export function AdminDashboard({
+  section,
   isOwner,
   defaultVendorId,
   vendors,
   flowerProducts,
   salesRecords,
   eventOrders,
-  userEmail,
+  userEmail: _userEmail,
   cmsLoadError,
 }: AdminDashboardProps) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [galleryUploading, setGalleryUploading] = useState(false);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaAssets, setMediaAssets] = useState<{ assetId: string; url: string }[]>([]);
+  const [mediaCopyFeedback, setMediaCopyFeedback] = useState<string | null>(null);
   const [productForm, setProductForm] = useState<ProductFormState>(emptyProductForm);
   const [vendorForm, setVendorForm] = useState<VendorFormState>(emptyVendorForm);
   const [salesForm, setSalesForm] = useState<SalesFormState>(emptySalesForm);
@@ -417,6 +434,10 @@ export function AdminDashboard({
     kind: "success" | "error";
     message: string;
   } | null>(null);
+  const [productTab, setProductTab] = useState<"all" | "flowers" | "pantry">("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setVendorRows(vendors);
@@ -444,18 +465,46 @@ export function AdminDashboard({
     [defaultVendorId, isOwner, salesRows],
   );
   const visibleEventOrders = useMemo(() => (isOwner ? eventOrderRows : []), [eventOrderRows, isOwner]);
+
+  const upcomingEventOrders = useMemo(() => {
+    const now = new Date();
+    const horizon = new Date(now);
+    horizon.setDate(horizon.getDate() + 30);
+    return visibleEventOrders
+      .filter((o) => {
+        if (!o.eventDate) return false;
+        const d = new Date(o.eventDate);
+        return !Number.isNaN(d.getTime()) && d >= now && d <= horizon;
+      })
+      .sort((a, b) => String(a.eventDate).localeCompare(String(b.eventDate)))
+      .slice(0, 8);
+  }, [visibleEventOrders]);
+
+  const paymentSummary = useMemo(() => {
+    let depositDue = 0;
+    let depositPaid = 0;
+    let balanceDue = 0;
+    let balancePaid = 0;
+    for (const o of visibleEventOrders) {
+      if (o.depositPaid) depositPaid += 1;
+      else if (o.depositPaymentLinkUrl || (o.depositAmountCents && o.depositAmountCents > 0))
+        depositDue += 1;
+      if (o.balancePaid) balancePaid += 1;
+      else if (o.balancePaymentLinkUrl || (o.balanceAmountCents && o.balanceAmountCents > 0))
+        balanceDue += 1;
+    }
+    return { depositDue, depositPaid, balanceDue, balancePaid };
+  }, [visibleEventOrders]);
+
+  const productsForTab = useMemo(() => {
+    if (productTab === "flowers") return visibleProducts.filter((p) => p.category !== "pantry");
+    if (productTab === "pantry") return visibleProducts.filter((p) => p.category === "pantry");
+    return visibleProducts;
+  }, [visibleProducts, productTab]);
+
   const selectedProducts = useMemo(
     () => visibleProducts.filter((product) => selectedProductIds.includes(product._id)),
     [selectedProductIds, visibleProducts],
-  );
-
-  const bouquetProducts = useMemo(
-    () => visibleProducts.filter((p) => p.category === "bouquet"),
-    [visibleProducts],
-  );
-  const pantryProducts = useMemo(
-    () => visibleProducts.filter((p) => p.category === "pantry"),
-    [visibleProducts],
   );
 
   const activeInStock = visibleProducts.filter(
@@ -520,6 +569,36 @@ export function AdminDashboard({
       return { ...prev, galleryAssetIds: ids, galleryPreviewUrls: urls };
     });
   }
+
+  async function uploadMediaLibraryFiles(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    setMediaUploading(true);
+    setErrorMessage(null);
+    setMediaCopyFeedback(null);
+    const added: { assetId: string; url: string }[] = [];
+    try {
+      for (const file of Array.from(fileList)) {
+        const body = new FormData();
+        body.set("file", file);
+        const res = await fetch("/api/admin/flower-products/upload-image", {
+          method: "POST",
+          body,
+        });
+        const data = (await res.json()) as { error?: string; assetId?: string; url?: string };
+        if (!res.ok || !data.assetId) {
+          setErrorMessage(data.error ?? "Upload failed");
+          return;
+        }
+        added.push({ assetId: data.assetId, url: data.url ?? "" });
+      }
+      setMediaAssets((prev) => [...added, ...prev]);
+      setStatusMessage(`Uploaded ${added.length} asset${added.length === 1 ? "" : "s"} to library.`);
+    } finally {
+      setMediaUploading(false);
+    }
+  }
+
+  async function postJson<T>(url: string, payload: Record<string, unknown>) {
     setBusyId(String(payload.id ?? url));
     setErrorMessage(null);
     setStatusMessage(null);
@@ -552,7 +631,7 @@ export function AdminDashboard({
     }
   }
 
-  function editProduct(product: FlowerProduct) {
+  function loadProductIntoForm(product: FlowerProduct) {
     const categoryIsKnown = productCategories.some((item) => item.value === product.category);
     const tierIsKnown = tierOptions.some((item) => item === product.tier);
     const billingLabel = product.billingLabel ?? "Flower Service";
@@ -587,6 +666,23 @@ export function AdminDashboard({
     });
   }
 
+  function editProduct(product: FlowerProduct) {
+    loadProductIntoForm(product);
+    if (section === "products") {
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      params.set("edit", product._id);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }
+
+  useEffect(() => {
+    if (section !== "products") return;
+    const id = searchParams?.get("edit")?.trim();
+    if (!id) return;
+    const p = productRows.find((row) => row._id === id);
+    if (p) loadProductIntoForm(p);
+  }, [section, searchParams, productRows]);
+
   function editVendor(vendor: Vendor) {
     setVendorForm({
       id: vendor._id,
@@ -619,6 +715,12 @@ export function AdminDashboard({
     setProductForm(emptyProductForm);
     setErrorMessage(null);
     setStatusMessage("New product form ready.");
+    if (section === "products") {
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      params.delete("edit");
+      const q = params.toString();
+      router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    }
   }
 
   function applySkuPreset(key: keyof typeof skuPresets) {
@@ -682,7 +784,12 @@ export function AdminDashboard({
     });
     if (data?.item) {
       setProductRows((current) => upsertById(current, data.item as FlowerProduct));
-      setProductForm(emptyProductForm);
+      loadProductIntoForm(data.item as FlowerProduct);
+      if (section === "products") {
+        const params = new URLSearchParams(searchParams?.toString() ?? "");
+        params.set("edit", (data.item as FlowerProduct)._id);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      }
     }
   }
 
@@ -1178,53 +1285,8 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-cream/40">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <header className="mb-10 flex flex-col gap-6 border-b border-ink/10 pb-8 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-ink/45">Admin</p>
-            <h1 className="mt-2 font-display text-4xl font-light text-ink sm:text-5xl">
-              Ritualmaker admin
-            </h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink/60">
-              Signed in as <span className="text-ink/80">{userEmail}</span>. Use the sections below
-              to manage inventory, event orders, and payments.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:items-end">
-            <nav
-              aria-label="Admin sections"
-              className="flex max-w-full flex-wrap gap-2 rounded-lg border border-ink/10 bg-white p-2 shadow-sm"
-            >
-              {[
-                ["#admin-overview", "Overview"],
-                ["#admin-inventory", "Inventory"],
-                ["#admin-bouquets", "Bouquets"],
-                ["#admin-pantry", "Pantry"],
-                ["#admin-events", "Events"],
-                ["#admin-payments", "Payments"],
-                ["#admin-utility", "Utility"],
-              ].map(([href, label]) => (
-                <a
-                  key={href}
-                  href={href}
-                  className="rounded-md px-3 py-2 text-[10px] font-medium uppercase tracking-widest text-ink/65 transition hover:bg-cream/80 hover:text-ink"
-                >
-                  {label}
-                </a>
-              ))}
-            </nav>
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: "/admin/sign-in" })}
-              className={`${btnSecondary()} sm:self-end`}
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
-
-        {(statusMessage || errorMessage || cmsLoadError) && (
+    <>
+      {(statusMessage || errorMessage || cmsLoadError) && (
           <div
             className={`mb-8 rounded-lg border px-4 py-3 text-sm ${
               errorMessage || cmsLoadError
@@ -1234,15 +1296,11 @@ export function AdminDashboard({
             role={errorMessage || cmsLoadError ? "alert" : "status"}
           >
             {errorMessage ?? cmsLoadError ?? statusMessage}
-          </div>
-        )}
+        </div>
+      )}
 
-        <div className="flex flex-col gap-12 lg:gap-16">
-      <AdminSection
-        id="admin-overview"
-        title="Dashboard overview"
-        description="At-a-glance counts for active stock, vendor items, and recent billing activity."
-      >
+      {section === "dashboard" ? (
+        <div className="flex flex-col gap-10">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Active in-stock", activeInStock],
@@ -1359,12 +1417,89 @@ export function AdminDashboard({
           </table>
         </div>
       </AdminCard>
-      </AdminSection>
 
+          <AdminCard
+            title="Upcoming events (next 30 days)"
+            description="From your event order pipeline."
+          >
+            {upcomingEventOrders.length ? (
+              <ul className="divide-y divide-ink/10 text-sm">
+                {upcomingEventOrders.map((o) => (
+                  <li key={o._id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <span className="font-medium text-ink">{o.name || "Client"}</span>
+                    <span className="text-ink/60">{o.eventDate}</span>
+                    <Link href="/admin/events" className="text-xs uppercase tracking-widest text-ink/50 underline">
+                      Open events
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink/55">No dated events in the next 30 days.</p>
+            )}
+          </AdminCard>
+
+          <AdminCard title="Recent checkout orders" description="Card payments from the site (Stripe webhook).">
+            {visibleSales.filter((r) => r.checkoutSessionId).slice(0, 8).length ? (
+              <ul className="divide-y divide-ink/10 text-sm">
+                {visibleSales
+                  .filter((r) => r.checkoutSessionId)
+                  .slice(0, 8)
+                  .map((r) => (
+                    <li key={r._id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                      <span className="font-medium text-ink">{r.itemName}</span>
+                      <span className="text-ink/60">{formatUSD(r.amountCents)}</span>
+                      <Link href="/admin/orders" className="text-xs uppercase tracking-widest text-ink/50 underline">
+                        Orders
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink/55">No Stripe checkout records yet.</p>
+            )}
+          </AdminCard>
+
+          <AdminCard title="Event payment summary" description="Deposit and balance pipeline (event orders).">
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded border border-ink/10 bg-cream/50 p-3">
+                <dt className="text-xs uppercase tracking-widest text-ink/45">Deposits paid</dt>
+                <dd className="mt-1 font-display text-2xl font-light">{paymentSummary.depositPaid}</dd>
+              </div>
+              <div className="rounded border border-ink/10 bg-cream/50 p-3">
+                <dt className="text-xs uppercase tracking-widest text-ink/45">Deposits due / linkable</dt>
+                <dd className="mt-1 font-display text-2xl font-light">{paymentSummary.depositDue}</dd>
+              </div>
+              <div className="rounded border border-ink/10 bg-cream/50 p-3">
+                <dt className="text-xs uppercase tracking-widest text-ink/45">Balances paid</dt>
+                <dd className="mt-1 font-display text-2xl font-light">{paymentSummary.balancePaid}</dd>
+              </div>
+              <div className="rounded border border-ink/10 bg-cream/50 p-3">
+                <dt className="text-xs uppercase tracking-widest text-ink/45">Balances due / linkable</dt>
+                <dd className="mt-1 font-display text-2xl font-light">{paymentSummary.balanceDue}</dd>
+              </div>
+            </dl>
+          </AdminCard>
+
+          <AdminCard title="Quick actions" description="Jump to common tasks.">
+            <div className="flex flex-wrap gap-2">
+              <Link href="/admin/products" className={btnPrimary()}>
+                New product
+              </Link>
+              <Link href="/admin/events" className={btnPrimary()}>
+                Event orders
+              </Link>
+              <Link href="/admin/media" className={btnSecondary()}>
+                Upload images
+              </Link>
+            </div>
+          </AdminCard>
+        </div>
+      ) : section === "products" ? (
       <AdminSection
         id="admin-inventory"
-        title="Inventory / offerings"
-        description="All flower products and services: batch pricing, per-item controls, and the full add/edit form."
+        title="Products"
+        description="Browse by tab, edit on the right. Save is pinned at the bottom of the editor."
       >
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
       <section className="grid gap-6 lg:grid-cols-1 xl:grid-cols-[1.15fr_0.85fr]">
@@ -1385,22 +1520,50 @@ export function AdminDashboard({
             </button>
           </div>
 
+          <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Product category">
+            {(
+              [
+                { id: "all" as const, label: "All" },
+                { id: "flowers" as const, label: "Flowers" },
+                { id: "pantry" as const, label: "Pantry" },
+              ] as const
+            ).map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={productTab === id}
+                onClick={() => setProductTab(id)}
+                className={`border px-4 py-2 text-xs uppercase tracking-widest ${
+                  productTab === id
+                    ? "border-ink bg-ink text-cream"
+                    : "border-ink/20 bg-white text-ink/70 hover:border-ink/40"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-5 border border-ink/10 bg-cream/70 p-3">
             <div className="flex flex-wrap items-end gap-3">
               <label className="flex items-center gap-2 text-xs uppercase tracking-widest text-ink/55">
                 <input
                   type="checkbox"
                   checked={
-                    visibleProducts.length > 0 &&
-                    selectedProductIds.length === visibleProducts.length
+                    productsForTab.length > 0 &&
+                    productsForTab.every((p) => selectedProductIds.includes(p._id))
                   }
-                  onChange={(event) =>
-                    setSelectedProductIds(
-                      event.target.checked ? visibleProducts.map((product) => product._id) : [],
-                    )
-                  }
+                  onChange={(event) => {
+                    const ids = productsForTab.map((p) => p._id);
+                    if (event.target.checked) {
+                      setSelectedProductIds((cur) => [...new Set([...cur, ...ids])]);
+                    } else {
+                      setSelectedProductIds((cur) => cur.filter((id) => !ids.includes(id)));
+                    }
+                  }}
                 />
-                Select all
+                Select visible
               </label>
               <label className="text-xs uppercase tracking-widest text-ink/55">
                 Direction
@@ -1449,14 +1612,26 @@ export function AdminDashboard({
             </div>
           </div>
 
-          <div className="mt-5 space-y-3">
-            {visibleProducts.length ? (
-              visibleProducts.map((product) => (
-                <article
-                  key={product._id}
-                  className="border border-ink/10 bg-cream/60 p-4"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {productsForTab.length ? (
+              productsForTab.map((product) => {
+                const catLabel =
+                  product.category === "pantry"
+                    ? "Pantry"
+                    : product.category === "bouquet"
+                      ? "Flower"
+                      : product.category;
+                const statusLabel =
+                  product.active === false
+                    ? "Draft"
+                    : product.inStock === false
+                      ? "Out of stock"
+                      : "Active";
+                return (
+                  <article
+                    key={product._id}
+                    className="flex flex-col border border-ink/10 bg-cream/60 p-4"
+                  >
                     <div className="flex gap-3">
                       <input
                         type="checkbox"
@@ -1465,7 +1640,7 @@ export function AdminDashboard({
                         aria-label={`Select ${product.name}`}
                         className="mt-1"
                       />
-                      <div className="h-14 w-14 shrink-0 overflow-hidden border border-ink/15 bg-stone/30">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden border border-ink/15 bg-stone/30">
                         {product.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -1474,129 +1649,53 @@ export function AdminDashboard({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-[8px] uppercase tracking-widest text-ink/35">
+                          <div className="flex h-full items-center justify-center text-[8px] uppercase text-ink/35">
                             —
                           </div>
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="mt-1 text-xs uppercase tracking-widest text-ink/40">
-                          {product.category} · {product.tier ?? "no tier"} · sort{" "}
-                          {product.sortOrder ?? 100}
-                        </p>
-                        <p className="mt-1 text-sm text-ink/65">
-                          {formatUSD(product.priceCents)}
-                          {typeof product.quantity === "number"
-                            ? ` · Qty ${product.quantity}`
-                            : ""}
-                          {" · "}
-                          {product.recurringItem === false ? "one-off" : "recurring"}
-                          {product.shipsNationwide ? " · ships US" : ""}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium leading-snug">{product.publicName ?? product.name}</p>
+                        <p className="mt-1 text-sm text-ink/65">{formatUSD(product.priceCents)}</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/45">
+                          {catLabel} · {statusLabel}
                         </p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        defaultValue={dollarsFromCents(product.priceCents)}
-                        aria-label={`Price for ${product.name}`}
-                        onBlur={(event) => {
-                          const nextPrice = centsFromDollars(event.target.value);
-                          if (nextPrice !== product.priceCents) {
-                            void patchProduct(product._id, { priceCents: nextPrice });
-                          }
-                        }}
-                        className="w-20 border border-ink/20 px-2 py-1.5 text-xs"
-                      />
-                      <button
-                        type="button"
-                        disabled={busyId === product._id}
-                        onClick={() =>
-                          void patchProduct(product._id, {
-                            inStock: product.inStock === false,
-                          })
-                        }
-                        className={`min-h-[44px] px-3 py-2 text-xs uppercase tracking-widest sm:min-h-0 ${statusClassName(
-                          product.inStock !== false,
-                        )}`}
-                      >
-                        {product.inStock === false ? "Out" : "In stock"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busyId === product._id}
-                        onClick={() =>
-                          void patchProduct(product._id, {
-                            active: product.active === false,
-                          })
-                        }
-                        className={`min-h-[44px] px-3 py-2 text-xs uppercase tracking-widest sm:min-h-0 ${statusClassName(
-                          product.active !== false,
-                        )}`}
-                      >
-                        {product.active === false ? "Inactive" : "Active"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => editProduct(product)}
-                        className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
-                      >
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-3">
+                      <button type="button" onClick={() => editProduct(product)} className={btnSecondary()}>
                         Edit
                       </button>
                       <button
                         type="button"
-                        onClick={() => startSalesFromProduct(product)}
-                        className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
-                      >
-                        Record sale
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => duplicateProduct(product)}
-                        className="border border-ink/20 px-3 py-1.5 text-xs uppercase tracking-widest"
+                        className={btnUtility()}
                       >
                         Duplicate
                       </button>
                     </div>
-                  </div>
-                  {product.inventoryAudit?.lastEditedAt && (
-                    <p className="mt-3 text-xs text-ink/45">
-                      Last edit:{" "}
-                      {new Date(product.inventoryAudit.lastEditedAt).toLocaleString()} by{" "}
-                      {product.inventoryAudit.lastEditedByEmail || "unknown"}
-                    </p>
-                  )}
-                </article>
-              ))
+                  </article>
+                );
+              })
             ) : (
-              <AdminEmptyState
-                title="No offerings in this view yet"
-                description="Add your first product with the form on the right, or seed required SKUs from your deployment scripts. Vendors only see their own items."
-              />
+              <div className="sm:col-span-2 lg:col-span-3">
+                <AdminEmptyState
+                  title="No products in this tab"
+                  description="Try another tab or add a new product."
+                />
+              </div>
             )}
           </div>
         </div>
 
-        <form onSubmit={saveProduct} className="border border-ink/10 bg-white p-4 sm:p-5">
+        <form onSubmit={saveProduct} className="relative border border-ink/10 bg-white p-4 pb-28 sm:p-5 sm:pb-32">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-widest text-ink/40">
-                {productForm.id ? "Edit offering" : "Add offering"}
+                {productForm.id ? "Edit product" : "New product"}
               </p>
-              <h2 className="mt-1 font-display text-3xl font-light">Product form</h2>
+              <h2 className="mt-1 font-display text-3xl font-light">Product editor</h2>
             </div>
-            <button
-              type="submit"
-              disabled={busyId === (productForm.id ?? "/api/admin/flower-products")}
-              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
-            >
-              {busyId === (productForm.id ?? "/api/admin/flower-products")
-                ? "Saving..."
-                : "Save offering"}
-            </button>
           </div>
 
           <div className="mt-4 flex flex-col gap-2">
@@ -1935,123 +2034,31 @@ export function AdminDashboard({
               />
             </FormSection>
           </div>
+          <div className="sticky bottom-0 z-10 -mx-4 mt-8 border-t border-ink/10 bg-cream/95 px-4 py-4 backdrop-blur sm:-mx-5 sm:px-5">
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <button type="button" onClick={() => newProduct()} className={btnUtility()}>
+                Clear form
+              </button>
+              <button
+                type="submit"
+                disabled={busyId === (productForm.id ?? "/api/admin/flower-products")}
+                className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream disabled:bg-ink/30"
+              >
+                {busyId === (productForm.id ?? "/api/admin/flower-products")
+                  ? "Saving..."
+                  : "Save product"}
+              </button>
+            </div>
+          </div>
         </form>
       </section>
       </div>
       </AdminSection>
-
-      <AdminSection
-        id="admin-bouquets"
-        title="Bouquets"
-        description="Flower products in the bouquet category. Use Inventory above for the full list and batch tools."
-      >
-        {bouquetProducts.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {bouquetProducts.map((product) => (
-              <AdminCard key={product._id} className="!p-4">
-                <div className="flex gap-3">
-                  <div className="h-20 w-20 shrink-0 overflow-hidden border border-ink/10 bg-stone/30">
-                    {product.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={product.imageUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[9px] uppercase tracking-widest text-ink/35">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                <p className="font-medium text-ink">{product.publicName ?? product.name}</p>
-                <p className="mt-1 text-sm text-ink/60">{formatUSD(product.priceCents)}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/45">
-                  {product.inStock === false ? "Out of stock" : "In stock"} ·{" "}
-                  {product.active === false ? "Inactive" : "Active"}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => editProduct(product)} className={btnSecondary()}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => startSalesFromProduct(product)}
-                    className={btnSecondary()}
-                  >
-                    Record sale
-                  </button>
-                </div>
-                  </div>
-                </div>
-              </AdminCard>
-            ))}
-          </div>
-        ) : (
-          <AdminEmptyState
-            title="No bouquet items yet"
-            description="Add a product with category “Bouquet” in Inventory, or run your CMS seed so Glimmer, Blessing, and Abundance appear."
-          />
-        )}
-      </AdminSection>
-
-      <AdminSection
-        id="admin-pantry"
-        title="Pantry items"
-        description="Seasonal pantry SKUs (oils, sugars, teas). Manage pricing and stock from Inventory."
-      >
-        {pantryProducts.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {pantryProducts.map((product) => (
-              <AdminCard key={product._id} className="!p-4">
-                <div className="flex gap-3">
-                  <div className="h-20 w-20 shrink-0 overflow-hidden border border-ink/10 bg-stone/30">
-                    {product.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={product.imageUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[9px] uppercase tracking-widest text-ink/35">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                <p className="font-medium text-ink">{product.publicName ?? product.name}</p>
-                <p className="mt-1 text-sm text-ink/60">{formatUSD(product.priceCents)}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => editProduct(product)} className={btnSecondary()}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => duplicateProduct(product)}
-                    className={btnUtility()}
-                  >
-                    Duplicate
-                  </button>
-                </div>
-                  </div>
-                </div>
-              </AdminCard>
-            ))}
-          </div>
-        ) : (
-          <AdminEmptyState
-            title="No pantry items yet"
-            description="Create flower products with category “Pantry” in Inventory, or seed the CMS with Garden Oil, Botanical Sugar, and Herbal Tea presets."
-          />
-        )}
-      </AdminSection>
-
+      ) : section === "events" ? (
       <AdminSection
         id="admin-events"
-        title="Event / wedding / corporate orders"
-        description="Proposals, Stripe invoices, and payment links for inquiries. Expand an order to edit details; PDFs and links stay client-safe (internal notes never go on the PDF)."
+        title="Events"
+        description="Weddings, corporate, and custom orders. Expand to edit; generate PDFs and Stripe links from the action row."
       >
         {eventOrderSectionError ? (
           <SectionFeedback kind="error" message={eventOrderSectionError} />
@@ -2644,10 +2651,50 @@ export function AdminDashboard({
         )}
       </AdminSection>
 
+      </AdminSection>
+      ) : section === "orders" ? (
+      <AdminSection
+        id="admin-orders"
+        title="Orders"
+        description="Site checkout (Stripe). Weddings and custom quotes are under Events."
+      >
+        <div className="space-y-3">
+          {visibleSales.filter((r) => r.checkoutSessionId).length ? (
+            visibleSales
+              .filter((r) => r.checkoutSessionId)
+              .slice(0, 50)
+              .map((record) => (
+                <article
+                  key={record._id}
+                  className="flex flex-wrap items-center justify-between gap-3 border border-ink/10 bg-white p-4"
+                >
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-ink/40">Order</p>
+                    <p className="mt-1 font-mono text-xs text-ink/70">{record.checkoutSessionId}</p>
+                    <p className="mt-2 font-medium">{record.itemName}</p>
+                    <p className="mt-1 text-sm text-ink/60">
+                      {record.customerName || record.customerEmail || "Customer"} · {record.saleDate}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display text-2xl font-light">{formatUSD(record.amountCents)}</p>
+                    <p className="mt-1 text-xs uppercase tracking-widest text-moss">Paid</p>
+                  </div>
+                </article>
+              ))
+          ) : (
+            <AdminEmptyState
+              title="No checkout orders yet"
+              description="Completed Stripe checkouts create records here via webhook."
+            />
+          )}
+        </div>
+      </AdminSection>
+      ) : section === "payments" ? (
       <AdminSection
         id="admin-payments"
-        title="Payments / Stripe status"
-        description="Record walk-up or manual sales and review recent entries. Vendor Stripe Connect lives under Site settings / utility."
+        title="Payments"
+        description="Stripe visibility for events and walk-up records. Use Events for editing inquiries."
       >
         {paymentsSectionFeedback ? (
           <SectionFeedback
@@ -2656,106 +2703,30 @@ export function AdminDashboard({
           />
         ) : null}
 
-      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        <form onSubmit={saveSalesRecord} className="border border-ink/10 bg-white p-4 sm:p-6">
-          <p className="text-xs uppercase tracking-widest text-ink/40">Billing record</p>
-          <h2 className="mt-2 font-display text-3xl font-light">Record sale</h2>
-          <div className="mt-4 space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextInput
-                label="Customer name optional"
-                value={salesForm.customerName}
-                onChange={(value) => setSalesForm({ ...salesForm, customerName: value })}
-              />
-              <TextInput
-                label="Customer email optional"
-                value={salesForm.customerEmail}
-                onChange={(value) => setSalesForm({ ...salesForm, customerEmail: value })}
-              />
-            </div>
-            <TextInput
-              label="Item / service name"
-              value={salesForm.itemName}
-              onChange={(value) => setSalesForm({ ...salesForm, itemName: value })}
-              required
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <TextInput
-                label="Amount"
-                value={salesForm.amount}
-                onChange={(value) => setSalesForm({ ...salesForm, amount: value })}
-                required
-              />
-              <TextInput
-                label="Date"
-                type="date"
-                value={salesForm.saleDate}
-                onChange={(value) => setSalesForm({ ...salesForm, saleDate: value })}
-                required
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm text-ink/70">
-                Payment method
-                <select
-                  value={salesForm.paymentMethod}
-                  onChange={(event) =>
-                    setSalesForm({
-                      ...salesForm,
-                      paymentMethod: event.target.value as SalesFormState["paymentMethod"],
-                    })
-                  }
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                >
-                  {paymentMethods.map((method) => (
-                    <option key={method.value} value={method.value}>
-                      {method.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm text-ink/70">
-                Vendor optional
-                <select
-                  value={salesForm.vendorId}
-                  onChange={(event) =>
-                    setSalesForm({ ...salesForm, vendorId: event.target.value })
-                  }
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                >
-                  <option value="">Ritualmaker / none</option>
-                  {visibleVendors.map((vendor) => (
-                    <option key={vendor._id} value={vendor._id}>
-                      {vendor.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <TextInput
-              label="Tax category / billing type"
-              value={salesForm.billingType}
-              onChange={(value) => setSalesForm({ ...salesForm, billingType: value })}
-            />
-            <TextareaInput
-              label="Notes"
-              value={salesForm.notes}
-              onChange={(value) => setSalesForm({ ...salesForm, notes: value })}
-            />
-            <button
-              type="submit"
-              className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream"
-            >
-              Save record
-            </button>
-          </div>
-        </form>
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <AdminCard title="Deposits paid" className="!p-4">
+            <p className="font-display text-3xl font-light">{paymentSummary.depositPaid}</p>
+          </AdminCard>
+          <AdminCard title="Deposits due / linkable" className="!p-4">
+            <p className="font-display text-3xl font-light">{paymentSummary.depositDue}</p>
+          </AdminCard>
+          <AdminCard title="Balances paid" className="!p-4">
+            <p className="font-display text-3xl font-light">{paymentSummary.balancePaid}</p>
+          </AdminCard>
+          <AdminCard title="Balances due / linkable" className="!p-4">
+            <p className="font-display text-3xl font-light">{paymentSummary.balanceDue}</p>
+          </AdminCard>
+        </div>
 
-        <div className="border border-ink/10 bg-white p-4 sm:p-6">
-          <p className="text-xs uppercase tracking-widest text-ink/40">Recent records</p>
+        <p className="mb-4 text-sm text-ink/60">
+          Open an order in <Link href="/admin/events" className="underline">Events</Link> to copy deposit,
+          balance, or invoice links.
+        </p>
+
+        <AdminCard title="Recent billing records" description="Cash, Venmo, manual card — owner only delete.">
           <div className="mt-4 space-y-3">
             {visibleSales.length ? (
-              visibleSales.slice(0, 12).map((record) => (
+              visibleSales.slice(0, 20).map((record) => (
                 <article key={record._id} className="border border-ink/10 bg-cream/60 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -2765,13 +2736,10 @@ export function AdminDashboard({
                         {record.vendorName ?? "Ritualmaker"}
                       </p>
                     </div>
-                    <p className="font-display text-2xl font-light">
-                      {formatUSD(record.amountCents)}
-                    </p>
+                    <p className="font-display text-2xl font-light">{formatUSD(record.amountCents)}</p>
                   </div>
                   <p className="mt-2 text-xs uppercase tracking-widest text-ink/40">
-                    {record.saleDate} · {record.paymentMethod} ·{" "}
-                    {record.billingType ?? "flower service"}
+                    {record.saleDate} · {record.paymentMethod}
                   </p>
                   {typeof record.ritualBundleDiscountCents === "number" &&
                   record.ritualBundleDiscountCents > 0 ? (
@@ -2794,31 +2762,179 @@ export function AdminDashboard({
                 </article>
               ))
             ) : (
-              <AdminEmptyState
-                title="No billing records yet"
-                description="Use Record sale to log cash, Venmo, or manual card payments. Stripe checkout completions also create records via webhook."
-              />
+              <AdminEmptyState title="No records" description="Nothing logged yet." />
             )}
           </div>
-        </div>
-      </section>
+        </AdminCard>
       </AdminSection>
-
+      ) : section === "media" ? (
       <AdminSection
-        id="admin-utility"
-        title="Site settings / utility tools"
-        description="Vendors, product presets, and other operational tools that do not belong in checkout."
+        id="admin-media"
+        title="Media library"
+        description="Upload assets to Sanity, copy URLs, then attach on Products. This session only — refresh clears the list."
       >
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-          <form
-            onSubmit={saveVendor}
-            className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6"
-          >
-            <p className={adminLabelClass}>Vendor form</p>
-            <h3 className="mt-2 font-display text-2xl font-light text-ink">
-              {vendorForm.id ? "Edit vendor" : "Add vendor"}
-            </h3>
-            <div className="mt-6 space-y-4">
+        {mediaCopyFeedback ? <SectionFeedback kind="success" message={mediaCopyFeedback} /> : null}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          multiple
+          disabled={mediaUploading}
+          onChange={(e) => {
+            void uploadMediaLibraryFiles(e.target.files);
+            e.target.value = "";
+          }}
+          className="block w-full max-w-lg text-sm file:mr-3 file:border file:border-ink/20 file:bg-white file:px-3 file:py-2 file:text-xs file:uppercase"
+        />
+        {mediaUploading ? (
+          <p className="mt-2 text-xs uppercase tracking-widest text-ink/45">Uploading…</p>
+        ) : null}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {mediaAssets.map((a) => (
+            <div key={a.assetId} className="border border-ink/10 bg-white p-3">
+              <div className="aspect-square overflow-hidden bg-stone/30">
+                {a.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center text-[10px] uppercase text-ink/40">No preview</div>
+                )}
+              </div>
+              <button
+                type="button"
+                className={`${btnSecondary()} mt-2 w-full text-[10px]`}
+                onClick={() => {
+                  const text = a.url || a.assetId;
+                  void navigator.clipboard.writeText(text).then(() => {
+                    setMediaCopyFeedback("Copied URL to clipboard.");
+                    setTimeout(() => setMediaCopyFeedback(null), 2500);
+                  });
+                }}
+              >
+                Copy URL
+              </button>
+            </div>
+          ))}
+        </div>
+      </AdminSection>
+      ) : section === "settings" ? (
+      <AdminSection
+        id="admin-settings"
+        title="Settings"
+        description="Vendors, manual sale logging, and shop bundle copy."
+      >
+        <AdminCard title="Bundle discount (customer-facing)" className="mb-8">
+          <p className="text-sm text-ink/70">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
+          <p className="mt-2 text-xs text-ink/50">
+            Amount is fixed in code ($3 / pantry unit with bouquet in cart). Change requires a deploy.
+          </p>
+        </AdminCard>
+
+        <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+          <form onSubmit={saveSalesRecord} className="border border-ink/10 bg-white p-4 sm:p-6">
+            <p className="text-xs uppercase tracking-widest text-ink/40">Record walk-up sale</p>
+            <h2 className="mt-2 font-display text-2xl font-light">Manual payment</h2>
+            <div className="mt-4 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <TextInput
+                  label="Customer name optional"
+                  value={salesForm.customerName}
+                  onChange={(value) => setSalesForm({ ...salesForm, customerName: value })}
+                />
+                <TextInput
+                  label="Customer email optional"
+                  value={salesForm.customerEmail}
+                  onChange={(value) => setSalesForm({ ...salesForm, customerEmail: value })}
+                />
+              </div>
+              <TextInput
+                label="Item / service name"
+                value={salesForm.itemName}
+                onChange={(value) => setSalesForm({ ...salesForm, itemName: value })}
+                required
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <TextInput
+                  label="Amount"
+                  value={salesForm.amount}
+                  onChange={(value) => setSalesForm({ ...salesForm, amount: value })}
+                  required
+                />
+                <TextInput
+                  label="Date"
+                  type="date"
+                  value={salesForm.saleDate}
+                  onChange={(value) => setSalesForm({ ...salesForm, saleDate: value })}
+                  required
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm text-ink/70">
+                  Payment method
+                  <select
+                    value={salesForm.paymentMethod}
+                    onChange={(event) =>
+                      setSalesForm({
+                        ...salesForm,
+                        paymentMethod: event.target.value as SalesFormState["paymentMethod"],
+                      })
+                    }
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  >
+                    {paymentMethods.map((method) => (
+                      <option key={method.value} value={method.value}>
+                        {method.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm text-ink/70">
+                  Vendor optional
+                  <select
+                    value={salesForm.vendorId}
+                    onChange={(event) =>
+                      setSalesForm({ ...salesForm, vendorId: event.target.value })
+                    }
+                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                  >
+                    <option value="">Ritualmaker / none</option>
+                    {visibleVendors.map((vendor) => (
+                      <option key={vendor._id} value={vendor._id}>
+                        {vendor.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <TextInput
+                label="Tax category / billing type"
+                value={salesForm.billingType}
+                onChange={(value) => setSalesForm({ ...salesForm, billingType: value })}
+              />
+              <TextareaInput
+                label="Notes"
+                value={salesForm.notes}
+                onChange={(value) => setSalesForm({ ...salesForm, notes: value })}
+              />
+              <button
+                type="submit"
+                className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream"
+              >
+                Save record
+              </button>
+            </div>
+          </form>
+
+          <div className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className={adminLabelClass}>Vendors</p>
+                <h3 className="mt-2 font-display text-2xl font-light text-ink">Stripe Connect</h3>
+              </div>
+              <button type="button" onClick={() => setVendorForm(emptyVendorForm)} className={btnUtility()}>
+                New vendor
+              </button>
+            </div>
+            <form onSubmit={saveVendor} className="mt-6 space-y-4 border-b border-ink/10 pb-6">
               <TextInput
                 label="Vendor name"
                 value={vendorForm.name}
@@ -2845,9 +2961,7 @@ export function AdminDashboard({
               <TextareaInput
                 label="Payout method notes"
                 value={vendorForm.payoutMethodNotes}
-                onChange={(value) =>
-                  setVendorForm({ ...vendorForm, payoutMethodNotes: value })
-                }
+                onChange={(value) => setVendorForm({ ...vendorForm, payoutMethodNotes: value })}
               />
               <TextareaInput
                 label="Commission or wholesale notes"
@@ -2869,29 +2983,10 @@ export function AdminDashboard({
               <button type="submit" className={btnPrimary()}>
                 Save vendor
               </button>
-            </div>
-          </form>
-
-          <div className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className={adminLabelClass}>Vendors</p>
-                <h3 className="mt-2 font-display text-2xl font-light text-ink">Consignment notes</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setVendorForm(emptyVendorForm)}
-                className={btnUtility()}
-              >
-                New vendor
-              </button>
-            </div>
+            </form>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {visibleVendors.map((vendor) => (
-                <article
-                  key={vendor._id}
-                  className="rounded-lg border border-ink/10 bg-cream/50 p-4"
-                >
+                <article key={vendor._id} className="rounded-lg border border-ink/10 bg-cream/50 p-4">
                   <p className="font-medium text-ink">{vendor.name}</p>
                   <p className="mt-1 text-sm text-ink/60">
                     {vendor.contactName || vendor.contactEmail || "No contact saved"}
@@ -2901,11 +2996,7 @@ export function AdminDashboard({
                     {vendor.stripeOnboardingComplete ? " · Stripe ready" : ""}
                   </p>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => editVendor(vendor)}
-                      className={btnSecondary()}
-                    >
+                    <button type="button" onClick={() => editVendor(vendor)} className={btnSecondary()}>
                       Edit
                     </button>
                     <button
@@ -2913,9 +3004,7 @@ export function AdminDashboard({
                       onClick={() => openConnectLink(vendor._id)}
                       disabled={busyId === vendor._id || !vendor.contactEmail}
                       className={btnPrimary()}
-                      title={
-                        vendor.contactEmail ? undefined : "Add vendor email before Stripe setup"
-                      }
+                      title={vendor.contactEmail ? undefined : "Add vendor email before Stripe setup"}
                     >
                       Stripe setup
                     </button>
@@ -2928,32 +3017,24 @@ export function AdminDashboard({
                       Open Stripe dashboard
                     </button>
                   </div>
-                  {!vendor.contactEmail ? (
-                    <p className="mt-3 text-xs text-ink/50">Add vendor email before Stripe setup.</p>
-                  ) : null}
-                  {!vendor.stripeAccountId ? (
-                    <p className="mt-1 text-xs text-ink/50">Connect not started yet.</p>
-                  ) : null}
                 </article>
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
         <AdminCard
           title="Product presets"
-          description="Quick-load starter SKUs from the product form in Inventory (Glimmer, Blessing, Abundance, pantry items)."
+          description="Load starter SKUs on the Products page (Glimmer, Blessing, Abundance, pantry)."
           className="mt-8"
         >
-          <p className="text-sm text-ink/65">
-            Open <strong>Inventory / offerings</strong> and use “Load Glimmer”, “Load Blessing”, etc.,
-            or start from <strong>New</strong> for a blank offering.
-          </p>
+          <Link href="/admin/products" className="text-sm text-ink underline">
+            Go to Products →
+          </Link>
         </AdminCard>
       </AdminSection>
-        </div>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }
 
