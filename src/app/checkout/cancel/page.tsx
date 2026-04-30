@@ -19,7 +19,7 @@ export default function CancelPage() {
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <Link
-          href="/farm-stand#flowers"
+          href="/farm-stand#shop"
           className="bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal"
         >
           See stand list

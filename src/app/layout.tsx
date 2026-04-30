@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Oleo_Script, Poppins } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { sanityClient } from "@/sanity/client";
 import { siteSettingsQuery } from "@/sanity/queries";
 import type { SiteSettings } from "@/sanity/types";
@@ -92,6 +94,9 @@ export default function RootLayout({
           Skip to main content
         </a>
         <Header />
+        <Suspense fallback={null}>
+          <ScrollToTop />
+        </Suspense>
         <main id="main">{children}</main>
         <Footer />
       </body>

@@ -39,7 +39,7 @@ export function MobileNav({ standClosed }: MobileNavProps) {
   }, [open, close]);
 
   const cta = standClosed ? "Stand closed" : "Shop flowers";
-  const ctaHref = "/farm-stand#flowers";
+  const ctaHref = "/farm-stand#shop";
 
   return (
     <div className="flex items-center gap-2 md:hidden">

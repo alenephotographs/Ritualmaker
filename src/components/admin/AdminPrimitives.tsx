@@ -24,7 +24,7 @@ export function AdminSection({
   return (
     <section
       id={id}
-      className={`scroll-mt-6 border border-ink/10 bg-cream/30 shadow-sm ${className}`}
+      className={`scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] border border-ink/10 bg-cream/30 shadow-sm ${className}`}
     >
       <div className="sticky top-0 z-10 border-b border-ink/10 bg-cream/95 px-5 py-4 backdrop-blur-sm sm:px-6">
         <h2 className="font-display text-2xl font-light text-ink sm:text-3xl">{title}</h2>

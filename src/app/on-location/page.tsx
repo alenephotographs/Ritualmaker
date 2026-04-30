@@ -72,7 +72,10 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
         </div>
       </section>
 
-      <section id="live" className="w-full scroll-mt-24 border-b border-ink/10 bg-bloom/15">
+      <section
+        id="live"
+        className="w-full scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] border-b border-ink/10 bg-bloom/15"
+      >
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-28">
           <p className="text-xs uppercase tracking-[0.2em] text-magenta/80">Signature</p>
           <h2 className="mt-4 max-w-3xl font-display text-3xl font-light leading-tight text-ink sm:text-4xl lg:text-5xl">

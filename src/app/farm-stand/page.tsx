@@ -49,7 +49,7 @@ export default async function FarmStandPage() {
         </a>
       </p>
 
-      <div id="shop" className="mt-12 scroll-mt-24">
+      <div id="shop" className="mt-12 scroll-mt-[calc(5.5rem+env(safe-area-inset-top))]">
         <p className="text-xs uppercase tracking-widest text-ink/40">Shop</p>
         <BouquetGrid
           bouquets={[]}
@@ -58,7 +58,10 @@ export default async function FarmStandPage() {
         />
       </div>
 
-      <section className="mt-16 border-t border-ink/10 pt-12 lg:mt-20 lg:pt-16" aria-label="Visit the stand">
+      <section
+        className="mt-16 scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] border-t border-ink/10 pt-12 lg:mt-20 lg:pt-16"
+        aria-label="Visit the stand"
+      >
         <ContactOutreachBlock id="visit" links={c} />
       </section>
     </div>

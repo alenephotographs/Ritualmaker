@@ -13,8 +13,8 @@ const nextConfig = {
     // Preserve any inbound links from the prior Webflow site here.
     return [
       { source: "/shop", destination: "/farm-stand", permanent: true },
-      { source: "/pantry", destination: "/farm-stand#pantry", permanent: true },
-      { source: "/reviews", destination: "/#reviews", permanent: true },
+      { source: "/pantry", destination: "/farm-stand#shop", permanent: true },
+      { source: "/reviews", destination: "/", permanent: true },
       { source: "/faq", destination: "/#faq", permanent: true },
       { source: "/weddings", destination: "/on-location", permanent: true },
       { source: "/events", destination: "/on-location", permanent: true },

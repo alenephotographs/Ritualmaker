@@ -37,7 +37,7 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
 
         <div className="mt-8">
           <Link
-            href="/farm-stand#flowers"
+            href="/farm-stand#shop"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
             Shop flowers

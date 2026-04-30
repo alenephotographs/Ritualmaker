@@ -7,7 +7,7 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
   return (
     <section
       id="faq"
-      className="bg-stone/30 py-20 lg:py-28"
+      className="scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] bg-stone/30 py-20 lg:py-28"
       aria-labelledby="faq-heading"
     >
       <div className="mx-auto max-w-4xl px-6 lg:px-8">
