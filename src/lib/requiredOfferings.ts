@@ -131,6 +131,10 @@ export const requiredOfferings: RequiredOffering[] = [
   },
 ] ;
 
+/**
+ * Creates missing canonical SKUs only. Does **not** overwrite existing documents —
+ * otherwise every owner admin load would reset price, quantity, inStock, etc. to presets.
+ */
 export async function ensureRequiredOfferings() {
   if (!hasSanityWriteClient()) return;
 
@@ -140,17 +144,14 @@ export async function ensureRequiredOfferings() {
       `*[_type == "flowerProduct" && (slug.current == $slug || _id == $id)][0]{_id}`,
       { id: _id, slug },
     );
+    if (existing?._id) continue;
+
     const doc = {
       ...fields,
       _type: "flowerProduct",
       slug: { _type: "slug", current: slug },
       vendor: { _type: "reference", _ref: "vendor.ritualmaker" },
     };
-
-    if (existing?._id) {
-      await sanityWriteClient.patch(existing._id).set(doc).commit();
-    } else {
-      await sanityWriteClient.create({ _id, ...doc });
-    }
+    await sanityWriteClient.create({ _id, ...doc });
   }
 }
