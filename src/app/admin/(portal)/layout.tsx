@@ -17,8 +17,8 @@ export default async function AdminPortalLayout({ children }: { children: ReactN
   }
 
   return (
-    <div className="min-h-screen bg-cream/40">
-      <div className="w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+    <div className="min-h-screen overflow-x-hidden bg-cream/40">
+      <div className="w-full min-w-0 max-w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <header className="mb-8 flex w-full flex-col gap-6 border-b border-ink/10 pb-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
           <div className="min-w-0 shrink-0">
             <p className="text-xs uppercase tracking-widest text-ink/45">Admin</p>

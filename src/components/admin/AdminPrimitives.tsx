@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 /** Shared field styling: labels above inputs, comfortable tap targets on mobile */
 export const adminInputClass =
-  "mt-1.5 w-full rounded-md border border-ink/20 bg-white px-3 py-2.5 text-sm text-ink shadow-sm transition focus:border-ink/40 focus:outline-none focus:ring-1 focus:ring-ink/15 min-h-[44px] sm:min-h-[42px]";
+  "mt-1.5 w-full min-w-0 rounded-md border border-ink/20 bg-white px-3 py-2.5 text-sm text-ink shadow-sm transition focus:border-ink/40 focus:outline-none focus:ring-1 focus:ring-ink/15 min-h-[44px] sm:min-h-[42px]";
 
 export const adminLabelClass = "block text-xs font-medium uppercase tracking-widest text-ink/55";
 
@@ -24,15 +24,17 @@ export function AdminSection({
   return (
     <section
       id={id}
-      className={`scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] border border-ink/10 bg-cream/30 shadow-sm ${className}`}
+      className={`min-w-0 max-w-full scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] border border-ink/10 bg-cream/30 shadow-sm ${className}`}
     >
       <div className="sticky top-0 z-10 border-b border-ink/10 bg-cream/95 px-5 py-4 backdrop-blur-sm sm:px-6">
         <h2 className="font-display text-2xl font-light text-ink sm:text-3xl">{title}</h2>
         {description ? (
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink/65">{description}</p>
+          <p className="mt-2 max-w-full break-words text-sm leading-relaxed text-ink/65 sm:max-w-3xl">
+            {description}
+          </p>
         ) : null}
       </div>
-      <div className="space-y-6 px-5 py-8 sm:px-6">{children}</div>
+      <div className="min-w-0 max-w-full space-y-6 overflow-x-auto px-5 py-8 sm:px-6">{children}</div>
     </section>
   );
 }
@@ -50,7 +52,7 @@ export function AdminCard({
 }) {
   return (
     <div
-      className={`rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6 ${className}`}
+      className={`min-w-0 max-w-full rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6 ${className}`}
     >
       {title ? (
         <div className="mb-4">
@@ -77,7 +79,7 @@ export function AdminEmptyState({
   return (
     <div className="rounded-lg border border-dashed border-ink/20 bg-cream/40 px-6 py-10 text-center">
       <p className="text-sm font-medium text-ink">{title}</p>
-      <p className="mx-auto mt-2 max-w-md text-sm text-ink/55">{description}</p>
+      <p className="mx-auto mt-2 max-w-full break-words text-sm text-ink/55 sm:max-w-md">{description}</p>
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>
   );
@@ -99,7 +101,7 @@ export function StatusBadge({
   } as const;
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-medium uppercase tracking-widest ${styles[variant]}`}
+      className={`inline-flex max-w-full min-w-0 items-center break-words rounded-md border px-2 py-1 text-[10px] font-medium uppercase tracking-widest ${styles[variant]}`}
     >
       {children}
     </span>
@@ -132,7 +134,7 @@ export function SectionFeedback({
   return (
     <div
       role={kind === "error" ? "alert" : "status"}
-      className={`rounded-md border px-4 py-3 text-sm ${
+      className={`rounded-md border px-4 py-3 text-sm break-words ${
         kind === "error"
           ? "border-magenta/30 bg-bloom/10 text-magenta"
           : "border-moss/30 bg-moss/10 text-moss"

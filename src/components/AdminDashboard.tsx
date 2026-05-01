@@ -1311,7 +1311,7 @@ export function AdminDashboard({
     <>
       {(statusMessage || errorMessage || cmsLoadError) && (
           <div
-            className={`mb-8 rounded-lg border px-4 py-3 text-sm ${
+            className={`mb-8 max-w-full break-words rounded-lg border px-4 py-3 text-sm ${
               errorMessage || cmsLoadError
                 ? "border-magenta/30 bg-bloom/10 text-magenta"
                 : "border-moss/30 bg-moss/10 text-moss"
@@ -1323,7 +1323,7 @@ export function AdminDashboard({
       )}
 
       {section === "dashboard" ? (
-        <div className="flex flex-col gap-10">
+        <div className="flex min-w-0 max-w-full flex-col gap-10">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Active in-stock", activeInStock],
@@ -2140,10 +2140,10 @@ export function AdminDashboard({
                   <div className="border-b border-ink/10 bg-cream/50 px-4 py-4 sm:px-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-base font-medium text-ink">
+                        <p className="break-words text-base font-medium text-ink">
                           {order.name || "Unnamed client"}
                         </p>
-                        <p className="mt-1 truncate text-sm text-ink/60">{order.email || "No email"}</p>
+                        <p className="mt-1 break-words text-sm text-ink/60">{order.email || "No email"}</p>
                         <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-6">
                           <div>
                             <span className={adminLabelClass}>Event date</span>
@@ -2694,11 +2694,11 @@ export function AdminDashboard({
               .map((record) => (
                 <article
                   key={record._id}
-                  className="flex flex-wrap items-center justify-between gap-3 border border-ink/10 bg-white p-4"
+                  className="flex min-w-0 max-w-full flex-wrap items-center justify-between gap-3 border border-ink/10 bg-white p-4"
                 >
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-widest text-ink/40">Order</p>
-                    <p className="mt-1 font-mono text-xs text-ink/70">{record.checkoutSessionId}</p>
+                    <p className="mt-1 break-all font-mono text-xs text-ink/70">{record.checkoutSessionId}</p>
                     <p className="mt-2 font-medium">{record.itemName}</p>
                     <p className="mt-1 text-sm text-ink/60">
                       {record.customerName || record.customerEmail || "Customer"} · {record.saleDate}
@@ -2755,10 +2755,10 @@ export function AdminDashboard({
           <div className="mt-4 space-y-3">
             {visibleSales.length ? (
               visibleSales.slice(0, 20).map((record) => (
-                <article key={record._id} className="border border-ink/10 bg-cream/60 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{record.itemName}</p>
+                <article key={record._id} className="min-w-0 max-w-full border border-ink/10 bg-cream/60 p-4">
+                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium break-words">{record.itemName}</p>
                       <p className="mt-1 text-sm text-ink/60">
                         {record.customerName || record.customerEmail || "Walk-up"} ·{" "}
                         {record.vendorName ?? "Ritualmaker"}
@@ -2857,8 +2857,8 @@ export function AdminDashboard({
           </p>
         </AdminCard>
 
-        <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-          <form onSubmit={saveSalesRecord} className="border border-ink/10 bg-white p-4 sm:p-6">
+        <section className="grid min-w-0 max-w-full gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+          <form onSubmit={saveSalesRecord} className="min-w-0 border border-ink/10 bg-white p-4 sm:p-6">
             <p className="text-xs uppercase tracking-widest text-ink/40">Record walk-up sale</p>
             <h2 className="mt-2 font-display text-2xl font-light">Manual payment</h2>
             <div className="mt-4 space-y-3">
@@ -2952,7 +2952,7 @@ export function AdminDashboard({
             </div>
           </form>
 
-          <div className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6">
+          <div className="min-w-0 rounded-lg border border-ink/10 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className={adminLabelClass}>Vendors</p>
@@ -3078,7 +3078,7 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <span className={adminLabelClass}>{label}</span>
-      <p className="mt-1.5 rounded-md border border-ink/10 bg-cream/40 px-3 py-2.5 text-sm text-ink/80">
+      <p className="mt-1.5 break-words rounded-md border border-ink/10 bg-cream/40 px-3 py-2.5 text-sm text-ink/80">
         {value}
       </p>
     </div>
@@ -3111,7 +3111,7 @@ function TextInput({
   step?: string;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className={adminLabelClass}>{label}</span>
       <input
         type={type}
@@ -3145,7 +3145,7 @@ function TextareaInput({
   rows?: number;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className={adminLabelClass}>{label}</span>
       <textarea
         value={value}
@@ -3172,7 +3172,7 @@ function SelectInput({
   required?: boolean;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className={adminLabelClass}>
         {label}
         {required ? <RequiredMark /> : null}
@@ -3206,11 +3206,11 @@ function ToggleSwitch({
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`flex items-center justify-between gap-3 border px-3 py-2 text-sm ${
+      className={`flex min-w-0 max-w-full items-center justify-between gap-3 border px-3 py-2 text-sm ${
         checked ? "border-moss/30 bg-moss/10 text-moss" : "border-ink/10 bg-white text-ink/55"
       }`}
     >
-      <span>{label}</span>
+      <span className="min-w-0 flex-1 text-left break-words">{label}</span>
       <span className={`h-5 w-9 rounded-full p-0.5 ${checked ? "bg-moss" : "bg-ink/20"}`}>
         <span
           className={`block h-4 w-4 rounded-full bg-white transition ${
