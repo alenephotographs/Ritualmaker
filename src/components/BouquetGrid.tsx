@@ -27,6 +27,10 @@ async function readJsonSafe(response: Response) {
   }
 }
 
+/** Full-width responsive shop grid; cards cap width and center when few columns. */
+const SHOP_PRODUCT_GRID_CLASS =
+  "grid w-full grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))] sm:justify-items-center";
+
 type ShopCategoryFilter = "all" | "flowers" | "pantry";
 
 type BouquetGridProps = {
@@ -454,7 +458,7 @@ export function BouquetGrid({
                   <p className="mt-2 max-w-2xl text-sm text-ink/60">
                     Bouquets and seasonal flower offerings.
                   </p>
-                  <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className={`mt-6 ${SHOP_PRODUCT_GRID_CLASS}`}>
                     {publicFlowersShopProducts.map((item) => (
                       <FlowerProductCard
                         key={item._id}
@@ -481,7 +485,7 @@ export function BouquetGrid({
                   <p className="mt-2 max-w-2xl text-sm text-ink/60">
                     Small-batch pantry items grown here and built to pair with your flowers.
                   </p>
-                  <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className={`mt-6 ${SHOP_PRODUCT_GRID_CLASS}`}>
                     {publicPantryShopProducts.map((item) => (
                       <FlowerProductCard
                         key={item._id}
@@ -526,7 +530,7 @@ export function BouquetGrid({
                       Small-batch pantry items grown here and built to pair with your flowers.
                     </p>
                   )}
-                  <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className={`mt-4 ${SHOP_PRODUCT_GRID_CLASS}`}>
                     {group.items.map((item) => (
                       <FlowerProductCard
                         key={item._id}
@@ -815,7 +819,7 @@ function FlowerProductCard({
   const heroUrl = shopProductHeroImageUrl(item);
 
   return (
-    <article className="flex flex-col border border-ink/10 bg-cream">
+    <article className="flex w-full max-w-full flex-col border border-ink/10 bg-cream sm:max-w-[400px] sm:justify-self-center">
       {detailHref ? (
         <Link href={detailHref} className="block aspect-[3/4] overflow-hidden bg-stone/40">
           {heroUrl ? (

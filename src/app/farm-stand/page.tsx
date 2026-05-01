@@ -32,7 +32,7 @@ export default async function FarmStandPage() {
   const c = resolveContactLinks(settings);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
+    <div className="mx-auto w-full max-w-screen-2xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
       <p className="mt-6 max-w-xl text-sm text-ink/60">
         Browse bouquets and garden pantry items. Items marked for nationwide shipping can check out with
