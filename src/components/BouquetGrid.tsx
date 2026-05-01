@@ -127,6 +127,7 @@ export function BouquetGrid({
 
   useEffect(() => {
     setItemCount(cartItemCount);
+    return () => setItemCount(0);
   }, [cartItemCount, setItemCount]);
 
   useEffect(() => {
