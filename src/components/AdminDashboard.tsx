@@ -2676,8 +2676,6 @@ export function AdminDashboard({
           />
         )}
       </AdminSection>
-
-      </AdminSection>
       ) : section === "orders" ? (
       <AdminSection
         id="admin-orders"
