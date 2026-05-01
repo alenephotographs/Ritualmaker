@@ -15,8 +15,11 @@ function requiredPublic(name: "NEXT_PUBLIC_SANITY_PROJECT_ID" | "NEXT_PUBLIC_SAN
 }
 
 /**
- * Set `ALLOW_BUILD_WITHOUT_SANITY=1` only for CI/skeleton builds that must compile without real CMS env.
- * Production deployments must never rely on this — pages will get empty CMS data and writes will fail.
+ * Placeholder project/dataset ONLY when `ALLOW_BUILD_WITHOUT_SANITY === "1"`.
+ * Used for local `pnpm check` (see package.json) or CI skeleton compiles.
+ *
+ * Never set `ALLOW_BUILD_WITHOUT_SANITY` on Vercel for a real deployment:
+ * without real `NEXT_PUBLIC_SANITY_*`, the build must fail so misconfiguration is obvious.
  */
 function allowBuildPlaceholder() {
   return process.env.ALLOW_BUILD_WITHOUT_SANITY === "1";
