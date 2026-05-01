@@ -131,6 +131,9 @@ type CheckoutLine =
   | { itemType: "pantryItem"; item: PantryItem; quantity: number }
   | { itemType: "flowerProduct"; item: FlowerProduct; quantity: number };
 
+/** Cart checkout only loads `flowerProduct` rows; narrow the union for correct item typing. */
+type FlowerProductCartLine = Extract<CheckoutLine, { itemType: "flowerProduct" }>;
+
 const RITUAL_BUNDLE_LINE_LABEL = "Bundle discount";
 
 function isUnavailable(itemType: CheckoutLine["itemType"], item: CheckoutLine["item"]) {
@@ -231,7 +234,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid itemType" }, { status: 400 });
     }
     if (Array.isArray(body.items) && body.items.length > 0) {
-      const lines: CheckoutLine[] = [];
+      const lines: FlowerProductCartLine[] = [];
       for (const rawLine of body.items.slice(0, 20)) {
         if (rawLine.itemType && rawLine.itemType !== "flowerProduct") {
           return NextResponse.json({ error: "Invalid cart item type" }, { status: 400 });
@@ -256,12 +259,9 @@ export async function POST(req: Request) {
         });
       }
 
-      const hasFlowerForBundle = lines.some(
-        (line) =>
-          line.itemType === "flowerProduct" &&
-          isBouquetCategory((line.item as FlowerProduct).category),
-      );
-      const applyBundleDiscount = hasFlowerForBundle && lines.some((line) => line.item.category === "pantry");
+      const hasFlowerForBundle = lines.some((line) => isBouquetCategory(line.item.category));
+      const applyBundleDiscount =
+        hasFlowerForBundle && lines.some((line) => line.item.category === "pantry");
 
       const bundlePricedLines = lines.map((line) => ({
         category: itemCategory(line.itemType, line.item),
@@ -329,11 +329,7 @@ export async function POST(req: Request) {
       }
 
       const firstLine = lines[0];
-      const allShippedNationwide = lines.every(
-        (line) =>
-          line.itemType === "flowerProduct" &&
-          (line.item as FlowerProduct).shipsNationwide === true,
-      );
+      const allShippedNationwide = lines.every((line) => line.item.shipsNationwide === true);
 
       const sessionMetadata: Record<string, string> = {
         itemType: "cart",
@@ -347,9 +343,7 @@ export async function POST(req: Request) {
         ctaVariant: body.ctaVariant ?? "",
       };
 
-      const transferDestination = transferDestinationForFlowerProducts(
-        lines.map((line) => line.item as FlowerProduct),
-      );
+      const transferDestination = transferDestinationForFlowerProducts(lines.map((line) => line.item));
 
       const sessionCreate: Stripe.Checkout.SessionCreateParams = {
         mode: "payment",
