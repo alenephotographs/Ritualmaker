@@ -38,6 +38,8 @@ type BouquetGridProps = {
   flowerProducts?: FlowerProduct[];
   /** Shipped US checkout: hide stand-only promos and adjust copy. */
   shopMode?: "stand" | "shipped";
+  /** Link for “message before visiting” copy on stand pickup cards (e.g. Instagram). */
+  standVisitInstagramUrl?: string;
 };
 
 type CartLine = {
@@ -49,6 +51,7 @@ export function BouquetGrid({
   bouquets,
   flowerProducts = [],
   shopMode = "stand",
+  standVisitInstagramUrl,
 }: BouquetGridProps) {
   const pathname = usePathname();
   const { setItemCount, consumeScrollToCart, requestScrollToCart } = useShopCart();
@@ -466,6 +469,7 @@ export function BouquetGrid({
                         onAdd={addToCart}
                         shipped={shopMode === "shipped" && item.shipsNationwide === true}
                         showProductDebug={shopProductDebug}
+                        standVisitInstagramUrl={standVisitInstagramUrl}
                       />
                     ))}
                   </div>
@@ -493,6 +497,7 @@ export function BouquetGrid({
                         onAdd={addToCart}
                         shipped={shopMode === "shipped" && item.shipsNationwide === true}
                         showProductDebug={shopProductDebug}
+                        standVisitInstagramUrl={standVisitInstagramUrl}
                       />
                     ))}
                   </div>
@@ -538,6 +543,7 @@ export function BouquetGrid({
                         onAdd={addToCart}
                         shipped={shopMode === "shipped" && item.shipsNationwide === true}
                         showProductDebug={shopProductDebug}
+                        standVisitInstagramUrl={standVisitInstagramUrl}
                       />
                     ))}
                   </div>
@@ -807,11 +813,13 @@ function FlowerProductCard({
   onAdd,
   shipped = false,
   showProductDebug = false,
+  standVisitInstagramUrl,
 }: {
   item: FlowerProduct;
   onAdd: (item: FlowerProduct) => void;
   shipped?: boolean;
   showProductDebug?: boolean;
+  standVisitInstagramUrl?: string;
 }) {
   const slug = item.slug?.trim();
   const detailHref = slug ? `/farm-stand/product/${encodeURIComponent(slug)}` : null;
@@ -882,18 +890,30 @@ function FlowerProductCard({
             {item.displayDescription ?? item.description}
           </p>
         )}
-        {typeof item.quantity === "number" && !shipped && (
-          <p className="mt-3 text-xs uppercase tracking-widest text-ink/45">
-            {item.quantity} available at the stand
-          </p>
-        )}
         {shipped ? (
           <p className="mt-3 text-xs uppercase tracking-widest text-moss/80">
             Ships within the US · Card checkout
           </p>
         ) : (
-          <p className="mt-3 text-xs uppercase tracking-widest text-ink/50">
-            Local / stand · Contact us for pickup or visit the stand
+          <p className="mt-3 text-xs leading-relaxed text-ink/55">
+            <span className="font-medium uppercase tracking-widest text-ink/45">Stand · </span>
+            First come, first served — we don&apos;t promise how many bouquets are left.
+            {standVisitInstagramUrl ? (
+              <>
+                {" "}
+                <a
+                  href={standVisitInstagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-ink underline decoration-ink/25 underline-offset-2 hover:decoration-ink/60"
+                >
+                  Message on Instagram
+                </a>{" "}
+                before you head over if you want a quick heads-up.
+              </>
+            ) : (
+              <> Local pickup — visit the stand or reach out to confirm.</>
+            )}
           </p>
         )}
         <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-4">
