@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "check": "pnpm lint && pnpm typecheck && pnpm build",
     "sanity:deploy-schema": "sanity schema deploy --dataset ritualmaker",
     "sanity:migrate-vendors": "node scripts/migrate-vendors.mjs",
     "sanity:normalize-flower-categories": "node scripts/normalize-flower-product-categories.mjs",

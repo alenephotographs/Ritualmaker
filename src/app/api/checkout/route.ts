@@ -15,6 +15,7 @@ import {
   isBouquetCategory,
   RITUAL_BUNDLE_DISCOUNT_PER_UNIT_CENTS,
 } from "@/lib/ritualBundle";
+import { getCheckoutStripeImages } from "@/lib/checkoutItemImages";
 
 export const runtime = "nodejs";
 
@@ -289,14 +290,8 @@ export async function POST(req: Request) {
               name: `${itemDisplayName(line.itemType, line.item)}${label ? ` — ${label}` : ""}`,
               description,
               images: (() => {
-                const urls =
-                  line.item.imageUrls?.filter((u) => /^https?:\/\//i.test(u)) ?? [];
-                const fromList = urls.length ? urls.slice(0, 8) : undefined;
-                const fallback =
-                  line.item.imageUrl && /^https?:\/\//i.test(line.item.imageUrl)
-                    ? [line.item.imageUrl]
-                    : undefined;
-                return fromList ?? fallback;
+                const urls = getCheckoutStripeImages(line.item);
+                return urls.length ? urls : undefined;
               })(),
             },
           },
@@ -444,14 +439,8 @@ export async function POST(req: Request) {
                     : item.name,
                 description,
                 images: (() => {
-                  const urls =
-                    item.imageUrls?.filter((u) => /^https?:\/\//i.test(u)) ?? [];
-                  const fromList = urls.length ? urls.slice(0, 8) : undefined;
-                  const fallback =
-                    item.imageUrl && /^https?:\/\//i.test(item.imageUrl)
-                      ? [item.imageUrl]
-                      : undefined;
-                  return fromList ?? fallback;
+                  const urls = getCheckoutStripeImages(item);
+                  return urls.length ? urls : undefined;
                 })(),
               },
             },

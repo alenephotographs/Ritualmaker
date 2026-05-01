@@ -117,6 +117,19 @@ export interface FlowerProduct {
   inventoryAuditHistory?: InventoryAuditHistoryEntry[];
 }
 
+/** Normalized storefront / checkout view of a sellable SKU (subset of CMS fields). */
+export interface ShopProduct {
+  id: string;
+  title: string;
+  slug?: string;
+  description?: string;
+  priceCents: number;
+  category: string;
+  images?: string[];
+  image_url?: string;
+  active?: boolean;
+}
+
 export interface Vendor {
   _id: string;
   name: string;
