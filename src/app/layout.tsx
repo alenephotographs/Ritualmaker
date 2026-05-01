@@ -5,6 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ClientProviders } from "@/components/ClientProviders";
 import { sanityClient } from "@/sanity/client";
 import { siteSettingsQuery } from "@/sanity/queries";
 import type { SiteSettings } from "@/sanity/types";
@@ -93,12 +94,14 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Header />
-        <Suspense fallback={null}>
-          <ScrollToTop />
-        </Suspense>
-        <main id="main">{children}</main>
-        <Footer />
+        <ClientProviders>
+          <Header />
+          <Suspense fallback={null}>
+            <ScrollToTop />
+          </Suspense>
+          <main id="main">{children}</main>
+          <Footer />
+        </ClientProviders>
       </body>
     </html>
   );

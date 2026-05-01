@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Bouquet, FlowerProduct } from "@/sanity/types";
 import { farmLabel, formatUSD, sizeLabel } from "@/lib/format";
@@ -14,6 +15,7 @@ import {
   shopProductDisplayTitle,
   shopProductHeroImageUrl,
 } from "@/lib/shopProduct";
+import { useShopCart } from "@/components/shop/ShopCartContext";
 
 async function readJsonSafe(response: Response) {
   const text = await response.text();
@@ -44,6 +46,8 @@ export function BouquetGrid({
   flowerProducts = [],
   shopMode = "stand",
 }: BouquetGridProps) {
+  const pathname = usePathname();
+  const { setItemCount, consumeScrollToCart, requestScrollToCart } = useShopCart();
   const [shopFilter, setShopFilter] = useState<ShopCategoryFilter>("all");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +119,25 @@ export function BouquetGrid({
     })),
   );
   const cartTotal = Math.max(0, cartSubtotal - ritualBundleDiscount);
+
+  const cartItemCount = useMemo(
+    () => cart.reduce((n, line) => n + line.quantity, 0),
+    [cart],
+  );
+
+  useEffect(() => {
+    setItemCount(cartItemCount);
+  }, [cartItemCount, setItemCount]);
+
+  useEffect(() => {
+    if (pathname !== "/farm-stand") return;
+    if (!consumeScrollToCart()) return;
+    const id = window.requestAnimationFrame(() => {
+      const el = document.getElementById("cart");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [pathname, consumeScrollToCart, cartItemCount]);
 
   useEffect(() => {
     try {
@@ -220,6 +243,9 @@ export function BouquetGrid({
       }
       return [...current, { item, quantity: 1 }];
     });
+    if (pathname === "/farm-stand") {
+      requestScrollToCart();
+    }
   }
 
   function removeFromCart(itemId: string) {
@@ -516,151 +542,160 @@ export function BouquetGrid({
           )}
         </div>
       )}
-      {cart.length > 0 && (
-        <div className="mb-10 border border-ink/10 bg-white p-5">
-          <p className="text-xs uppercase tracking-widest text-ink/40">Cart</p>
-          <div className="mt-4 space-y-3">
-            {cart.map((line) => (
-              <div
-                key={line.item._id}
-                className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-3 text-sm"
-              >
-                <div>
-                  <p className="font-medium">{line.item.publicName ?? line.item.name}</p>
-                  <p className="text-xs text-ink/50">
-                    {formatUSD(line.item.priceCents)} x {line.quantity}
-                  </p>
+      {(flowerProducts.length > 0 || bouquets.length > 0) && (
+        <div
+          id="cart"
+          className="mb-10 scroll-mt-[calc(5.5rem+env(safe-area-inset-top)+1rem)] border border-ink/10 bg-white p-5 shadow-sm"
+        >
+          <h2 className="font-display text-2xl font-light text-ink">Cart</h2>
+          {cart.length === 0 ? (
+            <p className="mt-4 text-sm text-ink/60">Your cart is empty.</p>
+          ) : (
+            <>
+              <div className="mt-4 space-y-3">
+                {cart.map((line) => (
+                  <div
+                    key={line.item._id}
+                    className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{line.item.publicName ?? line.item.name}</p>
+                      <p className="text-xs text-ink/50">
+                        {formatUSD(line.item.priceCents)} x {line.quantity}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(line.item._id)}
+                      className="text-xs uppercase tracking-widest text-ink/50 underline decoration-ink/20 underline-offset-4"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 space-y-2 text-sm text-ink/70">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatUSD(cartSubtotal)}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeFromCart(line.item._id)}
-                  className="text-xs uppercase tracking-widest text-ink/50 underline decoration-ink/20 underline-offset-4"
-                >
-                  Remove
-                </button>
+                {ritualBundleDiscount > 0 && (
+                  <div className="flex justify-between text-moss">
+                    <span>Bundle discount applied</span>
+                    <span>-{formatUSD(ritualBundleDiscount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-ink/10 pt-2 font-medium text-ink">
+                  <span>Total</span>
+                  <span>{formatUSD(cartTotal)}</span>
+                </div>
+                {shopMode === "shipped" &&
+                  cart.some((line) => line.item.shipsNationwide === true) && (
+                    <p className="text-xs text-ink/55">
+                      Product subtotal above. USPS shipping is calculated next and shown on the payment
+                      page.
+                    </p>
+                  )}
               </div>
-            ))}
-          </div>
-          <div className="mt-4 space-y-2 text-sm text-ink/70">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{formatUSD(cartSubtotal)}</span>
-            </div>
-            {ritualBundleDiscount > 0 && (
-              <div className="flex justify-between text-moss">
-                <span>Bundle discount applied</span>
-                <span>-{formatUSD(ritualBundleDiscount)}</span>
-              </div>
-            )}
-            <div className="flex justify-between border-t border-ink/10 pt-2 font-medium text-ink">
-              <span>Total</span>
-              <span>{formatUSD(cartTotal)}</span>
-            </div>
-            {shopMode === "shipped" &&
-              cart.some((line) => line.item.shipsNationwide === true) && (
-                <p className="text-xs text-ink/55">
-                  Product subtotal above. USPS shipping is calculated next and shown on the payment
-                  page.
-                </p>
-              )}
-          </div>
-          {shopMode === "shipped" &&
-            cart.some((line) => line.item.shipsNationwide === true) && (
-            <div className="mt-6 space-y-3 border-t border-ink/10 pt-6">
-              <p className="text-xs uppercase tracking-widest text-ink/40">Ship to (US)</p>
-              <label className="block text-sm text-ink/70">
-                Full name
-                <input
-                  value={shipName}
-                  onChange={(e) => setShipName(e.target.value)}
-                  autoComplete="shipping name"
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm text-ink/70">
-                Street address
-                <input
-                  value={shipLine1}
-                  onChange={(e) => setShipLine1(e.target.value)}
-                  autoComplete="shipping address-line1"
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm text-ink/70">
-                Apt / suite (optional)
-                <input
-                  value={shipLine2}
-                  onChange={(e) => setShipLine2(e.target.value)}
-                  autoComplete="shipping address-line2"
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm text-ink/70">
-                  City
-                  <input
-                    value={shipCity}
-                    onChange={(e) => setShipCity(e.target.value)}
-                    autoComplete="shipping address-level2"
-                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                  />
-                </label>
-                <label className="block text-sm text-ink/70">
-                  State
-                  <input
-                    value={shipState}
-                    onChange={(e) => setShipState(e.target.value)}
-                    autoComplete="shipping address-level1"
-                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                  />
-                </label>
-              </div>
-              <label className="block text-sm text-ink/70">
-                ZIP code
-                <input
-                  value={shipZip}
-                  onChange={(e) => setShipZip(e.target.value)}
-                  autoComplete="shipping postal-code"
-                  className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm text-ink/70">
-                  Phone (optional)
-                  <input
-                    value={shipPhone}
-                    onChange={(e) => setShipPhone(e.target.value)}
-                    autoComplete="shipping tel"
-                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                  />
-                </label>
-                <label className="block text-sm text-ink/70">
-                  Email (optional)
-                  <input
-                    type="email"
-                    value={shipEmail}
-                    onChange={(e) => setShipEmail(e.target.value)}
-                    autoComplete="shipping email"
-                    className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
-                  />
-                </label>
-              </div>
-            </div>
+              {shopMode === "shipped" &&
+                cart.some((line) => line.item.shipsNationwide === true) && (
+                  <div className="mt-6 space-y-3 border-t border-ink/10 pt-6">
+                    <p className="text-xs uppercase tracking-widest text-ink/40">Ship to (US)</p>
+                    <label className="block text-sm text-ink/70">
+                      Full name
+                      <input
+                        value={shipName}
+                        onChange={(e) => setShipName(e.target.value)}
+                        autoComplete="shipping name"
+                        className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="block text-sm text-ink/70">
+                      Street address
+                      <input
+                        value={shipLine1}
+                        onChange={(e) => setShipLine1(e.target.value)}
+                        autoComplete="shipping address-line1"
+                        className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="block text-sm text-ink/70">
+                      Apt / suite (optional)
+                      <input
+                        value={shipLine2}
+                        onChange={(e) => setShipLine2(e.target.value)}
+                        autoComplete="shipping address-line2"
+                        className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block text-sm text-ink/70">
+                        City
+                        <input
+                          value={shipCity}
+                          onChange={(e) => setShipCity(e.target.value)}
+                          autoComplete="shipping address-level2"
+                          className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="block text-sm text-ink/70">
+                        State
+                        <input
+                          value={shipState}
+                          onChange={(e) => setShipState(e.target.value)}
+                          autoComplete="shipping address-level1"
+                          className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                    <label className="block text-sm text-ink/70">
+                      ZIP code
+                      <input
+                        value={shipZip}
+                        onChange={(e) => setShipZip(e.target.value)}
+                        autoComplete="shipping postal-code"
+                        className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block text-sm text-ink/70">
+                        Phone (optional)
+                        <input
+                          value={shipPhone}
+                          onChange={(e) => setShipPhone(e.target.value)}
+                          autoComplete="shipping tel"
+                          className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="block text-sm text-ink/70">
+                        Email (optional)
+                        <input
+                          type="email"
+                          value={shipEmail}
+                          onChange={(e) => setShipEmail(e.target.value)}
+                          autoComplete="shipping email"
+                          className="mt-1 w-full border border-ink/20 px-3 py-2 text-sm"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              <button
+                type="button"
+                disabled={loadingId === "cart"}
+                onClick={checkoutCart}
+                className="mt-5 bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
+              >
+                {loadingId === "cart"
+                  ? "Starting..."
+                  : shopMode === "shipped"
+                    ? cart.some((line) => line.item.shipsNationwide === true)
+                      ? "Checkout with shipping"
+                      : "Checkout"
+                    : "Pay for stand items"}
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            disabled={loadingId === "cart"}
-            onClick={checkoutCart}
-            className="mt-5 bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
-          >
-            {loadingId === "cart"
-              ? "Starting..."
-              : shopMode === "shipped"
-                ? cart.some((line) => line.item.shipsNationwide === true)
-                  ? "Checkout with shipping"
-                  : "Checkout"
-                : "Pay for stand items"}
-          </button>
         </div>
       )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
