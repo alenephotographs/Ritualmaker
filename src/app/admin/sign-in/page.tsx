@@ -13,7 +13,7 @@ export default async function AdminSignInPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-7xl items-center justify-center px-6 py-16 lg:px-8">
+    <div className="flex min-h-[60vh] w-full items-center justify-center px-6 py-16 lg:px-10">
       <AdminSignInForm />
     </div>
   );

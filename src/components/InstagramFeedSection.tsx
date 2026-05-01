@@ -50,48 +50,25 @@ export function InstagramFeedSection({ settings, posts }: InstagramFeedSectionPr
           <div className="mt-10">
             <InstagramPostGrid posts={posts} />
           </div>
-        ) : (
-          <div
-            className={`mt-10 px-6 py-10 text-center text-sm ${
-              isDev
-                ? "rounded border border-dashed border-ink/20 bg-cream/50 text-ink/50"
-                : "text-ink/60"
-            }`}
-          >
-            {isDev ? (
-              <>
-                <p>
-                  Set <code className="text-xs text-ink/70">INSTAGRAM_ACCESS_TOKEN</code> and, for
-                  Facebook Graph, <code className="text-xs text-ink/70">INSTAGRAM_USER_ID</code> in{" "}
-                  <code className="text-xs text-ink/70">.env.local</code> to show the live grid.
-                </p>
-                <p className="mt-2">
-                  <Link
-                    href={profileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-ink/75 underline decoration-ink/25 underline-offset-4"
-                  >
-                    Open Instagram{handle ? ` — ${handle}` : ""}
-                  </Link>
-                </p>
-              </>
-            ) : (
-              <p>
-                <Link
-                  href={profileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-ink/75 underline decoration-ink/25 underline-offset-4"
-                >
-                  {handle
-                    ? `Open ${handle} for daily photos from the stand`
-                    : "Open our Instagram for daily photos from the stand"}
-                </Link>
-              </p>
-            )}
+        ) : isDev ? (
+          <div className="mt-10 rounded border border-dashed border-ink/20 bg-cream/50 px-6 py-10 text-center text-sm text-ink/50">
+            <p>
+              Set <code className="text-xs text-ink/70">INSTAGRAM_ACCESS_TOKEN</code> and, for
+              Facebook Graph, <code className="text-xs text-ink/70">INSTAGRAM_USER_ID</code> in{" "}
+              <code className="text-xs text-ink/70">.env.local</code> to show the live grid.
+            </p>
+            <p className="mt-2">
+              <Link
+                href={profileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink/75 underline decoration-ink/25 underline-offset-4"
+              >
+                Open Instagram{handle ? ` — ${handle}` : ""}
+              </Link>
+            </p>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );

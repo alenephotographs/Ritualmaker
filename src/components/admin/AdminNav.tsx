@@ -18,7 +18,7 @@ export function AdminNav() {
   return (
     <nav
       aria-label="Admin"
-      className="flex max-w-full flex-wrap gap-1 rounded-lg border border-ink/10 bg-white p-1.5 shadow-sm"
+      className="flex w-full max-w-full flex-wrap justify-start gap-1 rounded-lg border border-ink/10 bg-white p-1.5 shadow-sm lg:justify-end"
     >
       {LINKS.map(({ href, label }) => {
         const active =

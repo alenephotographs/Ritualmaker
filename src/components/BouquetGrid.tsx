@@ -74,6 +74,25 @@ export function BouquetGrid({
     [filteredFlowerProducts],
   );
 
+  const publicFlowersShopProducts = useMemo(
+    () =>
+      filteredFlowerProducts.filter(
+        (item) => isShopPublicCardComplete(item) && isShopFlowerCategory(item.category),
+      ),
+    [filteredFlowerProducts],
+  );
+
+  const publicPantryShopProducts = useMemo(
+    () =>
+      filteredFlowerProducts.filter(
+        (item) => isShopPublicCardComplete(item) && item.category === "pantry",
+      ),
+    [filteredFlowerProducts],
+  );
+
+  const splitShippedFlowerPantrySections =
+    shopMode === "shipped" && shopFilter === "all";
+
   const shopProductDebug =
     process.env.NEXT_PUBLIC_SHOP_PRODUCT_DEBUG === "1" ||
     process.env.NEXT_PUBLIC_SHOP_PRODUCT_DEBUG === "true";
@@ -395,49 +414,105 @@ export function BouquetGrid({
               <p className="mt-1 text-sm text-ink/70">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
             </div>
           )}
-          {[
-            {
-              label:
-                shopMode === "shipped"
-                  ? "Flowers & pantry"
-                  : "Seasonal flower offerings",
-              items:
-                shopMode === "shipped"
-                  ? publicShopProducts
-                  : publicShopProducts.filter((item) => isShopFlowerCategory(item.category)),
-            },
-            ...(shopMode === "shipped"
-              ? []
-              : [
-                  {
-                    label: "Seasonal garden offerings",
-                    items: publicShopProducts.filter((item) => item.category === "pantry"),
-                  },
-                ]),
-          ].map((group) =>
-            group.items.length ? (
-              <div key={group.label} className="mb-8 last:mb-0">
-                <p className="text-xs uppercase tracking-widest text-ink/40">
-                  {group.label}
-                </p>
-                {group.label === "Seasonal garden offerings" && shopMode === "stand" && (
+          {splitShippedFlowerPantrySections ? (
+            <>
+              {publicFlowersShopProducts.length > 0 ? (
+                <section className="mb-12" aria-labelledby="shop-flowers-heading">
+                  <h2
+                    id="shop-flowers-heading"
+                    className="font-display text-2xl font-light text-ink sm:text-3xl"
+                  >
+                    Flowers
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm text-ink/60">
+                    Bouquets and seasonal flower offerings.
+                  </p>
+                  <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    {publicFlowersShopProducts.map((item) => (
+                      <FlowerProductCard
+                        key={item._id}
+                        item={item}
+                        onAdd={addToCart}
+                        shipped={shopMode === "shipped" && item.shipsNationwide === true}
+                        showProductDebug={shopProductDebug}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+              {publicPantryShopProducts.length > 0 ? (
+                <section
+                  className={`${publicFlowersShopProducts.length > 0 ? "border-t border-ink/10 pt-12" : ""}`}
+                  aria-labelledby="shop-pantry-heading"
+                >
+                  <h2
+                    id="shop-pantry-heading"
+                    className="font-display text-2xl font-light text-ink sm:text-3xl"
+                  >
+                    Garden pantry
+                  </h2>
                   <p className="mt-2 max-w-2xl text-sm text-ink/60">
                     Small-batch pantry items grown here and built to pair with your flowers.
                   </p>
-                )}
-                <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  {group.items.map((item) => (
-                    <FlowerProductCard
-                      key={item._id}
-                      item={item}
-                      onAdd={addToCart}
-                      shipped={shopMode === "shipped" && item.shipsNationwide === true}
-                      showProductDebug={shopProductDebug}
-                    />
-                  ))}
+                  <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    {publicPantryShopProducts.map((item) => (
+                      <FlowerProductCard
+                        key={item._id}
+                        item={item}
+                        onAdd={addToCart}
+                        shipped={shopMode === "shipped" && item.shipsNationwide === true}
+                        showProductDebug={shopProductDebug}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </>
+          ) : (
+            [
+              {
+                label:
+                  shopMode === "shipped"
+                    ? "Flowers & pantry"
+                    : "Seasonal flower offerings",
+                items:
+                  shopMode === "shipped"
+                    ? publicShopProducts
+                    : publicShopProducts.filter((item) => isShopFlowerCategory(item.category)),
+              },
+              ...(shopMode === "shipped"
+                ? []
+                : [
+                    {
+                      label: "Seasonal garden offerings",
+                      items: publicShopProducts.filter((item) => item.category === "pantry"),
+                    },
+                  ]),
+            ].map((group) =>
+              group.items.length ? (
+                <div key={group.label} className="mb-8 last:mb-0">
+                  <p className="text-xs uppercase tracking-widest text-ink/40">
+                    {group.label}
+                  </p>
+                  {group.label === "Seasonal garden offerings" && shopMode === "stand" && (
+                    <p className="mt-2 max-w-2xl text-sm text-ink/60">
+                      Small-batch pantry items grown here and built to pair with your flowers.
+                    </p>
+                  )}
+                  <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    {group.items.map((item) => (
+                      <FlowerProductCard
+                        key={item._id}
+                        item={item}
+                        onAdd={addToCart}
+                        shipped={shopMode === "shipped" && item.shipsNationwide === true}
+                        showProductDebug={shopProductDebug}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null,
+              ) : null,
+            )
           )}
         </div>
       )}
