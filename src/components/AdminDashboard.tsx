@@ -1523,10 +1523,10 @@ export function AdminDashboard({
         id="admin-inventory"
         title="Products"
         description="Browse by tab, edit on the right. Save is pinned at the bottom of the editor."
+        className="max-w-none"
       >
-      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
-      <section className="grid gap-6 lg:grid-cols-1 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="border border-ink/10 bg-white p-4 sm:p-6">
+        <div className="grid w-full min-w-0 gap-8 lg:grid-cols-[minmax(400px,1fr)_minmax(500px,1.2fr)] lg:gap-10">
+          <div className="min-w-0 w-full border border-ink/10 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-widest text-ink/40">
@@ -1721,7 +1721,10 @@ export function AdminDashboard({
           </div>
         </div>
 
-        <form onSubmit={saveProduct} className="relative border border-ink/10 bg-white p-4 pb-28 sm:p-5 sm:pb-32">
+        <form
+          onSubmit={saveProduct}
+          className="relative min-w-0 w-full border border-ink/10 bg-white p-4 pb-28 sm:p-5 sm:pb-32"
+        >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-widest text-ink/40">
@@ -2077,8 +2080,7 @@ export function AdminDashboard({
             </div>
           </div>
         </form>
-      </section>
-      </div>
+        </div>
       </AdminSection>
       ) : section === "events" ? (
       <AdminSection
