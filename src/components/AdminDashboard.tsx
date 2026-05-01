@@ -1635,7 +1635,7 @@ export function AdminDashboard({
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 2xl:grid-cols-3">
             {productsForTab.length ? (
               productsForTab.map((product) => {
                 const catLabel = product.category === "pantry" ? "Pantry" : "Flowers";
@@ -1650,17 +1650,10 @@ export function AdminDashboard({
                 return (
                   <article
                     key={product._id}
-                    className="flex flex-col border border-ink/10 bg-cream/60 p-4"
+                    className="flex flex-col overflow-hidden border border-ink/10 bg-cream/60"
                   >
-                    <div className="flex gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedProductIds.includes(product._id)}
-                        onChange={() => toggleSelectedProduct(product._id)}
-                        aria-label={`Select ${product.name}`}
-                        className="mt-1"
-                      />
-                      <div className="h-16 w-16 shrink-0 overflow-hidden border border-ink/15 bg-stone/30">
+                    <div className="relative border-b border-ink/10 bg-stone/25">
+                      <div className="aspect-[4/3] w-full min-h-[11rem] sm:min-h-[12.5rem]">
                         {thumbUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -1669,33 +1662,42 @@ export function AdminDashboard({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-[8px] uppercase text-ink/35">
-                            —
+                          <div className="flex h-full w-full items-center justify-center text-xs uppercase tracking-widest text-ink/35">
+                            No image
                           </div>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium leading-snug">{product.publicName ?? product.name}</p>
-                        <p className="mt-1 text-sm text-ink/65">{formatUSD(product.priceCents)}</p>
-                        <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/45">
-                          {catLabel} · {statusLabel}
-                        </p>
-                        {issues.length > 0 ? (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {issues.map((issue) => (
-                              <span
-                                key={issue}
-                                className="inline-block border border-amber-300/90 bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-ink/80"
-                                title={productAdminIssueLabel(issue)}
-                              >
-                                {productAdminIssueLabel(issue)}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
+                      <label className="absolute left-3 top-3 flex cursor-pointer items-center rounded bg-cream/90 px-1.5 py-1 shadow-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.includes(product._id)}
+                          onChange={() => toggleSelectedProduct(product._id)}
+                          aria-label={`Select ${product.name}`}
+                          className="h-4 w-4"
+                        />
+                      </label>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-3">
+                    <div className="flex min-h-0 flex-1 flex-col gap-2 p-4">
+                      <p className="font-medium leading-snug text-ink">{product.publicName ?? product.name}</p>
+                      <p className="text-sm text-ink/65">{formatUSD(product.priceCents)}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-ink/45">
+                        {catLabel} · {statusLabel}
+                      </p>
+                      {issues.length > 0 ? (
+                        <div className="mt-1 flex flex-col gap-1.5">
+                          {issues.map((issue) => (
+                            <span
+                              key={issue}
+                              className="inline-block w-fit max-w-full break-words border border-amber-300/90 bg-amber-50 px-2 py-1 text-[10px] font-medium uppercase leading-snug tracking-wide text-ink/80"
+                              title={productAdminIssueLabel(issue)}
+                            >
+                              {productAdminIssueLabel(issue)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="mt-auto flex flex-wrap gap-2 border-t border-ink/10 p-4 pt-3">
                       <button type="button" onClick={() => editProduct(product)} className={btnSecondary()}>
                         Edit
                       </button>
@@ -1711,7 +1713,7 @@ export function AdminDashboard({
                 );
               })
             ) : (
-              <div className="sm:col-span-2 lg:col-span-3">
+              <div className="col-span-full">
                 <AdminEmptyState
                   title="No products in this tab"
                   description="Try another tab or add a new product."
