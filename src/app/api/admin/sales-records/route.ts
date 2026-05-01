@@ -146,6 +146,7 @@ export async function POST(req: Request) {
       ...(cleanText(body.ritualBundleDiscountApplied)
         ? { ritualBundleDiscountApplied: cleanText(body.ritualBundleDiscountApplied) }
         : {}),
+      ...(vendorId
         ? { vendor: { _type: "reference" as const, _ref: vendorId } }
         : {}),
     };
