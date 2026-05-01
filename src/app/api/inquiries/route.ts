@@ -16,13 +16,23 @@ type InquiryPayload = {
   phone?: string;
   eventDate?: string;
   venue?: string;
-  guestCount?: number;
+  eventLocation?: string;
+  guestCount?: number | string;
   budgetBand?: string;
   notes?: string;
+  /** Alias some frontends send for the notes/message body */
+  message?: string;
   services?: string[];
   formType?: FormType;
   photoInquiryKind?: PhotoInquiryKind;
 };
+
+function coerceGuestCount(raw: unknown): number | undefined {
+  if (raw === undefined || raw === null || raw === "") return undefined;
+  const n = typeof raw === "number" ? raw : Number(String(raw).trim());
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 1000000) return undefined;
+  return n;
+}
 
 const onLocationServiceValues = [
   "wedding-event-florals",
@@ -57,6 +67,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    const rawNotes = payload.message ?? payload.notes;
     const name = sanitizeString(payload.name);
     const email = sanitizeString(payload.email);
     const formType: FormType =
@@ -106,11 +117,12 @@ export async function POST(req: Request) {
       }
     }
 
+    const guestCount = coerceGuestCount(payload.guestCount);
     if (
-      typeof payload.guestCount === "number" &&
-      (!Number.isInteger(payload.guestCount) ||
-        payload.guestCount < 0 ||
-        payload.guestCount > 1000000)
+      guestCount === undefined &&
+      payload.guestCount !== undefined &&
+      payload.guestCount !== null &&
+      payload.guestCount !== ""
     ) {
       return NextResponse.json({ error: "Guest count must be a valid number" }, { status: 400 });
     }
@@ -127,6 +139,8 @@ export async function POST(req: Request) {
         ? (sanitizeString(payload.photoInquiryKind) as PhotoInquiryKind)
         : undefined;
 
+    const venue = sanitizeString(payload.venue) ?? sanitizeString(payload.eventLocation);
+
     const doc = await sanityWriteClient.create({
       _type: "weddingInquiry",
       formType,
@@ -134,10 +148,10 @@ export async function POST(req: Request) {
       email,
       phone: sanitizeString(payload.phone),
       eventDate: sanitizeString(payload.eventDate),
-      venue: sanitizeString(payload.venue),
-      guestCount: payload.guestCount,
+      venue,
+      guestCount,
       budgetBand: sanitizeString(payload.budgetBand),
-      notes: sanitizeString(payload.notes),
+      notes: sanitizeString(typeof rawNotes === "string" ? rawNotes : undefined),
       services,
       ...(photoInquiryKind ? { photoInquiryKind } : {}),
       status: "new",

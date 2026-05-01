@@ -6,8 +6,16 @@ export type EventOrder = {
   _updatedAt?: string;
   name?: string;
   email?: string;
+  phone?: string;
+  formType?: string;
+  services?: string[];
+  photoInquiryKind?: string;
+  eventType?: string;
   eventDate?: string;
   venue?: string;
+  eventLocation?: string;
+  guestCount?: number;
+  budgetBand?: string;
   notes?: string;
   proposalScope?: string;
   proposalTotalCents?: number;
@@ -31,11 +39,6 @@ export type EventOrder = {
   paymentStatusUpdatedAt?: string;
   internalNotes?: string;
   status?: string;
-  services?: string[];
-  formType?: string;
-  photoInquiryKind?: string;
-  eventType?: string;
-  eventLocation?: string;
 };
 
 export const eventOrderProjection = `{
@@ -44,8 +47,16 @@ export const eventOrderProjection = `{
   _updatedAt,
   name,
   email,
+  phone,
+  formType,
+  services,
+  photoInquiryKind,
+  eventType,
   eventDate,
   venue,
+  "eventLocation": coalesce(eventLocation, venue),
+  guestCount,
+  budgetBand,
   notes,
   proposalScope,
   proposalTotalCents,
@@ -68,10 +79,7 @@ export const eventOrderProjection = `{
   paidInFull,
   paymentStatusUpdatedAt,
   internalNotes,
-  status,
-  services,
-  formType,
-  photoInquiryKind
+  status
 }`;
 
 export function inferEventType(order: Pick<EventOrder, "services" | "formType" | "photoInquiryKind">) {

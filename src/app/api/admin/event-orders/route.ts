@@ -11,6 +11,10 @@ type EventOrderPatchBody = {
   eventType?: string;
   eventDate?: string;
   eventLocation?: string;
+  /** Client message from the public inquiry form (editable). */
+  notes?: string;
+  guestCount?: number | string | null;
+  budgetBand?: string;
   proposalScope?: string;
   proposalTotalCents?: number;
   depositAmountCents?: number;
@@ -37,6 +41,13 @@ function cleanDate(value: unknown) {
 function cleanCents(value: unknown) {
   const numeric = Number(value);
   return Number.isFinite(numeric) && numeric >= 0 ? Math.round(numeric) : undefined;
+}
+
+function cleanGuestCount(value: unknown): number | undefined {
+  if (value === null || value === "") return undefined;
+  const n = Number(value);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 1_000_000) return undefined;
+  return n;
 }
 
 async function fetchEventOrder(id: string) {
@@ -120,11 +131,30 @@ export async function PATCH(req: Request) {
         ? Math.max(0, proposalTotalCents - depositAmountCents)
         : undefined);
 
+    const guestCountPatch: Record<string, unknown> = {};
+    if (body.guestCount !== undefined) {
+      if (
+        body.guestCount === null ||
+        body.guestCount === "" ||
+        (typeof body.guestCount === "string" && !body.guestCount.trim())
+      ) {
+        guestCountPatch.guestCount = null;
+      } else {
+        const n = cleanGuestCount(body.guestCount);
+        guestCountPatch.guestCount = n ?? null;
+      }
+    }
+
     const patch: Record<string, unknown> = {
       ...(typeof body.phone === "string" ? { phone: cleanText(body.phone) } : {}),
       eventType: cleanText(body.eventType) || existing.eventType || "Wedding",
       eventDate: cleanDate(body.eventDate) ?? existing.eventDate ?? "",
       venue: cleanText(body.eventLocation) || existing.venue || "",
+      ...(typeof body.notes === "string" ? { notes: cleanText(body.notes) } : {}),
+      ...guestCountPatch,
+      ...(typeof body.budgetBand === "string"
+        ? { budgetBand: cleanText(body.budgetBand) || null }
+        : {}),
       proposalScope: cleanText(body.proposalScope),
       proposalTotalCents,
       depositAmountCents,

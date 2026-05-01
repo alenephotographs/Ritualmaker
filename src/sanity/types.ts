@@ -190,11 +190,13 @@ export interface EventOrder {
   phone?: string;
   formType?: "on-location" | "photography";
   services?: string[];
+  photoInquiryKind?: string;
   eventType?: string;
   eventDate?: string;
   eventLocation?: string;
   venue?: string;
   guestCount?: number;
+  budgetBand?: string;
   notes?: string;
   status?: EventOrderStatus | string;
   proposalScope?: string;

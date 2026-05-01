@@ -68,6 +68,17 @@ function drawWrappedText(
   return nextY;
 }
 
+function formatBudgetBand(band?: string) {
+  const labels: Record<string, string> = {
+    "under-3k": "Under $3k",
+    "3k-6k": "$3k–$6k",
+    "6k-10k": "$6k–$10k",
+    "10k-plus": "$10k+",
+  };
+  if (!band) return "—";
+  return labels[band] ?? band;
+}
+
 export async function POST(_req: Request, context: { params: { id: string } }) {
   const access = await requireAdminAccess();
   if ("error" in access) return access.error;
@@ -99,12 +110,33 @@ export async function POST(_req: Request, context: { params: { id: string } }) {
   });
   y -= 32;
 
+  const photoKindLabels: Record<string, string> = {
+    "field-rental": "Field rental",
+    "sessions-with-me": "Sessions (farm or on location)",
+    "wedding-engagement-on-location": "Wedding or engagement",
+  };
+
   const rows: Array<[string, string]> = [
     ["Client", order.name || "—"],
     ["Email", order.email || "—"],
+    ["Intake form", order.formType === "photography" ? "Photography" : "On location"],
+    [
+      "Services",
+      Array.isArray(order.services) && order.services.length ? order.services.join(", ") : "—",
+    ],
+    ...(order.formType === "photography" && order.photoInquiryKind
+      ? ([
+          [
+            "Photography topic",
+            photoKindLabels[order.photoInquiryKind] ?? order.photoInquiryKind,
+          ],
+        ] as [string, string][])
+      : []),
     ["Event type", order.eventType || "Event"],
     ["Event date", formatDate(order.eventDate)],
     ["Location", order.eventLocation || "—"],
+    ["Guest count", typeof order.guestCount === "number" ? String(order.guestCount) : "—"],
+    ["Budget band", formatBudgetBand(order.budgetBand)],
     ["Proposal total", formatCurrency(order.proposalTotalCents)],
     ["Deposit amount", formatCurrency(order.depositAmountCents)],
     ["Balance amount", formatCurrency(order.balanceAmountCents)],
@@ -119,6 +151,22 @@ export async function POST(_req: Request, context: { params: { id: string } }) {
   }
 
   y -= 4;
+  page.drawText("Client message (from inquiry)", {
+    x: 48,
+    y,
+    size: 11,
+    font: bold,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+  y -= 16;
+
+  for (const line of lineWrap(order.notes || "", 86)) {
+    page.drawText(line, { x: 48, y, size: 11, font: regular, color: rgb(0.1, 0.1, 0.1) });
+    y -= 14;
+    if (y < 60) break;
+  }
+
+  y -= 6;
   page.drawText("Proposal notes / scope", {
     x: 48,
     y,
@@ -128,7 +176,7 @@ export async function POST(_req: Request, context: { params: { id: string } }) {
   });
   y -= 16;
 
-  for (const line of lineWrap(order.proposalScope || order.notes || "", 86)) {
+  for (const line of lineWrap(order.proposalScope || "", 86)) {
     page.drawText(line, { x: 48, y, size: 11, font: regular, color: rgb(0.1, 0.1, 0.1) });
     y -= 14;
     if (y < 60) break;

@@ -897,23 +897,20 @@ function FlowerProductCard({
         ) : (
           <p className="mt-3 text-xs leading-relaxed text-ink/55">
             <span className="font-medium uppercase tracking-widest text-ink/45">Stand · </span>
-            First come, first served — we don&apos;t promise how many bouquets are left.
+            First come first serve, but feel free to{" "}
             {standVisitInstagramUrl ? (
-              <>
-                {" "}
-                <a
-                  href={standVisitInstagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-ink underline decoration-ink/25 underline-offset-2 hover:decoration-ink/60"
-                >
-                  Message on Instagram
-                </a>{" "}
-                before you head over if you want a quick heads-up.
-              </>
+              <a
+                href={standVisitInstagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink underline decoration-ink/25 underline-offset-2 hover:decoration-ink/60"
+              >
+                reach out on Instagram
+              </a>
             ) : (
-              <> Local pickup — visit the stand or reach out to confirm.</>
-            )}
+              "reach out"
+            )}{" "}
+            to confirm stock.
           </p>
         )}
         <div className="mt-auto flex items-center justify-between border-t border-ink/10 pt-4">

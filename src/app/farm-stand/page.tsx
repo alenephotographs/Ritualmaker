@@ -36,18 +36,17 @@ export default async function FarmStandPage() {
       <StandStatus settings={settings} />
       <p className="mt-6 max-w-xl text-sm text-ink/60">
         Browse bouquets and garden pantry items. Items marked for nationwide shipping can check out with
-        USPS rates; everything else is for local pickup or the stand.{" "}
-        <strong className="font-medium text-ink/75">Stand flowers are first come, first served</strong>
-        — we don&apos;t guarantee counts. If you want to double-check before you drive, message us on{" "}
+        USPS rates; everything else is for local pickup or the stand. Stand flowers are first come first
+        serve, but feel free to{" "}
         <a
           href={c.instagramUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"
         >
-          Instagram{c.instagramHandle ? ` (${c.instagramHandle})` : ""}
-        </a>
-        .{" "}
+          reach out on Instagram
+        </a>{" "}
+        to confirm stock.{" "}
         <a
           href="#visit"
           className="text-ink/75 underline decoration-ink/20 underline-offset-2 hover:text-ink"

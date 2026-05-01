@@ -112,6 +112,10 @@ type EventOrderFormState = {
   eventType: string;
   eventDate: string;
   eventLocation: string;
+  /** From public inquiry `notes` (client message). */
+  clientNotes: string;
+  guestCount: string;
+  budgetBand: string;
   proposalScope: string;
   proposalTotal: string;
   depositAmount: string;
@@ -296,6 +300,9 @@ const emptyEventOrderForm: EventOrderFormState = {
   eventType: "Wedding",
   eventDate: "",
   eventLocation: "",
+  clientNotes: "",
+  guestCount: "",
+  budgetBand: "",
   proposalScope: "",
   proposalTotal: "",
   depositAmount: "",
@@ -317,6 +324,36 @@ const eventOrderStatusOptions: { value: string; label: string }[] = [
   { value: "booked", label: "Booked" },
   { value: "declined", label: "Declined" },
 ];
+
+const inquiryBudgetBandOptions: { value: string; label: string }[] = [
+  { value: "", label: "—" },
+  { value: "under-3k", label: "Under $3k" },
+  { value: "3k-6k", label: "$3k–$6k" },
+  { value: "6k-10k", label: "$6k–$10k" },
+  { value: "10k-plus", label: "$10k+" },
+];
+
+const inquiryServiceLabels: Record<string, string> = {
+  "wedding-event-florals": "Weddings & events",
+  "popup-flower-bar": "Pop-up flower bars",
+  "restaurant-hotel": "Restaurants & hotels",
+  "commercial-account": "Commercial accounts",
+  "live-collage": "Live Collage™",
+  "general-on-location": "General on-location",
+  florals: "Wedding / event florals",
+  photography: "Photography",
+};
+
+const photoInquiryKindLabels: Record<string, string> = {
+  "field-rental": "Field rental",
+  "sessions-with-me": "Sessions (farm or on location)",
+  "wedding-engagement-on-location": "Wedding or engagement",
+};
+
+function formatInquiryServices(services?: string[]) {
+  if (!services?.length) return "—";
+  return services.map((id) => inquiryServiceLabels[id] ?? id).join(" · ");
+}
 
 function dollarsFromCents(cents?: number) {
   if (typeof cents !== "number") return "";
@@ -988,6 +1025,12 @@ export function AdminDashboard({
       eventType: order.eventType || inferEventType(order),
       eventDate: order.eventDate || "",
       eventLocation: order.eventLocation || order.venue || "",
+      clientNotes: order.notes || "",
+      guestCount:
+        typeof order.guestCount === "number" && Number.isFinite(order.guestCount)
+          ? String(order.guestCount)
+          : "",
+      budgetBand: order.budgetBand ?? "",
       proposalScope: order.proposalScope || "",
       proposalTotal: dollarsFromCents(order.proposalTotalCents),
       depositAmount: dollarsFromCents(order.depositAmountCents),
@@ -1065,6 +1108,9 @@ export function AdminDashboard({
       eventType: eventOrderForm.eventType,
       eventDate: eventOrderForm.eventDate,
       eventLocation: eventOrderForm.eventLocation,
+      notes: eventOrderForm.clientNotes,
+      guestCount: eventOrderForm.guestCount.trim() || null,
+      budgetBand: eventOrderForm.budgetBand,
       proposalScope: eventOrderForm.proposalScope,
       proposalTotalCents: centsFromDollars(eventOrderForm.proposalTotal),
       depositAmountCents: centsFromDollars(eventOrderForm.depositAmount),
@@ -2385,6 +2431,62 @@ export function AdminDashboard({
                                 helper="Saved with the order when you click Save event order."
                               />
                             </div>
+                          </AdminCard>
+
+                          <AdminCard
+                            title="Client inquiry (from form)"
+                            description="Everything the client submitted is stored here. Edit if you need to fix a typo; changes save with the button below."
+                          >
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <ReadOnlyField
+                                label="Intake form"
+                                value={
+                                  order.formType === "photography"
+                                    ? "Photography"
+                                    : order.formType === "on-location"
+                                      ? "On location"
+                                      : order.formType || "—"
+                                }
+                              />
+                              <ReadOnlyField
+                                label="Services"
+                                value={formatInquiryServices(order.services)}
+                              />
+                              {order.formType === "photography" && order.photoInquiryKind ? (
+                                <ReadOnlyField
+                                  label="Photography topic"
+                                  value={
+                                    photoInquiryKindLabels[order.photoInquiryKind] ??
+                                    order.photoInquiryKind
+                                  }
+                                />
+                              ) : null}
+                              <TextInput
+                                label="Guest count"
+                                type="number"
+                                min={0}
+                                value={eventOrderForm.guestCount}
+                                onChange={(v) => setEventOrderForm({ ...eventOrderForm, guestCount: v })}
+                                helper="From the inquiry form. Leave blank to clear."
+                              />
+                              <SelectInput
+                                label="Budget band"
+                                value={eventOrderForm.budgetBand}
+                                onChange={(value) =>
+                                  setEventOrderForm({ ...eventOrderForm, budgetBand: value })
+                                }
+                                options={inquiryBudgetBandOptions}
+                              />
+                            </div>
+                            <TextareaInput
+                              label="Client message / notes"
+                              rows={6}
+                              value={eventOrderForm.clientNotes}
+                              onChange={(value) =>
+                                setEventOrderForm({ ...eventOrderForm, clientNotes: value })
+                              }
+                              helper="Maps to the Notes field clients fill on the public inquiry form."
+                            />
                           </AdminCard>
 
                           <AdminCard title="Event details" description="What appears on proposals and invoices.">
