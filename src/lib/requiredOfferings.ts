@@ -5,7 +5,7 @@ export type RequiredOffering = {
   name: string;
   slug: string;
   publicName: string;
-  category: "bouquet" | "pantry";
+  category: "flowers" | "pantry";
   tier: "small" | "standard" | "premium" | "";
   priceCents: number;
   shortDescription: string;
@@ -25,7 +25,7 @@ export const requiredOfferings: RequiredOffering[] = [
     name: "Glimmer",
     slug: "glimmer",
     publicName: "Glimmer",
-    category: "bouquet",
+    category: "flowers",
     tier: "small",
     priceCents: 1200,
     shortDescription: "Small seasonal grab bouquet.",
@@ -43,7 +43,7 @@ export const requiredOfferings: RequiredOffering[] = [
     name: "Blessing",
     slug: "blessing",
     publicName: "Blessing",
-    category: "bouquet",
+    category: "flowers",
     tier: "standard",
     priceCents: 1800,
     shortDescription: "Signature Ritualmaker seasonal bouquet.",
@@ -61,7 +61,7 @@ export const requiredOfferings: RequiredOffering[] = [
     name: "Abundance",
     slug: "abundance",
     publicName: "Abundance",
-    category: "bouquet",
+    category: "flowers",
     tier: "premium",
     priceCents: 2600,
     shortDescription: "Larger gift-ready seasonal bouquet.",

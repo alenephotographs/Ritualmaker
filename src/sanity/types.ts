@@ -63,6 +63,8 @@ export interface PantryItem {
 }
 
 export type FlowerProductCategory =
+  | "flowers"
+  /** @deprecated Prefer "flowers" for shop bouquets; kept for legacy CMS rows. */
   | "bouquet"
   | "pantry"
   | "bundle"

@@ -12,6 +12,7 @@ import {
 import { getCheapestUspsRateCents, isShippoConfigured, type ShippoAddressInput } from "@/lib/shippo";
 import {
   computeRitualBundleDiscountCents,
+  isBouquetCategory,
   RITUAL_BUNDLE_DISCOUNT_PER_UNIT_CENTS,
 } from "@/lib/ritualBundle";
 
@@ -255,8 +256,12 @@ export async function POST(req: Request) {
         });
       }
 
-      const hasBouquet = lines.some((line) => itemCategory(line.itemType, line.item) === "bouquet");
-      const applyBundleDiscount = hasBouquet && lines.some((line) => line.item.category === "pantry");
+      const hasFlowerForBundle = lines.some(
+        (line) =>
+          line.itemType === "flowerProduct" &&
+          isBouquetCategory((line.item as FlowerProduct).category),
+      );
+      const applyBundleDiscount = hasFlowerForBundle && lines.some((line) => line.item.category === "pantry");
 
       const bundlePricedLines = lines.map((line) => ({
         category: itemCategory(line.itemType, line.item),

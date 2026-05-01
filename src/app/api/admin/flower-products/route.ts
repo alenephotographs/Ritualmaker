@@ -9,10 +9,21 @@ import {
 import { formatSanityWriteError } from "@/lib/sanityWriteErrors";
 import { sanityWriteClient } from "@/sanity/writeClient";
 import type { FlowerProduct, InventoryAuditHistoryEntry } from "@/sanity/types";
+import { normalizeShopProductCategory } from "@/lib/shopProduct";
 
 export const runtime = "nodejs";
 
 type ProductCategory = FlowerProduct["category"];
+
+const categories = new Set<ProductCategory>([
+  "flowers",
+  "pantry",
+  "bouquet",
+  "bundle",
+  "wedding_event",
+  "vendor_item",
+  "other",
+]);
 
 type RequestBody = {
   id?: string;
@@ -38,15 +49,6 @@ type RequestBody = {
   internalNotes?: string;
   sortOrder?: number;
 };
-
-const categories = new Set<ProductCategory>([
-  "bouquet",
-  "pantry",
-  "bundle",
-  "wedding_event",
-  "vendor_item",
-  "other",
-]);
 
 const tiers = new Set<NonNullable<FlowerProduct["tier"]>>([
   "small",
@@ -220,10 +222,11 @@ function validateProductInput(body: RequestBody, partial = false) {
   }
 
   if (!partial || body.category !== undefined) {
-    if (!body.category || !categories.has(body.category)) {
-      throw new Error("Choose a valid category");
+    const raw = body.category;
+    if (!raw || !categories.has(raw)) {
+      throw new Error("Choose a valid category (flowers or pantry)");
     }
-    data.category = body.category;
+    data.category = normalizeShopProductCategory(raw);
   }
 
   if (!partial || body.tier !== undefined) {
@@ -331,6 +334,7 @@ async function duplicateProduct(
     name,
     publicName: `${String(source.publicName ?? source.name ?? "Flower service")} copy`,
     slug: { _type: "slug", current: `${slugify(name)}-${Date.now()}`.slice(0, 96) },
+    category: normalizeShopProductCategory(source.category as string | undefined),
     active: false,
     inStock: false,
     sortOrder:

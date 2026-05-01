@@ -5,6 +5,7 @@ import { oneFlowerProductBySlugQuery } from "@/sanity/queries";
 import type { FlowerProduct } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
 import { RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
+import { shopProductDisplayTitle, shopProductHeroImageUrl } from "@/lib/shopProduct";
 
 export const revalidate = 60;
 
@@ -31,6 +32,8 @@ export default async function FlowerProductPage({ params }: Props) {
   }
 
   const isPantry = product.category === "pantry";
+  const heroUrl = shopProductHeroImageUrl(product);
+  const title = shopProductDisplayTitle(product);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16 pb-24 lg:px-8 lg:py-24">
@@ -44,25 +47,21 @@ export default async function FlowerProductPage({ params }: Props) {
       <p className="mt-6 text-xs uppercase tracking-widest text-ink/40">
         {isPantry ? "Pantry" : "Flowers"}
       </p>
-      <h1 className="mt-2 font-display text-4xl font-light text-ink md:text-5xl">
-        {product.publicName ?? product.name}
-      </h1>
+      <h1 className="mt-2 font-display text-4xl font-light text-ink md:text-5xl">{title}</h1>
       <p className="mt-4 font-display text-2xl font-light text-ink/90">
         {formatUSD(product.priceCents)}
       </p>
 
       <p className="mt-6 text-sm text-ink/65">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
 
-      {product.imageUrl ? (
-        <div className="mt-8 aspect-[4/5] overflow-hidden border border-ink/10 bg-stone/30">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={product.imageUrl}
-            alt={product.publicName ?? product.name}
-            className="h-full w-full object-cover"
-          />
-        </div>
-      ) : null}
+      <div className="mt-8 aspect-[4/5] overflow-hidden border border-ink/10 bg-stone/30">
+        {heroUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={heroUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-b from-stone/50 to-stone/25" aria-hidden />
+        )}
+      </div>
 
       {product.shortDescription ? (
         <p className="mt-8 text-sm font-medium text-ink/80">{product.shortDescription}</p>

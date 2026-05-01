@@ -51,7 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: "/photos/field-mixed-tulips-cluster.jpg",
           width: 1600,
           height: 1200,
-          alt: "Seasonal flowers",
+          alt: "Ritualmaker — flowers and pantry",
         },
       ],
     },

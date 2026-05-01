@@ -1,12 +1,8 @@
 import { defineField, defineType } from "sanity";
 
 const productCategories = [
-  { title: "Bouquet", value: "bouquet" },
+  { title: "Flowers", value: "flowers" },
   { title: "Pantry", value: "pantry" },
-  { title: "Bundle", value: "bundle" },
-  { title: "Wedding/event flowers", value: "wedding_event" },
-  { title: "Vendor item", value: "vendor_item" },
-  { title: "Other", value: "other" },
 ];
 
 const productTiers = [
@@ -56,7 +52,7 @@ export default defineType({
       title: "Category",
       type: "string",
       options: { list: productCategories },
-      initialValue: "bouquet",
+      initialValue: "flowers",
       validation: (rule) => rule.required(),
     }),
     defineField({

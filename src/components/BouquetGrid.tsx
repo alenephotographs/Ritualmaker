@@ -8,6 +8,12 @@ import {
   computeRitualBundleDiscountCents,
   RITUAL_BUNDLE_CUSTOMER_NOTE,
 } from "@/lib/ritualBundle";
+import {
+  isShopFlowerCategory,
+  isShopPublicCardComplete,
+  shopProductDisplayTitle,
+  shopProductHeroImageUrl,
+} from "@/lib/shopProduct";
 
 async function readJsonSafe(response: Response) {
   const text = await response.text();
@@ -55,13 +61,22 @@ export function BouquetGrid({
 
   const filteredFlowerProducts = useMemo(() => {
     if (shopFilter === "flowers") {
-      return flowerProducts.filter((item) => item.category !== "pantry");
+      return flowerProducts.filter((item) => isShopFlowerCategory(item.category));
     }
     if (shopFilter === "pantry") {
       return flowerProducts.filter((item) => item.category === "pantry");
     }
     return flowerProducts;
   }, [flowerProducts, shopFilter]);
+
+  const publicShopProducts = useMemo(
+    () => filteredFlowerProducts.filter((item) => isShopPublicCardComplete(item)),
+    [filteredFlowerProducts],
+  );
+
+  const shopProductDebug =
+    process.env.NEXT_PUBLIC_SHOP_PRODUCT_DEBUG === "1" ||
+    process.env.NEXT_PUBLIC_SHOP_PRODUCT_DEBUG === "true";
 
   const availableBouquets = useMemo(
     () => bouquets.filter((bouquet) => bouquet.available),
@@ -282,6 +297,11 @@ export function BouquetGrid({
     );
   }
 
+  const incompleteInFilter =
+    shopMode === "shipped" &&
+    filteredFlowerProducts.length > 0 &&
+    publicShopProducts.length === 0;
+
   return (
     <div>
       {error && (
@@ -329,6 +349,13 @@ export function BouquetGrid({
           No products in this category. Try <strong>All</strong> or another filter.
         </p>
       ) : null}
+      {incompleteInFilter ? (
+        <p className="mb-6 border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-ink/80" role="status">
+          {filteredFlowerProducts.length} product(s) in this view are hidden until each has a{" "}
+          <strong className="font-medium">public name</strong> and a valid <strong className="font-medium">price</strong>.
+          Fix them in <strong className="font-medium">Admin → Products</strong>.
+        </p>
+      ) : null}
       {lastBouquet && lastBouquet.available && (
         <div className="mb-6 border border-moss/30 bg-moss/10 px-4 py-4">
           <p className="text-xs uppercase tracking-widest text-moss">
@@ -358,7 +385,7 @@ export function BouquetGrid({
           </div>
         </div>
       )}
-      {filteredFlowerProducts.length > 0 && (
+      {publicShopProducts.length > 0 && (
         <div className="mb-8">
           {shopMode === "stand" && (
             <div className="mb-6 border border-moss/25 bg-moss/10 px-4 py-4">
@@ -376,15 +403,15 @@ export function BouquetGrid({
                   : "Seasonal flower offerings",
               items:
                 shopMode === "shipped"
-                  ? filteredFlowerProducts
-                  : filteredFlowerProducts.filter((item) => item.category !== "pantry"),
+                  ? publicShopProducts
+                  : publicShopProducts.filter((item) => isShopFlowerCategory(item.category)),
             },
             ...(shopMode === "shipped"
               ? []
               : [
                   {
                     label: "Seasonal garden offerings",
-                    items: filteredFlowerProducts.filter((item) => item.category === "pantry"),
+                    items: publicShopProducts.filter((item) => item.category === "pantry"),
                   },
                 ]),
           ].map((group) =>
@@ -405,6 +432,7 @@ export function BouquetGrid({
                       item={item}
                       onAdd={addToCart}
                       shipped={shopMode === "shipped" && item.shipsNationwide === true}
+                      showProductDebug={shopProductDebug}
                     />
                   ))}
                 </div>
@@ -663,61 +691,71 @@ function FlowerProductCard({
   item,
   onAdd,
   shipped = false,
+  showProductDebug = false,
 }: {
   item: FlowerProduct;
   onAdd: (item: FlowerProduct) => void;
   shipped?: boolean;
+  showProductDebug?: boolean;
 }) {
   const slug = item.slug?.trim();
   const detailHref = slug ? `/farm-stand/product/${encodeURIComponent(slug)}` : null;
+  const displayTitle = shopProductDisplayTitle(item);
+  const heroUrl = shopProductHeroImageUrl(item);
 
   return (
     <article className="flex flex-col border border-ink/10 bg-cream">
       {detailHref ? (
         <Link href={detailHref} className="block aspect-[3/4] overflow-hidden bg-stone/40">
-          {item.imageUrl ? (
+          {heroUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={item.imageUrl}
-              alt={item.name}
+              src={heroUrl}
+              alt=""
               className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-xs uppercase tracking-widest text-ink/30">
-              Seasonal flowers
-            </div>
+            <div
+              className="h-full w-full bg-gradient-to-b from-stone/50 to-stone/25"
+              aria-hidden
+            />
           )}
         </Link>
       ) : (
         <div className="aspect-[3/4] overflow-hidden bg-stone/40">
-          {item.imageUrl ? (
+          {heroUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={item.imageUrl}
-              alt={item.name}
+              src={heroUrl}
+              alt=""
               className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-xs uppercase tracking-widest text-ink/30">
-              Seasonal flowers
-            </div>
+            <div
+              className="h-full w-full bg-gradient-to-b from-stone/50 to-stone/25"
+              aria-hidden
+            />
           )}
         </div>
       )}
       <div className="flex flex-1 flex-col p-5">
+        {showProductDebug ? (
+          <p className="text-[10px] font-mono text-ink/45">
+            id={item._id} · cat={item.category ?? "—"} · active={String(item.active !== false)} · img=
+            {heroUrl ? "yes" : "no"}
+          </p>
+        ) : null}
         <p className="text-[10px] uppercase tracking-widest text-ink/40">
           {item.billingLabel ?? "Flower Service"}
         </p>
         {detailHref ? (
           <h3 className="mt-2 font-display text-2xl font-light">
             <Link href={detailHref} className="hover:text-ink/80">
-              {item.publicName ?? item.name}
+              {displayTitle}
             </Link>
           </h3>
         ) : (
-          <h3 className="mt-2 font-display text-2xl font-light">
-            {item.publicName ?? item.name}
-          </h3>
+          <h3 className="mt-2 font-display text-2xl font-light">{displayTitle}</h3>
         )}
         {item.shortDescription && (
           <p className="mt-2 text-sm font-medium text-ink/70">

@@ -6,7 +6,14 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { EventOrder, FlowerProduct, FlowerSalesRecord, Vendor } from "@/sanity/types";
 import { formatUSD } from "@/lib/format";
-import { RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
+import { isBouquetCategory, RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
+import {
+  productAdminIssueLabel,
+  productAdminIssues,
+  shopProductDisplayTitle,
+  shopProductHeroImageUrl,
+  type ProductAdminIssue,
+} from "@/lib/shopProduct";
 import {
   AdminCard,
   AdminEmptyState,
@@ -121,12 +128,8 @@ type EventOrderFormState = {
 };
 
 const productCategories = [
-  { value: "bouquet", label: "Bouquet" },
-  { value: "bundle", label: "Bundle" },
+  { value: "flowers", label: "Flowers" },
   { value: "pantry", label: "Pantry" },
-  { value: "wedding_event", label: "Wedding/event flowers" },
-  { value: "vendor_item", label: "Vendor item" },
-  { value: "other", label: "Other" },
 ];
 
 const tierOptions = ["small", "standard", "premium", "custom"] as const;
@@ -137,7 +140,7 @@ const skuPresets = {
     name: "Glimmer",
     publicName: "Glimmer",
     price: "12",
-    category: "bouquet",
+    category: "flowers",
     tier: "small",
     shortDescription: "Small seasonal grab bouquet.",
     displayDescription: "A simple daily flower offering, freshly cut and easy to take home.",
@@ -149,7 +152,7 @@ const skuPresets = {
     name: "Blessing",
     publicName: "Blessing",
     price: "18",
-    category: "bouquet",
+    category: "flowers",
     tier: "standard",
     shortDescription: "Signature Ritualmaker seasonal bouquet.",
     displayDescription: "A fuller bouquet for the table, the week, or a thoughtful gift.",
@@ -161,7 +164,7 @@ const skuPresets = {
     name: "Abundance",
     publicName: "Abundance",
     price: "26",
-    category: "bouquet",
+    category: "flowers",
     tier: "premium",
     shortDescription: "Larger gift-ready seasonal bouquet.",
     displayDescription: "An abundant seasonal arrangement for sharing, gifting, or anchoring a space.",
@@ -227,7 +230,7 @@ const emptyProductForm: ProductFormState = {
   publicName: "",
   shortDescription: "",
   displayDescription: "",
-  category: "bouquet",
+  category: "flowers",
   customCategory: "",
   tier: "",
   customTier: "",
@@ -326,6 +329,21 @@ function centsFromDollars(value: string) {
   return Math.round(amount * 100);
 }
 
+function validateShopProductForm(form: ProductFormState): string | null {
+  const title = (form.publicName ?? form.name ?? "").trim();
+  if (!title) return "Public name (title) is required before saving.";
+  const priceCents = centsFromDollars(form.price);
+  if (!form.price.trim() || priceCents <= 0) return "Enter a valid price greater than zero.";
+  const hasImage =
+    Boolean(form.imageUrl?.trim()) ||
+    form.galleryAssetIds.some((id) => id.startsWith("image-"));
+  if (!hasImage) return "Add at least one product image (upload or image URL) before saving.";
+  if (form.active && !form.inStock) {
+    return "Products marked active should be in stock, or turn off Active until you are ready to sell.";
+  }
+  return null;
+}
+
 function inferEventType(order: EventOrder) {
   const services = order.services ?? [];
   if (services.includes("commercial-account")) return "Corporate";
@@ -388,7 +406,7 @@ function findQuickStockProduct(
   const lower = label.toLowerCase();
   return products.find(
     (p) =>
-      p.category === "bouquet" &&
+      isBouquetCategory(p.category) &&
       (p.publicName?.trim().toLowerCase() === lower ||
         p.name.trim().toLowerCase() === lower),
   );
@@ -632,17 +650,18 @@ export function AdminDashboard({
   }
 
   function loadProductIntoForm(product: FlowerProduct) {
-    const categoryIsKnown = productCategories.some((item) => item.value === product.category);
     const tierIsKnown = tierOptions.some((item) => item === product.tier);
     const billingLabel = product.billingLabel ?? "Flower Service";
+    const shopCategory: "flowers" | "pantry" =
+      product.category === "pantry" ? "pantry" : "flowers";
     setProductForm({
       id: product._id,
       name: product.name,
       publicName: product.publicName ?? product.name,
       shortDescription: product.shortDescription ?? "",
       displayDescription: product.displayDescription ?? product.description ?? "",
-      category: categoryIsKnown ? product.category : "other",
-      customCategory: categoryIsKnown ? "" : product.category,
+      category: shopCategory,
+      customCategory: "",
       tier: tierIsKnown ? (product.tier ?? "") : "custom",
       customTier: tierIsKnown ? "" : (product.tier ?? ""),
       price: dollarsFromCents(product.priceCents),
@@ -745,21 +764,19 @@ export function AdminDashboard({
   }
 
   function productPayload() {
-    const category =
-      productForm.category === "other" && productForm.customCategory
-        ? productForm.customCategory
-        : productForm.category;
     const tier =
       productForm.tier === "custom" && productForm.customTier
         ? productForm.customTier
         : productForm.tier;
+    const shopCategory: "flowers" | "pantry" =
+      productForm.category === "pantry" ? "pantry" : "flowers";
     return {
       id: productForm.id,
       name: productForm.name,
       publicName: productForm.publicName,
       shortDescription: productForm.shortDescription,
       displayDescription: productForm.displayDescription,
-      category,
+      category: shopCategory,
       tier,
       priceCents: centsFromDollars(productForm.price),
       active: productForm.active,
@@ -779,6 +796,12 @@ export function AdminDashboard({
 
   async function saveProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validationError = validateShopProductForm(productForm);
+    if (validationError) {
+      setErrorMessage(validationError);
+      setStatusMessage(null);
+      return;
+    }
     const data = await postJson<FlowerProduct>("/api/admin/flower-products", {
       ...productPayload(),
     });
@@ -1615,12 +1638,9 @@ export function AdminDashboard({
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {productsForTab.length ? (
               productsForTab.map((product) => {
-                const catLabel =
-                  product.category === "pantry"
-                    ? "Pantry"
-                    : product.category === "bouquet"
-                      ? "Flower"
-                      : product.category;
+                const catLabel = product.category === "pantry" ? "Pantry" : "Flowers";
+                const issues = productAdminIssues(product);
+                const thumbUrl = shopProductHeroImageUrl(product);
                 const statusLabel =
                   product.active === false
                     ? "Draft"
@@ -1641,10 +1661,10 @@ export function AdminDashboard({
                         className="mt-1"
                       />
                       <div className="h-16 w-16 shrink-0 overflow-hidden border border-ink/15 bg-stone/30">
-                        {product.imageUrl ? (
+                        {thumbUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={product.imageUrl}
+                            src={thumbUrl}
                             alt=""
                             className="h-full w-full object-cover"
                           />
@@ -1660,6 +1680,19 @@ export function AdminDashboard({
                         <p className="mt-1 text-[10px] uppercase tracking-widest text-ink/45">
                           {catLabel} · {statusLabel}
                         </p>
+                        {issues.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {issues.map((issue) => (
+                              <span
+                                key={issue}
+                                className="inline-block border border-amber-300/90 bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-ink/80"
+                                title={productAdminIssueLabel(issue)}
+                              >
+                                {productAdminIssueLabel(issue)}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-3">
@@ -1799,13 +1832,6 @@ export function AdminDashboard({
                 onChange={(value) => setProductForm({ ...productForm, category: value })}
                 options={productCategories}
               />
-              {productForm.category === "other" && (
-                <TextInput
-                  label="Custom category"
-                  value={productForm.customCategory}
-                  onChange={(value) => setProductForm({ ...productForm, customCategory: value })}
-                />
-              )}
               <SelectInput
                 label="Tier"
                 value={productForm.tier || "small"}

@@ -4,8 +4,9 @@ export const RITUAL_BUNDLE_DISCOUNT_PER_UNIT_CENTS = 300;
 export const RITUAL_BUNDLE_CUSTOMER_NOTE =
   "$3 off any pantry item when purchased with a bouquet.";
 
+/** Bouquet / flower SKUs that qualify for the pantry bundle discount (not pantry-only). */
 export function isBouquetCategory(category: string | undefined) {
-  return category === "bouquet";
+  return category === "flowers" || category === "bouquet" || category === "bundle";
 }
 
 export function isPantryCategory(category: string | undefined) {

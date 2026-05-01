@@ -9,7 +9,7 @@ import { StandStatus } from "@/components/StandStatus";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Ritualmaker — Shop flowers & garden pantry",
+  title: "Ritualmaker — Shop & garden pantry",
   description:
     "Seasonal bouquets and small-batch pantry items from Ritualmaker — shipped nationwide where marked, or visit the stand.",
 };

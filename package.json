@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "sanity:deploy-schema": "sanity schema deploy --dataset ritualmaker",
     "sanity:migrate-vendors": "node scripts/migrate-vendors.mjs",
+    "sanity:normalize-flower-categories": "node scripts/normalize-flower-product-categories.mjs",
     "sanity:seed": "node scripts/seed-cms.mjs"
   },
   "dependencies": {
