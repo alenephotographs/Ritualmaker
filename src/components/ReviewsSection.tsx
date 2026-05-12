@@ -12,7 +12,7 @@ export function ReviewsSection({
   return (
     <section
       id="reviews"
-      className="bg-cream py-20 lg:py-28"
+      className="scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] bg-cream py-20 lg:py-28"
       aria-labelledby="reviews-heading"
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">

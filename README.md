@@ -28,6 +28,8 @@ See `.env.example`. Minimum to get the site rendering:
 - `NEXT_PUBLIC_SANITY_PROJECT_ID=qjcf272e`
 - `NEXT_PUBLIC_SANITY_DATASET=ritualmaker`
 
+**Local `pnpm build`:** without those variables in `.env.local`, `next build` will fail during page data collection. Use `cp .env.example .env.local` and fill values, or run **`pnpm check`** for a compile-only build (see [`BUILD_NOTES.md`](./BUILD_NOTES.md)).
+
 To enable Stripe checkout you also need:
 
 - `STRIPE_SECRET_KEY`

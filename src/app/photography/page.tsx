@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PhotographyInquiryForm } from "@/components/inquiry/PhotographyInquiryForm";
 import {
   photographyPortfolioFeaturedSrc,
@@ -41,14 +40,6 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
           <p className="mt-4 max-w-xl text-sm text-ink/60">
             When the season and stand schedule allow. We confirm dates by email.
           </p>
-          <div className="mt-8">
-            <Link
-              href="/photography?kind=field#inquiry-photography"
-              className="inline-block bg-ink px-6 py-3 text-xs uppercase tracking-widest text-cream hover:bg-charcoal"
-            >
-              Request field rental
-            </Link>
-          </div>
         </div>
         <div className="overflow-hidden border border-ink/10 bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -81,14 +72,6 @@ export default async function PhotographyPage({ searchParams }: PhotographyPageP
               <p className="mt-5 max-w-xl text-sm leading-relaxed text-ink/65">
                 Portraits on the farm, engagements, elopements, and wedding coverage on location — natural light, same eye as the flowers.
               </p>
-              <div className="mt-8">
-                <Link
-                  href="/photography#inquiry-photography"
-                  className="inline-block border border-ink/20 bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink/80 hover:bg-ink hover:text-cream"
-                >
-                  Book a session
-                </Link>
-              </div>
             </div>
             <div className="overflow-hidden border border-ink/10 bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}

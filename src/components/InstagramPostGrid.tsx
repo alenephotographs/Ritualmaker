@@ -1,9 +1,11 @@
 import type { InstagramMediaItem } from "@/lib/instagram";
 
 export function InstagramPostGrid({ posts }: { posts: InstagramMediaItem[] }) {
+  const previewPosts = posts.slice(0, 3);
+
   return (
-    <ul className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-1.5 lg:gap-2">
-      {posts.map((post) => {
+    <ul className="grid grid-cols-3 gap-1.5 lg:gap-2">
+      {previewPosts.map((post) => {
         const alt = post.caption
           ? post.caption.slice(0, 120)
           : "Photo from the Ritualmaker Instagram";

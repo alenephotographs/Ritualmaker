@@ -1,4 +1,14 @@
-import type { FAQ } from "@/lib/types/content";
+import type { FAQ } from "@/sanity/types";
+
+function faqAnswerPlainText(answer: FAQ["answer"]): string {
+  return answer
+    .map((block) =>
+      (block.children ?? [])
+        .map((c) => c.text ?? "")
+        .join(""),
+    )
+    .join("\n\n");
+}
 
 export function FAQSection({ faqs }: { faqs: FAQ[] }) {
   if (!faqs.length) return null;
@@ -6,7 +16,7 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
   return (
     <section
       id="faq"
-      className="bg-stone/30 py-20 lg:py-28"
+      className="scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] bg-stone/30 py-20 lg:py-28"
       aria-labelledby="faq-heading"
     >
       <div className="mx-auto max-w-4xl px-6 lg:px-8">
@@ -19,10 +29,13 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
         >
           Quick answers
         </h2>
+        <p className="mt-3 text-sm leading-relaxed text-ink/60">
+          Flowers, pantry, summer vegetables, events, and custom work — quick answers below.
+        </p>
 
         <div className="mt-12 divide-y divide-ink/10 border-t border-ink/10">
           {faqs.map((f) => {
-            const parts = f.answer
+            const parts = faqAnswerPlainText(f.answer)
               .split(/\n\n+/)
               .map((p) => p.trim())
               .filter(Boolean);

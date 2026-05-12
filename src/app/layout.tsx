@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Oleo_Script, Poppins } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { getSiteSettings } from "@/lib/db";
-import type { SiteSettings } from "@/lib/types/content";
+import { ScrollToTop } from "@/components/ScrollToTop";
+import { ClientProviders } from "@/components/ClientProviders";
+import { sanityClient } from "@/sanity/client";
+import { siteSettingsQuery } from "@/sanity/queries";
+import type { SiteSettings } from "@/sanity/types";
 
 const display = Oleo_Script({
   subsets: ["latin"],
@@ -21,14 +25,16 @@ const sans = Poppins({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSiteSettings().catch(() => null);
+  const settings = await sanityClient
+    .fetch<SiteSettings | null>(siteSettingsQuery)
+    .catch(() => null);
 
   const title =
     settings?.title ??
     "Ritualmaker — Farm stand, pantry, and on-location flowers";
   const description =
     settings?.description ??
-    "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Order online for pickup or pay cash at the stand.";
+    "Self-serve flowers at 38 Miller Hill Road, Hudson Valley. Stop by and buy what is fresh at the stand.";
 
   return {
     metadataBase: new URL(
@@ -46,7 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: "/photos/field-mixed-tulips-cluster.jpg",
           width: 1600,
           height: 1200,
-          alt: "Seasonal flowers",
+          alt: "Ritualmaker — flowers and pantry",
         },
       ],
     },
@@ -88,9 +94,14 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <Header />
-        <main id="main">{children}</main>
-        <Footer />
+        <ClientProviders>
+          <Header />
+          <Suspense fallback={null}>
+            <ScrollToTop />
+          </Suspense>
+          <main id="main">{children}</main>
+          <Footer />
+        </ClientProviders>
       </body>
     </html>
   );

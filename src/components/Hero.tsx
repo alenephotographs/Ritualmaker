@@ -1,6 +1,7 @@
 import Link from "next/link";
-import type { SiteSettings } from "@/lib/types/content";
+import type { SiteSettings } from "@/sanity/types";
 import { StandStatus } from "./StandStatus";
+import { RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
 
 export function Hero({ settings }: { settings: SiteSettings | null }) {
   const heroUrl = "/photos/field-mixed-tulips-cluster.jpg";
@@ -25,24 +26,24 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
         <StandStatus settings={settings} />
 
         <p className="text-xs uppercase tracking-widest text-cream/75">
-          Hudson Valley · Self-serve stand
+          Self-serve stand · Hudson Valley
         </p>
         <h1 className="mt-4 max-w-4xl font-display text-5xl font-light text-cream md:text-7xl lg:text-8xl">
-          {settings?.tagline ?? "Flowers for daily life, 24/7"}
+          {settings?.tagline ?? "Fresh flowers in the neighborhood, 24/7"}
         </h1>
 
         <p className="mt-5 max-w-xl text-base font-light text-cream/85 sm:text-lg">
-          Grown here. Pick up at the stand or order for gatherings, ceremony, and
-          photographs.
+          38 Miller Hill Road — stop by the stand and buy what is fresh in inventory.
         </p>
 
-        <div className="mt-8">
+        <div className="mt-8 space-y-3">
           <Link
-            href="/farm-stand#flowers"
+            href="/farm-stand#shop"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
             Shop
           </Link>
+          <p className="max-w-md text-xs text-cream/70">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
         </div>
       </div>
     </section>

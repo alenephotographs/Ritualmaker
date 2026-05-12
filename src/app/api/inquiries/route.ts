@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { insertWeddingInquiry } from "@/lib/db";
-import { hasSupabaseService } from "@/lib/supabase/service";
+import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
 
 export const runtime = "nodejs";
 
@@ -17,16 +16,35 @@ type InquiryPayload = {
   phone?: string;
   eventDate?: string;
   venue?: string;
-  guestCount?: number;
+  eventLocation?: string;
+  guestCount?: number | string;
   budgetBand?: string;
   notes?: string;
+  /** Alias some frontends send for the notes/message body */
+  message?: string;
   services?: string[];
   formType?: FormType;
   photoInquiryKind?: PhotoInquiryKind;
 };
 
-const allowedServices = new Set(["florals", "live-collage", "photography"]);
-const onLocationServices = new Set(["florals", "live-collage"]);
+function coerceGuestCount(raw: unknown): number | undefined {
+  if (raw === undefined || raw === null || raw === "") return undefined;
+  const n = typeof raw === "number" ? raw : Number(String(raw).trim());
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 1000000) return undefined;
+  return n;
+}
+
+const onLocationServiceValues = [
+  "wedding-event-florals",
+  "popup-flower-bar",
+  "restaurant-hotel",
+  "commercial-account",
+  "live-collage",
+  "general-on-location",
+  "florals",
+];
+const allowedServices = new Set([...onLocationServiceValues, "photography"]);
+const onLocationServices = new Set(onLocationServiceValues);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const allowedPhotoKinds = new Set<string>([
@@ -49,6 +67,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    const rawNotes = payload.message ?? payload.notes;
     const name = sanitizeString(payload.name);
     const email = sanitizeString(payload.email);
     const formType: FormType =
@@ -71,14 +90,14 @@ export async function POST(req: Request) {
     if (formType === "on-location") {
       if (!services.length) {
         return NextResponse.json(
-          { error: "Select at least one on-location service (florals or Live Collage™)" },
+          { error: "Select at least one on-location inquiry type" },
           { status: 400 },
         );
       }
       const invalid = services.some((s) => !onLocationServices.has(s));
       if (invalid) {
         return NextResponse.json(
-          { error: "On-location inquiries can only include event florals and/or Live Collage™" },
+          { error: "On-location inquiries can only include on-location services" },
           { status: 400 },
         );
       }
@@ -98,16 +117,17 @@ export async function POST(req: Request) {
       }
     }
 
+    const guestCount = coerceGuestCount(payload.guestCount);
     if (
-      typeof payload.guestCount === "number" &&
-      (!Number.isInteger(payload.guestCount) ||
-        payload.guestCount < 0 ||
-        payload.guestCount > 1000000)
+      guestCount === undefined &&
+      payload.guestCount !== undefined &&
+      payload.guestCount !== null &&
+      payload.guestCount !== ""
     ) {
       return NextResponse.json({ error: "Guest count must be a valid number" }, { status: 400 });
     }
 
-    if (!hasSupabaseService()) {
+    if (!hasSanityWriteClient()) {
       return NextResponse.json(
         { error: "Inquiry intake is temporarily unavailable. Please try again shortly." },
         { status: 500 },
@@ -119,27 +139,27 @@ export async function POST(req: Request) {
         ? (sanitizeString(payload.photoInquiryKind) as PhotoInquiryKind)
         : undefined;
 
-    const id = await insertWeddingInquiry({
+    const venue = sanitizeString(payload.venue) ?? sanitizeString(payload.eventLocation);
+
+    const doc = await sanityWriteClient.create({
+      _type: "weddingInquiry",
       formType,
       name,
       email,
       phone: sanitizeString(payload.phone),
       eventDate: sanitizeString(payload.eventDate),
-      venue: sanitizeString(payload.venue),
-      guestCount: payload.guestCount,
+      venue,
+      guestCount,
       budgetBand: sanitizeString(payload.budgetBand),
-      notes: sanitizeString(payload.notes),
+      notes: sanitizeString(typeof rawNotes === "string" ? rawNotes : undefined),
       services,
       ...(photoInquiryKind ? { photoInquiryKind } : {}),
+      status: "new",
     });
-
-    if (!id) {
-      return NextResponse.json({ error: "Could not save inquiry" }, { status: 500 });
-    }
 
     return NextResponse.json({
       ok: true,
-      id,
+      id: doc._id,
       note: "Inquiry saved successfully.",
     });
   } catch (error) {

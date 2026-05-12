@@ -1,22 +1,25 @@
 import Link from "next/link";
-import { getSiteSettings } from "@/lib/db";
-import type { SiteSettings } from "@/lib/types/content";
-import { Wordmark, brandCategoryClassName } from "@/components/Logo";
+import { sanityClient } from "@/sanity/client";
+import { siteSettingsQuery } from "@/sanity/queries";
+import type { SiteSettings } from "@/sanity/types";
+import { Wordmark } from "@/components/Logo";
 import { resolveContactLinks } from "@/lib/siteContact";
 
 export async function Footer() {
-  const s = await getSiteSettings().catch(() => null);
+  const s = await sanityClient
+    .fetch<SiteSettings | null>(siteSettingsQuery)
+    .catch(() => null);
   const contact = resolveContactLinks(s);
 
   return (
     <footer className="border-t border-ink/10 bg-stone/40">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
-          <Link href="/" className="inline-block" aria-label="Ritualmaker, home">
-            <Wordmark className="h-8 w-auto lg:h-9" />
+          <Link href="/" className="inline-block max-w-full" aria-label="Ritualmaker, home">
+            <Wordmark className="h-8 max-w-full lg:h-9" />
           </Link>
           <p className="mt-4 text-sm text-ink/60">
-            {s?.tagline ?? "Flowers and photographs for daily life."}
+            {s?.tagline ?? "Fresh flowers in the neighborhood, 24/7."}
           </p>
           {s?.address && (
             <p className="mt-4 text-sm text-ink/50">{s.address}</p>
@@ -52,6 +55,33 @@ export async function Footer() {
             Connect
           </p>
           <ul className="mt-4 space-y-2 text-sm">
+            <li>
+              <a
+                href={contact.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={
+                  contact.instagramHandle
+                    ? `Instagram ${contact.instagramHandle}`
+                    : "Instagram @ritualmakerny"
+                }
+                className="hover:text-ink"
+              >
+                Instagram
+                {contact.instagramHandle ? ` ${contact.instagramHandle}` : " @ritualmakerny"}
+              </a>
+            </li>
+            <li>
+              <a
+                href={contact.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook Ritualmaker NY"
+                className="hover:text-ink"
+              >
+                Facebook
+              </a>
+            </li>
             {contact.googleProfileUrl && (
               <li>
                 <a
@@ -61,23 +91,6 @@ export async function Footer() {
                   className="hover:text-ink"
                 >
                   Google (hours &amp; photos)
-                </a>
-              </li>
-            )}
-            {s?.instagramUrl && (
-              <li>
-                <a
-                  href={s.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={
-                    s.instagramHandle
-                      ? `Instagram ${s.instagramHandle}`
-                      : "Instagram"
-                  }
-                  className="hover:text-ink"
-                >
-                  Instagram{s.instagramHandle ? ` ${s.instagramHandle}` : ""}
                 </a>
               </li>
             )}
@@ -122,29 +135,6 @@ export async function Footer() {
               </Link>
             </li>
           </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-ink/10 bg-cream/70">
-        <div className="mx-auto max-w-7xl px-6 py-6 lg:px-8">
-          <p className="text-[10px] uppercase tracking-widest text-ink/40">
-            Ritualmaker family
-          </p>
-          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-ink/80">
-            <Link href="/farm-stand" className={`${brandCategoryClassName} inline-block`}>
-              Farm stand
-            </Link>
-            <Link href="/photography" className={`${brandCategoryClassName} inline-block`}>
-              Photography
-            </Link>
-            <Link
-              href="/on-location"
-              className={`${brandCategoryClassName} inline-block`}
-              aria-label="Ritualmaker on location — weddings, pop-up flower bars, commercial accounts, and Live Collage™"
-            >
-              On location
-            </Link>
-          </div>
         </div>
       </div>
 

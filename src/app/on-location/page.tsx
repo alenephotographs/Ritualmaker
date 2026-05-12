@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { OnLocationInquiryForm } from "@/components/inquiry/OnLocationInquiryForm";
-import { LiveCollageSection } from "@/components/LiveCollageSection";
 
 export const metadata = {
   title: "On location",
@@ -74,25 +72,20 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
         </div>
       </section>
 
-      <section className="w-full border-b border-ink/10 bg-bloom/15">
+      <section
+        id="live"
+        className="w-full scroll-mt-[calc(5.5rem+env(safe-area-inset-top))] border-b border-ink/10 bg-bloom/15"
+      >
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8 lg:py-28">
           <p className="text-xs uppercase tracking-[0.2em] text-magenta/80">Signature</p>
           <h2 className="mt-4 max-w-3xl font-display text-3xl font-light leading-tight text-ink sm:text-4xl lg:text-5xl">
             Live Collage™
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
-            Florals built live at your event — details below.
+            Florals built live at your event for 30-90 minutes, depending upon budget.
           </p>
-          <Link
-            href="#live"
-            className="mt-8 inline-block text-xs uppercase tracking-[0.2em] text-magenta underline decoration-magenta/40 underline-offset-4 hover:decoration-magenta"
-          >
-            See how it works
-          </Link>
         </div>
       </section>
-
-      <LiveCollageSection />
 
       <section className="mx-auto max-w-7xl px-6 pb-20 lg:px-8 lg:pb-24">
         <OnLocationInquiryForm
