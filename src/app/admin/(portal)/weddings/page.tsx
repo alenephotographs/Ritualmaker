@@ -2,9 +2,9 @@ import { AdminDashboard } from "@/components/AdminDashboard";
 import { loadAdminDashboardData } from "@/lib/adminData";
 import { auth } from "@/auth";
 
-export const metadata = { title: "Admin — Events" };
+export const metadata = { title: "Admin — Wedding inquiries" };
 
-export default async function AdminEventsPage() {
+export default async function AdminWeddingInquiriesPage() {
   const session = await auth();
   if (!session?.user?.email) return null;
   const isOwner = session.user.role === "owner";

@@ -1497,8 +1497,8 @@ export function AdminDashboard({
                   <li key={o._id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                     <span className="font-medium text-ink">{o.name || "Client"}</span>
                     <span className="text-ink/60">{o.eventDate}</span>
-                    <Link href="/admin/events" className="text-xs uppercase tracking-widest text-ink/50 underline">
-                      Open events
+                    <Link href="/admin/weddings" className="text-xs uppercase tracking-widest text-ink/50 underline">
+                      Open pipeline
                     </Link>
                   </li>
                 ))}
@@ -1555,8 +1555,11 @@ export function AdminDashboard({
               <Link href="/admin/products" className={btnPrimary()}>
                 New product
               </Link>
+              <Link href="/admin/weddings" className={btnPrimary()}>
+                Wedding inquiries (CMS)
+              </Link>
               <Link href="/admin/events" className={btnPrimary()}>
-                Event orders
+                Events &amp; Proposals
               </Link>
               <Link href="/admin/media" className={btnSecondary()}>
                 Upload images
@@ -2849,7 +2852,7 @@ export function AdminDashboard({
         </div>
 
         <p className="mb-4 text-sm text-ink/60">
-          Open an order in <Link href="/admin/events" className="underline">Events</Link> to copy deposit,
+          Open an order in <Link href="/admin/weddings" className="underline">Wedding inquiries</Link> to copy deposit,
           balance, or invoice links.
         </p>
 
