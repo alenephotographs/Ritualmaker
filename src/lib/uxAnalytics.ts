@@ -1,4 +1,5 @@
-import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
+import { insertUxEvent } from "@/lib/db";
+import { hasSupabaseService } from "@/lib/supabase/service";
 
 export type UxEventInput = {
   eventType: "cta_view" | "cta_click" | "checkout_completed";
@@ -13,24 +14,20 @@ export type UxEventInput = {
 };
 
 export async function trackUxEvent(input: UxEventInput) {
-  if (!hasSanityWriteClient()) return;
-
-  const doc: { _type: "uxEvent"; [key: string]: unknown } = {
-    _type: "uxEvent",
-    eventType: input.eventType,
-    experiment: input.experiment ?? "cta-copy",
-    eventAt: new Date().toISOString(),
-  };
-
-  if (input.variant) doc.variant = input.variant;
-  if (input.itemType) doc.itemType = input.itemType;
-  if (input.itemId) doc.itemId = input.itemId;
-  if (input.checkoutSessionId) doc.checkoutSessionId = input.checkoutSessionId;
-  if (typeof input.amountTotal === "number") doc.amountTotal = input.amountTotal;
-  if (input.path) doc.path = input.path;
-  if (input.userAgent) doc.userAgent = input.userAgent;
-
-  await sanityWriteClient.create({
-    ...doc,
-  });
+  if (!hasSupabaseService()) return;
+  try {
+    await insertUxEvent({
+      eventType: input.eventType,
+      experiment: input.experiment ?? "cta-copy",
+      variant: input.variant,
+      itemType: input.itemType,
+      itemId: input.itemId,
+      checkoutSessionId: input.checkoutSessionId,
+      amountTotal: input.amountTotal,
+      path: input.path,
+      userAgent: input.userAgent,
+    });
+  } catch (e) {
+    console.error("[uxAnalytics] insert failed", e);
+  }
 }

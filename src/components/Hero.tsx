@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { SiteSettings } from "@/sanity/types";
+import type { SiteSettings } from "@/lib/types/content";
 import { StandStatus } from "./StandStatus";
 
 export function Hero({ settings }: { settings: SiteSettings | null }) {
@@ -25,14 +25,15 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
         <StandStatus settings={settings} />
 
         <p className="text-xs uppercase tracking-widest text-cream/75">
-          Self-serve stand · Hudson Valley
+          Hudson Valley · Self-serve stand
         </p>
         <h1 className="mt-4 max-w-4xl font-display text-5xl font-light text-cream md:text-7xl lg:text-8xl">
-          {settings?.tagline ?? "Fresh flowers in the neighborhood, 24/7"}
+          {settings?.tagline ?? "Flowers for daily life, 24/7"}
         </h1>
 
         <p className="mt-5 max-w-xl text-base font-light text-cream/85 sm:text-lg">
-          38 Miller Hill Road — grab stems at the stand (cash) or order below for pickup.
+          Grown here. Pick up at the stand or order for gatherings, ceremony, and
+          photographs.
         </p>
 
         <div className="mt-8">
@@ -40,7 +41,7 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
             href="/farm-stand#flowers"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
-            Shop flowers
+            Shop
           </Link>
         </div>
       </div>

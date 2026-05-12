@@ -1,6 +1,6 @@
-import type { SiteSettings } from "@/sanity/types";
+import type { SiteSettings } from "@/lib/types/content";
 
-/** Shown in copy when Sanity address is empty */
+/** Shown in copy when site address is empty */
 export const STAND_ADDRESS_LINE = "38 Miller Hill Road, Hudson Valley, NY";
 
 /** Google Maps search for the stand — used when `mapUrl` is not set in site settings */

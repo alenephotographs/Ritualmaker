@@ -15,7 +15,6 @@ export const photographyPortfolioImages: string[] = [
   `${base}/j5-d5ff68ce-782e-4f39-9d7d-fe15352d1233.png`,
   `${base}/j6-63f122a3-1675-4443-b09b-0e11cad90ff3.png`,
   `${base}/j7-c4fa17e2-5796-4d1b-924a-9e0c412a32c6.png`,
-  `${base}/j8-5892bfb5-2db6-4679-a1db-6200890d5de5.png`,
   `${base}/j9-9c35cb3a-9c97-4067-894e-509c3815d227.png`,
   `${base}/j0-991c7862-72e4-4b3e-abd4-46809a8e5296.png`,
   `${base}/j1-459a4d13-084b-42d7-a5ba-61fbb0dd50ef.png`,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Bouquet } from "@/sanity/types";
+import type { Bouquet } from "@/lib/types/content";
 import { farmLabel, formatUSD, sizeLabel } from "@/lib/format";
 
 async function readJsonSafe(response: Response) {

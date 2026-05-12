@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { sanityClient } from "@/sanity/client";
+import { getSiteSettings } from "@/lib/db";
 import { resolveContactLinks } from "@/lib/siteContact";
-import { siteSettingsQuery } from "@/sanity/queries";
-import type { SiteSettings } from "@/sanity/types";
+import type { SiteSettings } from "@/lib/types/content";
 
 export const metadata = {
   title: "Thank you",
@@ -10,7 +9,7 @@ export const metadata = {
 };
 
 export default async function SuccessPage() {
-  const s = await sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null);
+  const s = await getSiteSettings().catch(() => null);
   const c = resolveContactLinks(s);
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-6 text-center">

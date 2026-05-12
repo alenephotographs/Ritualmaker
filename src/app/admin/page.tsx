@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { sanityClient } from "@/sanity/client";
-import type { Bouquet, PantryItem, Vendor } from "@/sanity/types";
-import { bouquetsQuery, pantryItemsQuery, vendorsQuery } from "@/sanity/queries";
+import { getBouquets, getPantryItems, getVendors } from "@/lib/db";
+import type { Bouquet, PantryItem, Vendor } from "@/lib/types/content";
 import { AdminDashboard } from "@/components/AdminDashboard";
 
 export const metadata = {
@@ -22,9 +21,9 @@ export default async function AdminPage() {
   }
 
   const [vendors, bouquets, pantryItems] = await Promise.all([
-    sanityClient.fetch<Vendor[]>(vendorsQuery).catch(() => []),
-    sanityClient.fetch<Bouquet[]>(bouquetsQuery).catch(() => []),
-    sanityClient.fetch<PantryItem[]>(pantryItemsQuery).catch(() => []),
+    getVendors().catch(() => []),
+    getBouquets().catch(() => []),
+    getPantryItems().catch(() => []),
   ]);
 
   return (

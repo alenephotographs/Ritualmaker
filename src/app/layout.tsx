@@ -3,9 +3,8 @@ import { Oleo_Script, Poppins } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { sanityClient } from "@/sanity/client";
-import { siteSettingsQuery } from "@/sanity/queries";
-import type { SiteSettings } from "@/sanity/types";
+import { getSiteSettings } from "@/lib/db";
+import type { SiteSettings } from "@/lib/types/content";
 
 const display = Oleo_Script({
   subsets: ["latin"],
@@ -22,9 +21,7 @@ const sans = Poppins({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await sanityClient
-    .fetch<SiteSettings | null>(siteSettingsQuery)
-    .catch(() => null);
+  const settings = await getSiteSettings().catch(() => null);
 
   const title =
     settings?.title ??

@@ -1,5 +1,4 @@
-import type { FAQ } from "@/sanity/types";
-import { PortableText } from "next-sanity";
+import type { FAQ } from "@/lib/types/content";
 
 export function FAQSection({ faqs }: { faqs: FAQ[] }) {
   if (!faqs.length) return null;
@@ -22,7 +21,12 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
         </h2>
 
         <div className="mt-12 divide-y divide-ink/10 border-t border-ink/10">
-          {faqs.map((f) => (
+          {faqs.map((f) => {
+            const parts = f.answer
+              .split(/\n\n+/)
+              .map((p) => p.trim())
+              .filter(Boolean);
+            return (
             <details key={f._id} className="group py-6">
               <summary className="flex cursor-pointer list-none items-start justify-between gap-6">
                 <h3 className="font-display text-xl font-light">{f.question}</h3>
@@ -30,11 +34,14 @@ export function FAQSection({ faqs }: { faqs: FAQ[] }) {
                   +
                 </span>
               </summary>
-              <div className="mt-4 max-w-3xl text-sm leading-relaxed text-ink/70">
-                <PortableText value={f.answer} />
+              <div className="mt-4 max-w-3xl space-y-3 text-sm leading-relaxed text-ink/70">
+                {parts.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
               </div>
             </details>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

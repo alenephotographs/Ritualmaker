@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { SiteSettings } from "@/sanity/types";
+import type { SiteSettings } from "@/lib/types/content";
 import type { InstagramMediaItem } from "@/lib/instagram";
 import { InstagramPostGrid } from "./InstagramPostGrid";
 
@@ -23,17 +23,15 @@ export function InstagramFeedSection({ settings, posts }: InstagramFeedSectionPr
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest text-ink/40">Instagram</p>
+            <p className="text-xs uppercase tracking-widest text-ink/40">Photography</p>
             <h2
               id="instagram-heading"
               className="mt-2 font-display text-3xl font-light sm:text-4xl"
             >
-              Day-to-day on the stand &amp; field
+              Instagram
             </h2>
             <p className="mt-2 max-w-lg text-sm text-ink/60">
-              {hasGrid
-                ? "Updated often — open a photo for the full post on Instagram."
-                : "We post most days. Follow the link for photos from the stand and the field."}
+              Photographs made as a way of marking time, using the same seasonal approach.
             </p>
           </div>
           <Link
@@ -42,7 +40,7 @@ export function InstagramFeedSection({ settings, posts }: InstagramFeedSectionPr
             rel="noopener noreferrer"
             className="shrink-0 bg-ink px-5 py-2.5 text-center text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal"
           >
-            {handle ? `View ${handle}` : "View Instagram"}
+            {handle ? `Open ${handle}` : "Open Instagram"}
           </Link>
         </div>
 
@@ -84,9 +82,7 @@ export function InstagramFeedSection({ settings, posts }: InstagramFeedSectionPr
                   rel="noopener noreferrer"
                   className="text-ink/75 underline decoration-ink/25 underline-offset-4"
                 >
-                  {handle
-                    ? `Open ${handle} for daily photos from the stand`
-                    : "Open our Instagram for daily photos from the stand"}
+                  {handle ? `Open ${handle}` : "Open Instagram"}
                 </Link>
               </p>
             )}

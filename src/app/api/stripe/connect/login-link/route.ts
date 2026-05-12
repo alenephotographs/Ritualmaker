@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createExpressDashboardLink } from "@/lib/stripeConnect";
-import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
-import type { Vendor } from "@/sanity/types";
+import { getVendorByIdForConnect } from "@/lib/db";
+import { hasSupabaseService } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 
@@ -27,16 +27,13 @@ export async function POST(req: Request) {
     if (!body.vendorId) {
       return NextResponse.json({ error: "Missing vendorId" }, { status: 400 });
     }
-    if (!hasSanityWriteClient()) {
+    if (!hasSupabaseService()) {
       return NextResponse.json(
         { error: "Vendor dashboard is temporarily unavailable" },
         { status: 500 },
       );
     }
-    const vendor = await sanityWriteClient.fetch<Vendor | null>(
-      `*[_type == "vendor" && _id == $id][0]{_id, stripeAccountId}`,
-      { id: body.vendorId },
-    );
+    const vendor = await getVendorByIdForConnect(body.vendorId);
     if (!vendor?.stripeAccountId) {
       return NextResponse.json(
         { error: "Vendor does not have a connected Stripe account yet" },

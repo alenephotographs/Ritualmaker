@@ -1,4 +1,4 @@
-import type { SiteSettings } from "@/sanity/types";
+import type { SiteSettings } from "@/lib/types/content";
 
 export function StandStatus({ settings }: { settings: SiteSettings | null }) {
   if (!settings) return null;

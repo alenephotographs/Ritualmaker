@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
-import type { Bouquet, PantryItem, Vendor } from "@/sanity/types";
+import type { Bouquet, PantryItem, Vendor } from "@/lib/types/content";
 
 type AdminDashboardProps = {
   isOwner: boolean;
@@ -138,6 +139,17 @@ export function AdminDashboard({
           Sign out
         </button>
       </div>
+
+      {isOwner ? (
+        <p className="mb-8">
+          <Link
+            href="/admin/events"
+            className="text-xs uppercase tracking-widest text-ink/55 underline decoration-ink/20 underline-offset-4 hover:text-ink"
+          >
+            Events &amp; Proposals →
+          </Link>
+        </p>
+      ) : null}
 
       <section className="mb-8">
         <h2 className="font-display text-3xl font-light">Vendors</h2>

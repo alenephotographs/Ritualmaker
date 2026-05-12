@@ -1,4 +1,4 @@
-import type { Review, SiteSettings } from "@/sanity/types";
+import type { Review, SiteSettings } from "@/lib/types/content";
 
 export function ReviewsSection({
   reviews,

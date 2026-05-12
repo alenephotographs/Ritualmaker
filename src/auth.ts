@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { sanityClient } from "@/sanity/client";
-import type { Vendor } from "@/sanity/types";
+import { getVendorForSignIn } from "@/lib/db";
 
 function normalizeEmail(value?: string) {
   return value?.trim().toLowerCase();
@@ -48,17 +47,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
         }
 
-        const vendor = await sanityClient.fetch<Vendor | null>(
-          `*[_type == "vendor" && coalesce(active, true) == true && lower(contactEmail) == $email && accessCode == $accessCode][0]{
-            _id,
-            contactEmail
-          }`,
-          { email, accessCode },
-        );
+        const vendor = await getVendorForSignIn(email, accessCode);
         if (!vendor?._id) return null;
 
         return {
-          id: vendor._id,
+          id: email,
           email,
           role: "vendor",
           vendorId: vendor._id,

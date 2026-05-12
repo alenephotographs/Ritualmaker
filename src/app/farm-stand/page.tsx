@@ -1,7 +1,6 @@
-import { sanityClient } from "@/sanity/client";
+import { getBouquets, getPantryItems, getSiteSettings } from "@/lib/db";
 import { resolveContactLinks } from "@/lib/siteContact";
-import { bouquetsQuery, pantryItemsQuery, siteSettingsQuery } from "@/sanity/queries";
-import type { Bouquet, PantryItem, SiteSettings } from "@/sanity/types";
+import type { Bouquet, PantryItem, SiteSettings } from "@/lib/types/content";
 import { ContactOutreachBlock } from "@/components/ContactOutreachBlock";
 import { BouquetGrid } from "@/components/BouquetGrid";
 import { PantryGrid } from "@/components/PantryGrid";
@@ -17,9 +16,9 @@ export const metadata = {
 
 export default async function FarmStandPage() {
   const [settings, bouquets, pantryItems] = await Promise.all([
-    sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
-    sanityClient.fetch<Bouquet[]>(bouquetsQuery).catch(() => []),
-    sanityClient.fetch<PantryItem[]>(pantryItemsQuery).catch(() => []),
+    getSiteSettings().catch(() => null),
+    getBouquets().catch(() => []),
+    getPantryItems().catch(() => []),
   ]);
   const c = resolveContactLinks(settings);
 
@@ -50,7 +49,9 @@ export default async function FarmStandPage() {
 
       <div id="pantry" className="mt-16 scroll-mt-24 border-t border-ink/10 pt-10">
         <p className="text-xs uppercase tracking-widest text-ink/40">Pantry</p>
-        <h2 className="mt-3 font-display text-4xl font-light">In stock</h2>
+        <p className="mt-3 max-w-xl text-sm text-ink/60">
+          Small-batch pantry items grown here and made to pair with your flowers.
+        </p>
         <div className="mt-10">
           <PantryGrid items={pantryItems} />
         </div>

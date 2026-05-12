@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { sanityClient } from "@/sanity/client";
-import { siteSettingsQuery } from "@/sanity/queries";
-import type { SiteSettings } from "@/sanity/types";
+import { getSiteSettings } from "@/lib/db";
+import type { SiteSettings } from "@/lib/types/content";
 import { Wordmark, brandCategoryClassName } from "@/components/Logo";
 import { resolveContactLinks } from "@/lib/siteContact";
 
 export async function Footer() {
-  const s = await sanityClient
-    .fetch<SiteSettings | null>(siteSettingsQuery)
-    .catch(() => null);
+  const s = await getSiteSettings().catch(() => null);
   const contact = resolveContactLinks(s);
 
   return (
@@ -19,7 +16,7 @@ export async function Footer() {
             <Wordmark className="h-8 w-auto lg:h-9" />
           </Link>
           <p className="mt-4 text-sm text-ink/60">
-            {s?.tagline ?? "Fresh flowers in the neighborhood, 24/7."}
+            {s?.tagline ?? "Flowers and photographs for daily life."}
           </p>
           {s?.address && (
             <p className="mt-4 text-sm text-ink/50">{s.address}</p>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
+import { insertWeddingInquiry } from "@/lib/db";
+import { hasSupabaseService } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Guest count must be a valid number" }, { status: 400 });
     }
 
-    if (!hasSanityWriteClient()) {
+    if (!hasSupabaseService()) {
       return NextResponse.json(
         { error: "Inquiry intake is temporarily unavailable. Please try again shortly." },
         { status: 500 },
@@ -118,8 +119,7 @@ export async function POST(req: Request) {
         ? (sanitizeString(payload.photoInquiryKind) as PhotoInquiryKind)
         : undefined;
 
-    const doc = await sanityWriteClient.create({
-      _type: "weddingInquiry",
+    const id = await insertWeddingInquiry({
       formType,
       name,
       email,
@@ -131,12 +131,15 @@ export async function POST(req: Request) {
       notes: sanitizeString(payload.notes),
       services,
       ...(photoInquiryKind ? { photoInquiryKind } : {}),
-      status: "new",
     });
+
+    if (!id) {
+      return NextResponse.json({ error: "Could not save inquiry" }, { status: 500 });
+    }
 
     return NextResponse.json({
       ok: true,
-      id: doc._id,
+      id,
       note: "Inquiry saved successfully.",
     });
   } catch (error) {

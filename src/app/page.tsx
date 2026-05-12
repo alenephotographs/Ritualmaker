@@ -1,14 +1,9 @@
-import { sanityClient } from "@/sanity/client";
-import {
-  bouquetsQuery,
-  faqsQuery,
-  siteSettingsQuery,
-} from "@/sanity/queries";
+import { getBouquets, getFaqs, getSiteSettings } from "@/lib/db";
 import type {
   Bouquet,
   FAQ,
   SiteSettings,
-} from "@/sanity/types";
+} from "@/lib/types/content";
 import { Hero } from "@/components/Hero";
 import { BouquetGrid } from "@/components/BouquetGrid";
 import { InstagramFeedSection } from "@/components/InstagramFeedSection";
@@ -19,9 +14,9 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const [settings, bouquets, faqs, instagramPosts] = await Promise.all([
-    sanityClient.fetch<SiteSettings | null>(siteSettingsQuery).catch(() => null),
-    sanityClient.fetch<Bouquet[]>(bouquetsQuery).catch(() => []),
-    sanityClient.fetch<FAQ[]>(faqsQuery).catch(() => []),
+    getSiteSettings().catch(() => null),
+    getBouquets().catch(() => []),
+    getFaqs().catch(() => []),
     getRecentInstagramMedia(9).catch(() => null),
   ]);
 
@@ -31,7 +26,7 @@ export default async function HomePage() {
     name: settings?.title ?? "Ritualmaker",
     description:
       settings?.description ??
-      "Self-serve flowers, Hudson Valley — 24/7.",
+      "Flowers for daily life. Hudson Valley self-serve stand.",
     url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com",
     address: {
       "@type": "PostalAddress",
@@ -74,7 +69,7 @@ export default async function HomePage() {
               What&apos;s on the shelf
             </h2>
             <p className="mt-3 max-w-xl text-sm text-ink/60">
-              Restocked through the day — pay online here or cash at the stand.
+              Seasonal flowers, arranged simply or built into larger offerings.
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-import type { ArchivePhoto } from "@/sanity/types";
+import type { ArchivePhoto } from "@/lib/types/content";
 
 function srcOf(p: ArchivePhoto): string | null {
   return p.externalUrl ?? p.imageUrl ?? null;

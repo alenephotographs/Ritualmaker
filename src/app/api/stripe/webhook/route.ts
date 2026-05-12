@@ -1,10 +1,43 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
-import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
+import {
+  markClientDocumentStripePayment,
+  setClientDocumentStripeInvoiceStatus,
+  updateVendorFromStripeAccount,
+} from "@/lib/db";
+import { hasSupabaseService } from "@/lib/supabase/service";
 import { trackUxEvent } from "@/lib/uxAnalytics";
 
 export const runtime = "nodejs";
+
+async function resolveProposalPaymentMeta(
+  stripe: Stripe,
+  session: Stripe.Checkout.Session,
+): Promise<{ clientDocumentId?: string; paymentRole?: string }> {
+  let clientDocumentId = session.metadata?.clientDocumentId?.trim();
+  let paymentRole = session.metadata?.paymentRole?.trim();
+  if (clientDocumentId && paymentRole) {
+    return { clientDocumentId, paymentRole };
+  }
+  const plRef = session.payment_link;
+  const plId =
+    typeof plRef === "string"
+      ? plRef
+      : plRef &&
+          typeof plRef === "object" &&
+          "id" in plRef &&
+          typeof (plRef as { id?: string }).id === "string"
+        ? (plRef as { id: string }).id
+        : null;
+  if (plId?.startsWith("plink_")) {
+    const pl = await stripe.paymentLinks.retrieve(plId);
+    clientDocumentId =
+      pl.metadata?.clientDocumentId?.trim() ?? clientDocumentId;
+    paymentRole = pl.metadata?.paymentRole?.trim() ?? paymentRole;
+  }
+  return { clientDocumentId, paymentRole };
+}
 
 export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature");
@@ -28,6 +61,34 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       try {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (hasSupabaseService()) {
+          try {
+            const meta = await resolveProposalPaymentMeta(stripe, session);
+            if (meta.clientDocumentId && meta.paymentRole) {
+              const amount = session.amount_total ?? undefined;
+              if (
+                meta.paymentRole === "deposit" ||
+                meta.paymentRole === "balance"
+              ) {
+                await markClientDocumentStripePayment(
+                  meta.clientDocumentId,
+                  meta.paymentRole === "deposit" ? "deposit" : "balance",
+                  { amountTotalCents: amount },
+                );
+                console.log("[stripe] client document payment", meta);
+              } else if (meta.paymentRole === "full") {
+                await markClientDocumentStripePayment(
+                  meta.clientDocumentId,
+                  "full",
+                  { amountTotalCents: amount },
+                );
+                console.log("[stripe] client document full payment", meta);
+              }
+            }
+          } catch (e) {
+            console.error("[stripe] proposal payment metadata", e);
+          }
+        }
         await trackUxEvent({
           eventType: "checkout_completed",
           experiment: "cta-copy",
@@ -48,37 +109,60 @@ export async function POST(req: Request) {
       }
       break;
     }
+    case "invoice.paid":
+    case "invoice.payment_succeeded": {
+      try {
+        const inv = event.data.object as Stripe.Invoice;
+        if (hasSupabaseService()) {
+          const docId =
+            inv.metadata?.clientDocumentId?.trim() ||
+            inv.metadata?.event_order_id?.trim();
+          if (docId) {
+            await setClientDocumentStripeInvoiceStatus(docId, "paid");
+            console.log("[stripe] client document invoice paid", docId);
+          }
+        }
+      } catch (e) {
+        console.error("[stripe] invoice paid handler", e);
+      }
+      break;
+    }
+    case "invoice.voided": {
+      try {
+        const inv = event.data.object as Stripe.Invoice;
+        if (hasSupabaseService()) {
+          const docId =
+            inv.metadata?.clientDocumentId?.trim() ||
+            inv.metadata?.event_order_id?.trim();
+          if (docId) {
+            await setClientDocumentStripeInvoiceStatus(docId, "void");
+          }
+        }
+      } catch (e) {
+        console.error("[stripe] invoice voided handler", e);
+      }
+      break;
+    }
     case "account.updated": {
       try {
         const account = event.data.object as Stripe.Account;
-        if (hasSanityWriteClient()) {
+        if (hasSupabaseService()) {
           const complete = Boolean(
             account.charges_enabled &&
               account.payouts_enabled &&
               account.details_submitted,
           );
-          const vendor = await sanityWriteClient.fetch<{ _id: string } | null>(
-            `*[_type == "vendor" && stripeAccountId == $accountId][0]{_id}`,
-            { accountId: account.id },
-          );
-          if (vendor?._id) {
-            const currentlyDue = account.requirements?.currently_due ?? [];
-            const pastDue = account.requirements?.past_due ?? [];
-            await sanityWriteClient
-              .patch(vendor._id)
-              .set({
-                stripeOnboardingComplete: complete,
-                stripeDetailsSubmitted: Boolean(account.details_submitted),
-                stripeChargesEnabled: Boolean(account.charges_enabled),
-                stripePayoutsEnabled: Boolean(account.payouts_enabled),
-                stripeRequirementsCurrentlyDue: currentlyDue,
-                stripeRequirementsPastDue: pastDue,
-                stripeRequirementsDisabledReason:
-                  account.requirements?.disabled_reason ?? "",
-                stripeComplianceLastSyncedAt: new Date().toISOString(),
-              })
-              .commit();
-          }
+          const currentlyDue = account.requirements?.currently_due ?? [];
+          const pastDue = account.requirements?.past_due ?? [];
+          await updateVendorFromStripeAccount(account.id, {
+            stripeOnboardingComplete: complete,
+            stripeDetailsSubmitted: Boolean(account.details_submitted),
+            stripeChargesEnabled: Boolean(account.charges_enabled),
+            stripePayoutsEnabled: Boolean(account.payouts_enabled),
+            stripeRequirementsCurrentlyDue: currentlyDue,
+            stripeRequirementsPastDue: pastDue,
+            stripeRequirementsDisabledReason: account.requirements?.disabled_reason ?? "",
+          });
         }
       } catch (error) {
         console.error("[stripe] failed handling account.updated", error);

@@ -4,8 +4,8 @@ import {
   createAccountOnboardingLink,
   createConnectedAccountV2,
 } from "@/lib/stripeConnect";
-import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
-import type { Vendor } from "@/sanity/types";
+import { getVendorByIdForConnect, setVendorStripeAccountId } from "@/lib/db";
+import { hasSupabaseService } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
 
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     if (!body.vendorId) {
       return NextResponse.json({ error: "Missing vendorId" }, { status: 400 });
     }
-    if (!hasSanityWriteClient()) {
+    if (!hasSupabaseService()) {
       return NextResponse.json(
         { error: "Vendor updates are temporarily unavailable" },
         { status: 500 },
@@ -36,15 +36,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const vendor = await sanityWriteClient.fetch<Vendor | null>(
-      `*[_type == "vendor" && _id == $id][0]{
-        _id,
-        name,
-        contactEmail,
-        stripeAccountId
-      }`,
-      { id: body.vendorId },
-    );
+    const vendor = await getVendorByIdForConnect(body.vendorId);
     if (!vendor) {
       return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
     }
@@ -64,10 +56,7 @@ export async function POST(req: Request) {
         email: vendor.contactEmail,
       });
       accountId = account.id;
-      await sanityWriteClient
-        .patch(vendor._id)
-        .set({ stripeAccountId: accountId })
-        .commit();
+      await setVendorStripeAccountId(vendor._id, accountId);
     }
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { sanityClient } from "@/sanity/client";
+import { getBouquetById, getPantryItemById } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { farmLabel, sizeLabel } from "@/lib/format";
-import type { Bouquet, PantryItem } from "@/sanity/types";
-import { oneBouquetByIdQuery, onePantryItemByIdQuery } from "@/sanity/queries";
+import type { Bouquet, PantryItem } from "@/lib/types/content";
 
 export const runtime = "nodejs";
 
@@ -47,12 +46,8 @@ export async function POST(req: Request) {
 
     const item =
       itemType === "pantryItem"
-        ? await sanityClient.fetch<PantryItem | null>(onePantryItemByIdQuery, {
-            id: itemId,
-          })
-        : await sanityClient.fetch<Bouquet | null>(oneBouquetByIdQuery, {
-            id: itemId,
-          });
+        ? await getPantryItemById(itemId)
+        : await getBouquetById(itemId);
 
     if (!item) {
       return NextResponse.json({ error: "Item not found" }, { status: 404 });

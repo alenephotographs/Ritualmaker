@@ -1,6 +1,6 @@
 "use client";
 
-import type { PantryItem } from "@/sanity/types";
+import type { PantryItem } from "@/lib/types/content";
 import { categoryLabel, formatUSD } from "@/lib/format";
 
 export function PantryGrid({ items }: { items: PantryItem[] }) {

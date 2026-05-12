@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
-import type { InventoryAuditHistoryEntry, Vendor } from "@/sanity/types";
+import { updateProductForAdmin } from "@/lib/db";
+import { hasSupabaseService } from "@/lib/supabase/service";
 
 type RequestBody = {
   kind?: "bouquet" | "pantryItem";
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (!hasSanityWriteClient()) {
+  if (!hasSupabaseService()) {
     return NextResponse.json(
       { error: "Product updates are temporarily unavailable" },
       { status: 500 },
@@ -40,90 +40,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid product kind" }, { status: 400 });
     }
 
-    const doc = await sanityWriteClient.fetch<{
-      _id: string;
-      vendor?: { _ref: string };
-      inventoryAuditHistory?: InventoryAuditHistoryEntry[];
-    } | null>(
-      `*[_type == $type && _id == $id][0]{_id, vendor, inventoryAuditHistory}`,
-      { id: body.id, type: body.kind },
-    );
-    if (!doc) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-
     const isOwner = session.user.role === "owner";
-    const userVendorId = session.user.vendorId;
-    if (!isOwner) {
-      if (!userVendorId) {
-        return NextResponse.json({ error: "Vendor identity missing" }, { status: 403 });
-      }
-      if (doc.vendor?._ref !== userVendorId) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-    }
-
-    const patch = sanityWriteClient.patch(doc._id);
-    let changed = false;
-    if (typeof body.available === "boolean") {
-      patch.set({ available: body.available });
-      changed = true;
-    }
-    if (typeof body.comingSoon === "boolean" && body.kind === "pantryItem") {
-      patch.set({ comingSoon: body.comingSoon });
-      changed = true;
-    }
-    if (body.vendorId && isOwner) {
-      const vendor = await sanityWriteClient.fetch<Vendor | null>(
-        `*[_type == "vendor" && _id == $id][0]{_id}`,
-        { id: body.vendorId },
-      );
-      if (vendor?._id) {
-        patch.set({ vendor: { _type: "reference", _ref: vendor._id } });
-        changed = true;
-      }
-    }
-
-    if (!changed) {
-      return NextResponse.json({ error: "No updatable fields provided" }, { status: 400 });
-    }
-
-    const now = new Date().toISOString();
-    const changeParts: string[] = [];
-    if (typeof body.available === "boolean") {
-      changeParts.push(`available=${body.available ? "true" : "false"}`);
-    }
-    if (typeof body.comingSoon === "boolean" && body.kind === "pantryItem") {
-      changeParts.push(`comingSoon=${body.comingSoon ? "true" : "false"}`);
-    }
-    if (body.vendorId && isOwner) {
-      changeParts.push(`vendorReassigned=${body.vendorId}`);
-    }
-
-    const historyEntry: InventoryAuditHistoryEntry = {
-      _key: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      editedAt: now,
-      editedByEmail: session.user.email ?? "",
-      editedByRole: isOwner ? "owner" : "vendor",
-      editedByVendorId: userVendorId ?? "",
-      changeSummary: changeParts.join(", "),
-    };
-    const previousHistory = Array.isArray(doc.inventoryAuditHistory)
-      ? doc.inventoryAuditHistory
-      : [];
-    const nextHistory = [historyEntry, ...previousHistory].slice(0, 10);
-
-    patch.set({
-      inventoryAudit: {
-        lastEditedAt: now,
-        lastEditedByEmail: session.user.email ?? "",
-        lastEditedByRole: isOwner ? "owner" : "vendor",
-        lastEditedByVendorId: userVendorId ?? "",
-      },
-      inventoryAuditHistory: nextHistory,
+    const result = await updateProductForAdmin({
+      kind: body.kind,
+      id: body.id,
+      available: body.available,
+      comingSoon: body.comingSoon,
+      vendorId: body.vendorId,
+      userEmail: session.user.email,
+      isOwner,
+      userVendorId: session.user.vendorId,
     });
 
-    await patch.commit();
+    if (!result.ok) {
+      const status =
+        result.message === "Product not found"
+          ? 404
+          : result.message === "Forbidden"
+            ? 403
+            : result.message === "No updatable fields provided" || result.message === "Invalid vendor"
+              ? 400
+              : 500;
+      return NextResponse.json({ error: result.message }, { status });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[admin/products] failed", error);

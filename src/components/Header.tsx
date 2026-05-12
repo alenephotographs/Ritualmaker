@@ -1,15 +1,11 @@
 import Link from "next/link";
-import { sanityClient } from "@/sanity/client";
-import { siteSettingsQuery } from "@/sanity/queries";
-import type { SiteSettings } from "@/sanity/types";
+import { getSiteSettings } from "@/lib/db";
 import { Wordmark } from "@/components/Logo";
 import { MobileNav } from "@/components/MobileNav";
 import { RitualmakerCategoryNav } from "@/components/RitualmakerCategoryNav";
 
 export async function Header() {
-  const settings = await sanityClient
-    .fetch<SiteSettings | null>(siteSettingsQuery)
-    .catch(() => null);
+  const settings = await getSiteSettings().catch(() => null);
   const standClosed = settings?.standStatus === "closed";
 
   return (

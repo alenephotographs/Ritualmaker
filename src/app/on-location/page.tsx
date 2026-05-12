@@ -47,7 +47,7 @@ export default function OnLocationPage({ searchParams }: OnLocationPageProps) {
             Weddings &amp; events
           </h2>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink/65 sm:text-lg">
-            Personals, ceremony, reception, tables, installs — tuned to your date and space.
+            Flowers for gatherings and ceremony, designed seasonally and without excess.
           </p>
         </div>
       </section>
