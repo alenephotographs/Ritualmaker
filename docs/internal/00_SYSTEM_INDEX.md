@@ -59,7 +59,7 @@ Details: [`01_ARCHITECTURE_MAP.md`](./01_ARCHITECTURE_MAP.md)
 | [`10_RETRIEVAL_QUERIES.md`](./10_RETRIEVAL_QUERIES.md) | Task → doc/code lookup |
 | [`11_TASK_ROUTING_PROTOCOL.md`](./11_TASK_ROUTING_PROTOCOL.md) | Startup ritual + precognitive reorientation |
 | [`12_GITHUB_ISSUE_TAXONOMY.md`](./12_GITHUB_ISSUE_TAXONOMY.md) | Issue labels and routing |
-| [`13_PENDING_ISSUES.md`](./13_PENDING_ISSUES.md) | Issue templates until filed (agent env may lack `gh` write) |
+| [`13_PENDING_ISSUES.md`](./13_PENDING_ISSUES.md) | Issue index (#6–#8); label apply reminder |
 
 **External SoT:** [`README.md`](../../README.md), [`BUILD_NOTES.md`](../../BUILD_NOTES.md), [`docs/cutover.md`](../cutover.md), [`supabase/migrations/`](../../supabase/migrations/)
 
@@ -67,15 +67,15 @@ Details: [`01_ARCHITECTURE_MAP.md`](./01_ARCHITECTURE_MAP.md)
 
 ## Blockers
 
-**Durable home:** GitHub Issues (`type:blocker`). Doc IDs below map to Issues filed in metasystem pass.
+**Durable home:** GitHub Issues. Chat-only blockers are **invalid**.
 
 | ID | Summary | Issue |
 |----|---------|-------|
-| B1 | Production Webflow → Vercel cutover not executed | See Issues |
-| B3 | Dual CRM: Sanity `eventOrder` vs Supabase `client_documents` | See Issues |
-| B5 | Stripe live + webhook not verified for production stand | See Issues |
+| B1 | Production Webflow → Vercel cutover not executed | [#6](https://github.com/alenephotographs/Ritualmaker/issues/6) |
+| B3 | Dual CRM: Sanity `eventOrder` vs Supabase `client_documents` | [#7](https://github.com/alenephotographs/Ritualmaker/issues/7) |
+| B5 | Stripe live + webhook not verified for production stand | [#8](https://github.com/alenephotographs/Ritualmaker/issues/8) |
 
-Chat-only blockers are **invalid** — file an Issue.
+Apply labels per [`12_GITHUB_ISSUE_TAXONOMY.md`](./12_GITHUB_ISSUE_TAXONOMY.md) (agent env may lack label write).
 
 ---
 

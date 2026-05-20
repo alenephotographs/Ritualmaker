@@ -1,8 +1,8 @@
 # Ritualmaker — Current State
 
-**As-of:** 2026-05-20  
+**As-of:** 2026-05-20 (issue operationalization)  
 **Repo:** `alenephotographs/Ritualmaker`  
-**Branch baseline:** `main` @ `1fd65ef`
+**Branch baseline:** `main` @ `1fd65ef` · metasystem docs on `cursor/metasystem-alignment-ab0b` @ `0f7099f`
 
 Read with [`00_SYSTEM_INDEX.md`](./00_SYSTEM_INDEX.md) and [`01_ARCHITECTURE_MAP.md`](./01_ARCHITECTURE_MAP.md).
 
@@ -35,7 +35,7 @@ Agents must **not** collapse Ritualmaker into generic “Human Operating System�
 | Sanity | Project `qjcf272e`, dataset `ritualmaker`, Studio `/studio` |
 | Supabase | Migrations in `supabase/migrations/`; requires linked project + service role on server |
 | Stripe | Test/live keys per env; webhook + live stand test **pending verification** |
-| GitHub Issues | **None filed** at start of this pass — blockers were doc-only until Issues created |
+| GitHub Issues | **#6** (B1 cutover), **#7** (B3 CRM drift), **#8** (B5 Stripe) — labels pending manual apply |
 
 ---
 
@@ -63,7 +63,13 @@ When stepping back before high-stakes work, separate:
 
 ## Open blockers (durable home: GitHub Issues)
 
-See Issues labeled `type:blocker` after this pass. Doc IDs B1–B5 in [`00_SYSTEM_INDEX.md`](./00_SYSTEM_INDEX.md) map to those Issues.
+| Doc ID | Issue | Title |
+|--------|-------|--------|
+| B1 | [#6](https://github.com/alenephotographs/Ritualmaker/issues/6) | Webflow → Vercel cutover not executed |
+| B3 | [#7](https://github.com/alenephotographs/Ritualmaker/issues/7) | Sanity eventOrder vs Supabase client_documents |
+| B5 | [#8](https://github.com/alenephotographs/Ritualmaker/issues/8) | Stripe live + webhook verification |
+
+B4 (env/build) remains operational guidance in `BUILD_NOTES.md` — file an Issue only if Vercel build is failing in production.
 
 ---
 

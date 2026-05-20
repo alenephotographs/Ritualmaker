@@ -4,6 +4,33 @@ Rolling log of agent passes. Newest first.
 
 ---
 
+## 2026-05-20 — Issue operationalization pass
+
+**Branch:** `cursor/metasystem-alignment-ab0b`  
+**Scope:** GitHub Issues + doc links only
+
+### Delivered
+
+- Created Issues **#6** (B1 cutover), **#7** (B3 CRM drift), **#8** (B5 Stripe)
+- Updated `13_PENDING_ISSUES.md` → filed index
+- Linked blockers in `00_SYSTEM_INDEX.md`, `02_CURRENT_STATE.md`
+
+### Not done (API 403)
+
+- GitHub labels not created/applied — founder to add per `12_GITHUB_ISSUE_TAXONOMY.md`
+- PR #4 supersede comment (addComment 403)
+
+### PR state
+
+- **PR #5** open — metasystem docs; not merged (founder approval required)
+- **PR #4** superseded by #5 — close #4 when #5 merges
+
+### Checks
+
+None — docs/issue pass only.
+
+---
+
 ## 2026-05-20 — Metasystem alignment pass
 
 **Branch:** `cursor/metasystem-alignment-ab0b`  
