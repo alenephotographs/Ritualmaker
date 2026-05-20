@@ -131,7 +131,7 @@ ASK_CHATGPT: <specific review question>
 SITE: Ritualmaker
 REPO: alenephotographs/Ritualmaker
 BRANCH: cursor/system-index-pass-ab0b
-COMMIT: <see git log after push>
+COMMIT: c081d77
 FILES_CHANGED:
 - docs/internal/00_SYSTEM_INDEX.md
 - docs/internal/01_ARCHITECTURE_MAP.md
