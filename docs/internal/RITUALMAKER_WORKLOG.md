@@ -162,3 +162,51 @@ No product code, public copy, Sanity mutation, checkout/payment changes, or inve
 ### Next safe action
 
 Commit audit docs; then execute Gear 1 checklist from `RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md` cross-referenced with `RITUALMAKER_NEXT_SAFE_ACTION_QUEUE.md`.
+
+---
+
+## 2026-05-27 — Gear 1 availability workflow docs
+
+### Mode
+
+Docs / operational workflow only.
+
+### Audit commit pushed
+
+**Yes.** `fb4521fa31ee4907636936e605a538698c083665` pushed to `origin/main` (`6e29998..fb4521f`).
+
+### Files read
+
+- `README.md`
+- `docs/internal/RITUALMAKER_OPERATING_SPHERE.md`
+- `docs/internal/RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md`
+- `docs/internal/RITUALMAKER_NEXT_SAFE_ACTION_QUEUE.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md`
+- `docs/internal/RITUALMAKER_SPHERE_MAP.json`
+- `docs/operations/ritualmaker-seed-tracking-database-v0-1.md`
+- `src/sanity/schemas/flowerProduct.ts`, `flowerSalesRecord.ts`, `siteSettings.ts`
+- `src/app/farm-stand/page.tsx`
+- `src/components/StandStatus.tsx`, `BouquetGrid.tsx`
+
+### Files created
+
+- `docs/operations/ritualmaker-stand-availability-workflow-v0-1.md`
+- `docs/operations/ritualmaker-bloom-harvest-log-template-v0-1.md`
+- `docs/internal/RITUALMAKER_GEAR_1_OPERATING_RITUALS.md`
+
+### Files updated
+
+- `docs/internal/RITUALMAKER_WORKLOG.md` (this entry)
+
+### Checks run
+
+- `git diff --check` — see commit pass
+- `pnpm check` — see commit pass
+
+### No-touch confirmation
+
+No product code, public copy, Sanity mutation, checkout/payment changes, migrations, or inventory mutation. Uncommitted product work left untouched.
+
+### Recommended next action
+
+Use Gear 1 rituals on the next stand day; after 2–4 weeks of stable manual reconciliation, run Gear 2 implementation pass from `RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md`.
