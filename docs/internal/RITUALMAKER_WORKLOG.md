@@ -210,3 +210,44 @@ No product code, public copy, Sanity mutation, checkout/payment changes, migrati
 ### Recommended next action
 
 Use Gear 1 rituals on the next stand day; after 2–4 weeks of stable manual reconciliation, run Gear 2 implementation pass from `RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md`.
+
+---
+
+## 2026-05-27 — First live Gear 1 operating cycle log
+
+### Mode
+
+Docs only — live operational log setup; no Sanity, inventory, checkout, or public copy changes.
+
+### Files read
+
+- `docs/internal/RITUALMAKER_OPERATING_SPHERE.md`
+- `docs/internal/RITUALMAKER_GEAR_1_OPERATING_RITUALS.md`
+- `docs/operations/ritualmaker-stand-availability-workflow-v0-1.md`
+- `docs/operations/ritualmaker-bloom-harvest-log-template-v0-1.md`
+- `docs/operations/ritualmaker-seed-tracking-database-v0-1.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md`
+
+### Files created
+
+- `docs/operations/live-logs/2026-05-27-gear-1-operating-cycle.md`
+
+### Files updated
+
+- `docs/internal/RITUALMAKER_WORKLOG.md` (this entry)
+
+### Known data captured
+
+- Two cannabis seedlings planted outside 2026-05-26; behind vegetable garden, downhill drainage path; full sun until house shadow; nearest broccoli/Brussels sprouts in raised bed; monitor waterlogging, transplant shock, animal pressure, legal/privacy/security.
+
+### Checks run
+
+- `git diff --check` — see commit pass
+
+### No-touch confirmation
+
+No product code, public copy, Sanity mutation, checkout/payment changes, or inventory mutation.
+
+### Recommended next action
+
+Founder completes placeholder sections on next field walk / stand day; optionally backfill seed ledger with cannabis zone when ID/placement is stable.
