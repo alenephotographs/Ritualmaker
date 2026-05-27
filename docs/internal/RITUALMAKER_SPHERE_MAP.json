@@ -1,0 +1,63 @@
+{
+  "sphere": "Ritualmaker",
+  "type": "physical_world_seasonal_production",
+  "center_of_gravity": "seasonal flower and creative production business",
+  "core_areas": {
+    "garden_production": {
+      "state": "partial",
+      "source_of_truth": "docs/operations/ritualmaker-seed-tracking-database-v0-1.md"
+    },
+    "flower_product_production": {
+      "state": "partial",
+      "source_of_truth": "Sanity flowerProduct schema and storefront queries"
+    },
+    "sales_channels": {
+      "state": "active",
+      "channels": [
+        "stand",
+        "cash",
+        "direct payment app",
+        "website Stripe checkout",
+        "shipping where enabled"
+      ]
+    },
+    "website_public_promise": {
+      "state": "needs seasonal truth audit"
+    },
+    "revenue_accounting": {
+      "state": "partial",
+      "risk": "channel reconciliation drift"
+    },
+    "customer_trust": {
+      "state": "high importance"
+    },
+    "photography_content": {
+      "state": "distributed"
+    },
+    "founder_labor": {
+      "state": "high manual burden"
+    }
+  },
+  "current_pressures": [
+    "inventory drift",
+    "seasonal timing",
+    "founder memory burden",
+    "content timing",
+    "availability truth",
+    "perishable inventory"
+  ],
+  "deferred_surfaces": [
+    "subscriptions",
+    "delivery scheduling",
+    "inventory automation",
+    "CSA systems",
+    "expanded ecommerce automation"
+  ],
+  "no_touch_boundaries": [
+    "no code changes",
+    "no inventory mutation",
+    "no checkout changes",
+    "no public copy deployment",
+    "no customer actions"
+  ]
+}
