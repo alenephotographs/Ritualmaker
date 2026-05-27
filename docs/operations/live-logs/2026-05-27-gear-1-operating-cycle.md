@@ -37,6 +37,28 @@
 
 ---
 
+## Founder update — 2026-05-27 (field + sales notes)
+
+_Reported same day as log; sale occurred **the other day** (~2026-05-25 / 2026-05-26 — exact date not confirmed)._
+
+### Garden / bloom
+
+- **Ranunculus:** More coming on in the round (additional stems/flushes expected).
+- **Peonies:** Buds getting larger — not harvest-ready; **leave to grow**.
+- **First ranunculus bouquet:** Sold for **$12** — founder notes this was the **first ranunculus bouquet** of the season (likely aligns with Glimmer-tier pricing; confirm SKU in Admin if logging formally).
+
+### Stand / neighbor
+
+- A **neighbor left a jar** at the stand (gift / return — not a sale). Contents and pantry-SKU relevance **not yet specified**.
+
+### Revenue follow-up (Gear 1)
+
+- [ ] Log **$12 ranunculus bouquet** in Admin → Settings → **Record walk-up sale** if not already entered (`itemName` e.g. “Ranunculus bouquet” or matching `publicName`).
+- [ ] Note payment method (cash / venmo / other): _[not yet provided]_
+- [ ] Reconcile shelf / optional `quantity` if that bouquet came off the stand
+
+---
+
 ## Weather context
 
 - Overnight low / daytime high: _[not yet provided]_
@@ -53,7 +75,7 @@
 | Behind vegetable garden — downhill drainage (cannabis ×2) | [x] noted | New outdoor plantings 2026-05-26; monitor hydrology |
 | Raised bed — broccoli / Brussels sprouts | [ ] | Nearest reference to cannabis placement; _condition not yet logged_ |
 | Vegetable garden (general) | [ ] | _[not yet provided]_ |
-| Roadside / cut-flower zones (see seed ledger) | [ ] | _[not yet provided]_ |
+| Roadside / cut-flower zones (see seed ledger) | [x] partial | Ranunculus — more in the round; peony buds enlarging |
 | Stand shelf (38 Miller Hill Road) | [ ] | _[not yet provided]_ |
 
 ---
@@ -62,10 +84,10 @@
 
 What is visibly in flower (not necessarily cut-ready).
 
-- Variety / crop: _[not yet provided]_
-- Zone: _[not yet provided]_
-- Stage: [ ] bud  [ ] peak  [ ] fading
-- Notes: _[not yet provided]_
+- **Ranunculus** — in production; first $12 bouquet sold the other day; more stems coming on in the round
+- **Peonies** — buds getting larger; stage: [x] bud  [ ] peak  [ ] fading — not cut-ready
+- Zone: _[bed/zone label not yet provided]_
+- Notes: First ranunculus bouquet of season = sales + content milestone
 
 ---
 
@@ -75,7 +97,8 @@ What you would actually cut for bouquets / stand within the next few hours.
 
 | Crop / variety | Zone | Est. stems | Target SKU (Glimmer / Blessing / Abundance / other) |
 | --- | --- | --- | --- |
-| _[not yet provided]_ | | | |
+| Ranunculus | _[zone TBD]_ | More in the round | Glimmer ($12) or ad hoc — first sale logged |
+| Peonies | _[zone TBD]_ | Buds only — not yet | Hold — buds enlarging |
 
 **Founder judgment:** stems long enough? cool enough to cut? worth the cut? — _[not yet provided]_
 
@@ -84,7 +107,8 @@ What you would actually cut for bouquets / stand within the next few hours.
 ## Leave to grow / leave for seed
 
 - Cannabis seedlings (behind veg garden, downhill) — **leave**; just planted; monitor only
-- _[additional entries not yet provided]_
+- **Peonies** — buds enlarging; do not cut until founder judgment says ready
+- **Ranunculus** — leave remaining flush to size up where not yet cut for stand
 
 ---
 
@@ -98,7 +122,7 @@ What you would actually cut for bouquets / stand within the next few hours.
 
 | Tier / SKU | Potential bouquets (field) | Stand-ready now (packed/on shelf) |
 | --- | --- | --- |
-| Glimmer (small) | _[not yet provided]_ | _[not yet provided]_ |
+| Glimmer (small) | Ranunculus flush building | 1 sold ~$12 the other day; rest TBD |
 | Blessing (standard) | _[not yet provided]_ | _[not yet provided]_ |
 | Abundance (premium) | _[not yet provided]_ | _[not yet provided]_ |
 | Pantry / other | _[not yet provided]_ | _[not yet provided]_ |
@@ -118,7 +142,7 @@ _Pre-open / mid-day / end-of-day checklist — not yet run for 2026-05-27._
 | Product readiness (Sanity SKUs) | _[not yet provided]_ |
 | `siteSettings.standStatus` / `standMessage` | _[not yet provided — Studio only]_ |
 | `flowerProduct` active / inStock / quantity | _[not yet provided]_ |
-| Cash / direct sales review | _[not yet provided]_ |
+| Cash / direct sales review | **Partial** — $12 ranunculus bouquet noted; confirm Admin log |
 | Stripe / website orders review | _[not yet provided]_ |
 | Photo / content capture | _[not yet provided]_ |
 | End-of-day reset | _[not yet provided]_ |
@@ -127,9 +151,8 @@ _Pre-open / mid-day / end-of-day checklist — not yet run for 2026-05-27._
 
 ## Content / photo opportunities
 
-- [ ] Bed in full bloom
-- [ ] Bouquet in hand / at stand
-- [ ] Pantry jar / process shot
+- [x] Bouquet in hand / at stand — **first ranunculus bouquet** (sold; photo may be retrospective)
+- [ ] Pantry jar / process shot — neighbor left a jar; contents TBD
 - [ ] Before/after harvest
 - Notes for caption (seasonal, no overpromise): _[not yet provided]_
 
@@ -137,11 +160,12 @@ _Pre-open / mid-day / end-of-day checklist — not yet run for 2026-05-27._
 
 ## Sanity updates needed
 
-Punch list after field truth — **empty until founder completes stand/SKU review.**
+Punch list after field truth — partial from founder notes.
 
 | Action | SKU / setting | Field | New intent |
 | --- | --- | --- | --- |
-| _[not yet provided]_ | | | |
+| Log first ranunculus sale | _manual record_ | flowerSalesRecord | $12 — date ~2026-05-25/26 if not in Admin |
+| Peonies | — | — | Do not list until harvest-ready |
 
 ---
 
@@ -149,7 +173,7 @@ Punch list after field truth — **empty until founder completes stand/SKU revie
 
 | Time | Item (use publicName) | Amount | Method (cash/venmo/other) | Logged in Admin? |
 | --- | --- | --- | --- | --- |
-| _[not yet provided]_ | | | | |
+| ~2026-05-25/26 | Ranunculus bouquet (first of season) | $12.00 | _[cash/venmo/other — TBD]_ | [ ] confirm in Admin |
 
 ---
 
@@ -164,8 +188,8 @@ Punch list after field truth — **empty until founder completes stand/SKU revie
 ## End-of-day snapshot
 
 - Shelf empty? [ ] yes  [ ] partial  [ ] n/a  [ ] not checked
-- Field carryover for tomorrow: Cannabis monitoring; complete bloom/stand sections when founder runs full cycle
-- One-line summary: **First Gear 1 live log initialized; two cannabis seedlings outdoors logged with drainage/light context; stand and SKU truth pending founder input.**
+- Field carryover for tomorrow: Cannabis monitoring; **ranunculus flush + peony bud watch**; log $12 sale in Admin if missing; note neighbor jar
+- One-line summary: **First ranunculus bouquet sold ($12); more ranunculus coming on; peony buds sizing up; neighbor left jar at stand.**
 
 ---
 
@@ -173,10 +197,10 @@ Punch list after field truth — **empty until founder completes stand/SKU revie
 
 | Truth | Status on 2026-05-27 |
 | --- | --- |
-| Garden | Partial — cannabis placement logged; bloom/harvest TBD |
-| Stand | Not yet logged |
+| Garden | Partial — cannabis, ranunculus flush, peony buds logged |
+| Stand | Partial — neighbor jar noted; ranunculus sale |
 | Website (Sanity) | Not reviewed this cycle — no changes authorized by this pass |
-| Revenue | Not yet logged |
+| Revenue | Partial — $12 ranunculus sale reported; Admin log unconfirmed |
 
 ---
 

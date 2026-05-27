@@ -251,3 +251,31 @@ No product code, public copy, Sanity mutation, checkout/payment changes, or inve
 ### Recommended next action
 
 Founder completes placeholder sections on next field walk / stand day; optionally backfill seed ledger with cannabis zone when ID/placement is stable.
+
+---
+
+## 2026-05-27 — Live Gear 1 log: ranunculus sale + peony buds
+
+### Mode
+
+Docs only — founder field/sales notes appended to live cycle log.
+
+### Files updated
+
+- `docs/operations/live-logs/2026-05-27-gear-1-operating-cycle.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md` (this entry)
+
+### Founder data captured
+
+- $12 ranunculus bouquet sold the other day — first ranunculus bouquet of season
+- More ranunculus in the round
+- Peony buds getting larger (hold for cut)
+- Neighbor left a jar at stand (contents TBD)
+
+### No-touch confirmation
+
+No product code, Sanity, checkout, inventory, or public copy changes.
+
+### Recommended next action
+
+Confirm sale date + payment method; log in Admin → Settings if missing; note what was in neighbor’s jar.
