@@ -70,3 +70,95 @@ No:
 - public copy deployment;
 - customer actions;
 - payment-flow mutations.
+
+---
+
+## 2026-05-27 — Inventory truth audit 01
+
+**Mode:** Read-only audit + docs update only
+**Agent pass:** Operational inventory truth audit (storefront/product vs seasonal operating model)
+
+### Files read
+
+- `README.md`, `docs/cutover.md`
+- `src/app/page.tsx`, `src/app/farm-stand/page.tsx`, `src/app/farm-stand/product/[slug]/page.tsx`
+- `src/components/Hero.tsx`, `StandStatus.tsx`, `BouquetGrid.tsx`, `Header.tsx`, `HeaderClient.tsx`
+- `src/sanity/queries.ts`, schemas (`flowerProduct`, `flowerSalesRecord`, `siteSettings`, `bouquet`, `pantryItem`)
+- `src/lib/shopProduct.ts`, `requiredOfferings.ts`, `ritualBundle.ts`, `adminData.ts`
+- `src/app/api/checkout/route.ts`, `stripe/webhook` (sales section), `admin/flower-products`, `admin/sales-records`
+- `src/app/admin/(portal)/products/page.tsx`, `dashboard/page.tsx`, `AdminDashboard` (key sections)
+
+### Unavailable at audit time (stale local checkout)
+
+- `docs/operations/ritualmaker-seed-tracking-database-v0-1.md`
+- `docs/internal/RITUALMAKER_OPERATING_SPHERE.md`
+- `docs/internal/RITUALMAKER_NEXT_SAFE_ACTION_QUEUE.md`
+- `docs/internal/RITUALMAKER_SPHERE_MAP.json`
+- Prior `docs/internal/RITUALMAKER_WORKLOG.md`
+
+### Files created/updated
+
+- **Created** `docs/internal/RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md`
+- **Created** local worklog draft (merged into this file on reconciliation pass)
+
+### Findings (summary)
+
+1. **`flowerProduct`** is the live shop SKU; visibility = `active && inStock` (GROQ) + title/price (client). `quantity` and `recurringItem` are non-enforcing.
+2. **`shipsNationwide`** drives fulfillment UX, not listing eligibility.
+3. **`standStatus`** affects header/pill only — not product queries or checkout.
+4. **Sales do not update stock** — Stripe webhook and manual cash records append `flowerSalesRecord` only.
+5. Public cards may lack images; legacy `bouquet` / `pantryItem` checkout remains; farm-stand uses `bouquets={[]}`.
+
+### Checks run (audit pass)
+
+- `git diff --check` — pass
+- `pnpm check` — pass
+
+### No-touch confirmation
+
+Documentation only. No product code, Sanity data, checkout, or inventory changes.
+
+### Recommended next action
+
+Gear 1 manual rituals in audit doc; then Gear 2 admin stand controls + seasonal banner (no checkout automation).
+
+---
+
+## 2026-05-27 — Inventory truth audit reconciliation
+
+### Repo sync status
+
+- **Branch:** `main`
+- **Before sync:** local `main` was **5 commits behind** `origin/main` (fast-forwardable)
+- **Action:** `git fetch origin`; initial `git pull --ff-only origin main` blocked by untracked local `docs/internal/RITUALMAKER_WORKLOG.md`; moved aside, pull succeeded (`1fd65ef` → `6e29998`)
+- **After sync:** local `main` matches `origin/main` for pulled commits; audit artifact retained locally
+
+### Seed-tracking doc after sync
+
+**Found:** `docs/operations/ritualmaker-seed-tracking-database-v0-1.md` (from remote, not present in stale checkout)
+
+### Files confirmed (all present locally post-sync)
+
+- `docs/operations/ritualmaker-seed-tracking-database-v0-1.md`
+- `docs/internal/RITUALMAKER_OPERATING_SPHERE.md`
+- `docs/internal/RITUALMAKER_NEXT_SAFE_ACTION_QUEUE.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md`
+- `docs/internal/RITUALMAKER_SPHERE_MAP.json`
+- `docs/internal/RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md`
+
+### Audit file path
+
+`docs/internal/RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md` — kept as a **specific audit artifact**; does not replace operating sphere or action queue.
+
+### No-touch confirmation
+
+No product code, public copy, Sanity mutation, checkout/payment changes, or inventory mutation. Docs-only reconciliation and commit.
+
+### Checks run
+
+- `git diff --check` — see commit pass
+- `pnpm check` — see commit pass
+
+### Next safe action
+
+Commit audit docs; then execute Gear 1 checklist from `RITUALMAKER_INVENTORY_TRUTH_AUDIT_01.md` cross-referenced with `RITUALMAKER_NEXT_SAFE_ACTION_QUEUE.md`.
