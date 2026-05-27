@@ -305,3 +305,45 @@ No product code, Sanity, checkout, inventory, or public copy changes.
 ### Recommended next action
 
 Enter 2026-05-25 cash sale in Admin if not done; reconcile stand `quantity` if tracked.
+
+---
+
+## 2026-05-27 — Live log Z-ID backfill
+
+### Mode
+
+Docs only — Z-ID backfill and source-truth hygiene for first Gear 1 live log.
+
+### Files read
+
+- `docs/internal/RITUALMAKER_SPHERE_ATLAS.md`
+- `docs/operations/ritualmaker-bed-and-planting-location-index-v0-1.md`
+- `docs/operations/ritualmaker-seed-tracking-database-v0-1.md`
+- `docs/operations/ritualmaker-bloom-harvest-log-template-v0-1.md`
+- `docs/operations/live-logs/2026-05-27-gear-1-operating-cycle.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md`
+
+### Files updated
+
+- `docs/operations/live-logs/2026-05-27-gear-1-operating-cycle.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md` (this entry)
+
+### Plants / zones clarified
+
+- Cannabis → **Z1B** (nearest **Z1A**); broccoli/Brussels → **Z1A**; main veg → **Z1**
+- Ranunculus → lower mailbox / spring flower zone (exact Z-ID **unresolved**)
+- Peonies → likely **Z5** context (exact bed **unresolved**)
+- Index-only cross-refs added for **Z2**, **Z2A**, **Z2B**, **Z3**, **Z4**, **Z5A** (not walked this cycle)
+
+### Uncertain locations preserved
+
+- Ranunculus field bed: no Z-number in bed index — not mapped to Z2/Z3 without founder confirmation
+- Peonies: exact bed within house/rock/spring perennial context still TBD
+
+### No-touch confirmation
+
+No product code, public copy, Sanity, checkout, inventory, client-portal WIP, or `src/**` changes.
+
+### Recommended next action
+
+Founder field-walk to confirm ranunculus and peony Z-IDs; update bed index if new sub-zone warranted; enter 2026-05-25 cash sale in Admin if missing.

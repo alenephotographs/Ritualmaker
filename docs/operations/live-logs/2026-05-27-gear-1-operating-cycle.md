@@ -19,11 +19,12 @@
 | Field | Value |
 | --- | --- |
 | Crop | Cannabis (2 seedlings) |
+| Zone ID | **Z1B** — behind vegetable garden downhill drainage pocket (**sensitive / private / internal only**) |
 | Planted | Outside, **2026-05-26** (yesterday relative to log date) |
-| Location | Behind the vegetable garden, slightly downhill |
-| Hydrology | Where water from the vegetable garden and general slope drains through before continuing downhill |
+| Location | Z1B; downhill behind **Z1** main arch / protected vegetable garden |
+| Hydrology | Where water from Z1 and general slope drains through before continuing downhill |
 | Light | Full sun until plants fall into the house shadow |
-| Nearest reference | Closest to broccoli and Brussels sprouts in the raised bed |
+| Nearest reference | **Z1A** raised bed / brassica edge (broccoli and Brussels sprouts) |
 | Public / shop relevance | **None** — internal garden production only; not a storefront SKU |
 
 **Next action (monitor):**
@@ -43,8 +44,8 @@ _Sale and stand notes; refined 2026-05-27 with founder follow-up._
 
 ### Garden / bloom
 
-- **Ranunculus:** More coming on in the round (additional stems/flushes expected).
-- **Peonies:** Buds getting larger — not harvest-ready; **leave to grow**.
+- **Ranunculus:** More coming on in the round (additional stems/flushes expected). **Zone:** lower mailbox / spring flower zone per bed index — exact Z-ID **needs field confirmation** (distinct from **Z2** dahlia strips).
+- **Peonies:** Buds getting larger — not harvest-ready; **leave to grow**. **Zone:** house / rock / spring perennial context — likely **Z5** area; exact bed **needs field confirmation**.
 - **First ranunculus bouquet:** Sold for **$12** — **first ranunculus bouquet** of the season (likely Glimmer-tier; confirm SKU in Admin if logging formally).
 
 ### Stand / neighbor
@@ -73,19 +74,25 @@ _Sale and stand notes; refined 2026-05-27 with founder follow-up._
 - Overnight low / daytime high: _[not yet provided]_
 - Rain / frost / wind / heat note: _[not yet provided]_
 - Watering done? [ ] yes  [ ] no  [ ] partial
-- Protection needed? (row cover, shade, extra water): _[not yet provided — watch cannabis drainage zone after rain]_
+- Protection needed? (row cover, shade, extra water): _[not yet provided — watch **Z1B** cannabis drainage after rain]_
 
 ---
 
 ## Beds / zones checked
 
-| Zone / bed | Checked? | General condition |
-| --- | --- | --- |
-| Behind vegetable garden — downhill drainage (cannabis ×2) | [x] noted | New outdoor plantings 2026-05-26; monitor hydrology |
-| Raised bed — broccoli / Brussels sprouts | [ ] | Nearest reference to cannabis placement; _condition not yet logged_ |
-| Vegetable garden (general) | [ ] | _[not yet provided]_ |
-| Roadside / cut-flower zones (see seed ledger) | [x] partial | Ranunculus — more in the round; peony buds enlarging |
-| Stand shelf (38 Miller Hill Road) | [ ] | _[not yet provided]_ |
+| Zone ID | Working name | Checked? | General condition |
+| --- | --- | --- | --- |
+| **Z1B** | Behind veg garden downhill drainage (cannabis ×2) | [x] noted | New outdoor plantings 2026-05-26; monitor hydrology; **private/sensitive** |
+| **Z1A** | Raised bed / brassica edge | [ ] | Broccoli, Brussels sprouts; nearest reference to Z1B; _condition not yet logged_ |
+| **Z1** | Main arch / protected vegetable garden | [ ] | _[not yet provided]_ |
+| **Z2** | Upper roadside production bed | [ ] | Dahlias, roadside production context — not walked this cycle |
+| **Z2A** | Black plastic/fabric strips (seed lane) | [ ] | Unidentified flower seed + marigolds — not walked this cycle |
+| **Z2B** | Uppermost stump near road | [ ] | 27 rescued tomato seedlings (bed index) — not walked this cycle |
+| **Z3** | Lower slope under driveway | [ ] | Birds & Butterfly mix context — not walked this cycle |
+| **Z4** | Big tree bed (calendula ring) | [ ] | Calendula saved-seed ring — not walked this cycle |
+| **Z5** | Rock garden / shaded upper house garden | [x] partial | Peony buds enlarging — exact bed within Z5 **needs field confirmation** |
+| Ranunculus area | Lower mailbox / spring flower zone | [x] partial | More ranunculus in the round; **exact Z-ID needs field confirmation** |
+| Stand | 38 Miller Hill Road shelf | [ ] | _[not yet provided]_ |
 
 ---
 
@@ -93,9 +100,10 @@ _Sale and stand notes; refined 2026-05-27 with founder follow-up._
 
 What is visibly in flower (not necessarily cut-ready).
 
-- **Ranunculus** — in production; first $12 bouquet sold the other day; more stems coming on in the round
+- **Ranunculus** — in production; first $12 bouquet sold 2026-05-25; more stems coming on in the round
+  - **Zone:** lower mailbox / spring flower zone (bed index) — **exact Z-ID needs field confirmation**; not **Z2** dahlia placement
 - **Peonies** — buds getting larger; stage: [x] bud  [ ] peak  [ ] fading — not cut-ready
-- Zone: _[bed/zone label not yet provided]_
+  - **Zone:** house / rock / spring perennial context — likely **Z5**; **exact bed needs field confirmation**
 - Notes: First ranunculus bouquet of season = sales + content milestone
 
 ---
@@ -106,8 +114,8 @@ What you would actually cut for bouquets / stand within the next few hours.
 
 | Crop / variety | Zone | Est. stems | Target SKU (Glimmer / Blessing / Abundance / other) |
 | --- | --- | --- | --- |
-| Ranunculus | _[zone TBD]_ | More in the round | Glimmer ($12) or ad hoc — first sale logged |
-| Peonies | _[zone TBD]_ | Buds only — not yet | Hold — buds enlarging |
+| Ranunculus | Lower mailbox / spring flower zone — **Z-ID TBD** | More in the round | Glimmer ($12) or ad hoc — first sale logged |
+| Peonies | House/rock/spring perennial — likely **Z5**, bed **TBD** | Buds only — not yet | Hold — buds enlarging |
 
 **Founder judgment:** stems long enough? cool enough to cut? worth the cut? — _[not yet provided]_
 
@@ -115,9 +123,9 @@ What you would actually cut for bouquets / stand within the next few hours.
 
 ## Leave to grow / leave for seed
 
-- Cannabis seedlings (behind veg garden, downhill) — **leave**; just planted; monitor only
-- **Peonies** — buds enlarging; do not cut until founder judgment says ready
-- **Ranunculus** — leave remaining flush to size up where not yet cut for stand
+- Cannabis seedlings (**Z1B**, behind **Z1**) — **leave**; just planted; monitor only; **private/sensitive**
+- **Peonies** (**Z5** context, exact bed TBD) — buds enlarging; do not cut until founder judgment says ready
+- **Ranunculus** (lower mailbox / spring zone, Z-ID TBD) — leave remaining flush to size up where not yet cut for stand
 
 ---
 
@@ -188,7 +196,7 @@ Punch list after field truth — partial from founder notes.
 
 ## Next watering / protection note
 
-- **Cannabis zone:** Watch for waterlogging where veg-garden and slope drainage converges; check seedlings after next rain or irrigation.
+- **Z1B (cannabis):** Watch for waterlogging where Z1 veg-garden and slope drainage converges; check seedlings after next rain or irrigation.
 - **General:** _[not yet provided]_
 - Watch list (beds stressing, forecast): _[not yet provided]_
 
@@ -206,7 +214,7 @@ Punch list after field truth — partial from founder notes.
 
 | Truth | Status on 2026-05-27 |
 | --- | --- |
-| Garden | Partial — cannabis, ranunculus flush, peony buds logged |
+| Garden | Partial — **Z1B** cannabis, ranunculus flush (Z-ID TBD), peony buds (**Z5** context TBD) |
 | Stand | Partial — empty jar for stand use; ranunculus walk-up sale |
 | Website (Sanity) | Not reviewed this cycle — no changes authorized by this pass |
 | Revenue | **2026-05-25 · $12 cash · ranunculus bouquet** — documented here; Admin entry still to confirm |
@@ -221,3 +229,27 @@ Sections marked _[not yet provided]_ should be completed on the next stand day o
 2. Harvestable today + bouquet/stand-ready counts
 3. Stand walk + Sanity punch list
 4. Cash and Stripe reconciliation
+5. **Field confirm** exact Z-ID for ranunculus (lower mailbox / spring zone) and peony bed within **Z5**
+
+---
+
+## Location confidence / Z-ID backfill
+
+_Backfilled 2026-05-27 from `ritualmaker-bed-and-planting-location-index-v0-1.md` and sphere atlas. Do not treat “likely” or “uncertain” rows as survey-grade placement._
+
+| Plant / item | Previous location wording | Backfilled zone ID | Confidence | Source doc | Follow-up needed |
+| --- | --- | --- | --- | --- | --- |
+| Cannabis (2 seedlings) | Behind vegetable garden, slightly downhill | **Z1B** (nearest **Z1A** brassica bed) | **confirmed** | bed index §1, §3; live log founder report | Monitor hydrology; private/internal only; seed ledger backfill optional |
+| Broccoli / Brussels sprouts | Raised bed nearest cannabis | **Z1A** | **confirmed** | bed index §1 | Log bed condition on next walk |
+| Main vegetable garden | Vegetable garden (general) | **Z1** | **confirmed** | bed index §1 | Full Z1 walk not yet done this cycle |
+| Ranunculus (field flush) | Roadside / cut-flower zones; zone TBD | Lower mailbox / spring flower zone — **no Z-number assigned in index** | **uncertain** | bed index §2 Ranunculus | Founder confirm exact bed; assign Z-ID if index updated |
+| Peonies (buds enlarging) | _(none — vague roadside row)_ | House/rock/spring perennial — **likely Z5** | **uncertain** | bed index §2 Peonies | Confirm individual peony bed on field walk |
+| Dahlias | _(not in this live log)_ | **Z2** | **confirmed** (index only) | bed index §2 Dahlias | Walk Z2 when checking cut flowers |
+| Unidentified seed + marigolds (black strips) | _(not in this live log)_ | **Z2A** | **confirmed** (index only) | bed index §1–2 | Germination check when visited |
+| 27 rescued tomato seedlings | _(not in this live log)_ | **Z2B** | **confirmed** (index only) | bed index §1, §3 | Survival check when visited |
+| Birds & Butterfly mix | _(not in this live log)_ | **Z3** | **confirmed** (index only) | bed index §1 | Meadow/pollinator walk when visited |
+| Calendula saved-seed ring | _(not in this live log)_ | **Z4** | **confirmed** (index only) | bed index §2 Calendula | Germination under tree competition |
+| Rock garden perennials | _(implicit peony context)_ | **Z5** | **likely** | bed index §1, §2 Peonies | Confirm peony clump location |
+| Saved purple spiky seed pocket | _(not in this live log)_ | **Z5A** | **confirmed** (index only) | bed index §1, §2 | Wait for true leaves before ID |
+| Ranunculus bouquet sale | Stand walk-up (2026-05-25) | Stand (not a bed) | **confirmed** | live log founder report | Admin `flowerSalesRecord` if missing |
+| Neighbor empty jar | Stand | Stand (not a bed) | **confirmed** | live log founder report | None |
