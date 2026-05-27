@@ -279,3 +279,29 @@ No product code, Sanity, checkout, inventory, or public copy changes.
 ### Recommended next action
 
 Confirm sale date + payment method; log in Admin → Settings if missing; note what was in neighbor’s jar.
+
+---
+
+## 2026-05-27 — Live Gear 1 log: sale date + empty jar
+
+### Mode
+
+Docs only — founder follow-up on ranunculus sale and neighbor jar.
+
+### Files updated
+
+- `docs/operations/live-logs/2026-05-27-gear-1-operating-cycle.md`
+- `docs/internal/RITUALMAKER_WORKLOG.md` (this entry)
+
+### Founder data captured
+
+- Ranunculus bouquet: **2026-05-25**, **$12**, **walk-up cash**
+- Neighbor jar: **empty**, left for founder stand/pantry use
+
+### No-touch confirmation
+
+No product code, Sanity, checkout, inventory, or public copy changes.
+
+### Recommended next action
+
+Enter 2026-05-25 cash sale in Admin if not done; reconcile stand `quantity` if tracked.

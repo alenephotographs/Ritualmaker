@@ -39,22 +39,31 @@
 
 ## Founder update — 2026-05-27 (field + sales notes)
 
-_Reported same day as log; sale occurred **the other day** (~2026-05-25 / 2026-05-26 — exact date not confirmed)._
+_Sale and stand notes; refined 2026-05-27 with founder follow-up._
 
 ### Garden / bloom
 
 - **Ranunculus:** More coming on in the round (additional stems/flushes expected).
 - **Peonies:** Buds getting larger — not harvest-ready; **leave to grow**.
-- **First ranunculus bouquet:** Sold for **$12** — founder notes this was the **first ranunculus bouquet** of the season (likely aligns with Glimmer-tier pricing; confirm SKU in Admin if logging formally).
+- **First ranunculus bouquet:** Sold for **$12** — **first ranunculus bouquet** of the season (likely Glimmer-tier; confirm SKU in Admin if logging formally).
 
 ### Stand / neighbor
 
-- A **neighbor left a jar** at the stand (gift / return — not a sale). Contents and pantry-SKU relevance **not yet specified**.
+- **Neighbor left an empty jar** at the stand — for founder to use (packaging / stand ops). Not a filled pantry item; not a sale.
+
+### Sale detail (confirmed)
+
+| Field | Value |
+| --- | --- |
+| Date | **2026-05-25** (founder: two days ago relative to 2026-05-27) |
+| Item | Ranunculus bouquet — first of season |
+| Amount | $12.00 |
+| Channel | Walk-up / stand |
+| Payment | **Cash** |
 
 ### Revenue follow-up (Gear 1)
 
-- [ ] Log **$12 ranunculus bouquet** in Admin → Settings → **Record walk-up sale** if not already entered (`itemName` e.g. “Ranunculus bouquet” or matching `publicName`).
-- [ ] Note payment method (cash / venmo / other): _[not yet provided]_
+- [ ] Log in Admin → Settings → **Record walk-up sale** if not already entered (`itemName`: “Ranunculus bouquet”; `paymentMethod`: cash; `saleDate`: 2026-05-25; `amount`: 12.00)
 - [ ] Reconcile shelf / optional `quantity` if that bouquet came off the stand
 
 ---
@@ -152,7 +161,7 @@ _Pre-open / mid-day / end-of-day checklist — not yet run for 2026-05-27._
 ## Content / photo opportunities
 
 - [x] Bouquet in hand / at stand — **first ranunculus bouquet** (sold; photo may be retrospective)
-- [ ] Pantry jar / process shot — neighbor left a jar; contents TBD
+- [ ] Pantry jar / process shot — neighbor left **empty jar** for stand use (logged; no photo yet)
 - [ ] Before/after harvest
 - Notes for caption (seasonal, no overpromise): _[not yet provided]_
 
@@ -164,7 +173,7 @@ Punch list after field truth — partial from founder notes.
 
 | Action | SKU / setting | Field | New intent |
 | --- | --- | --- | --- |
-| Log first ranunculus sale | _manual record_ | flowerSalesRecord | $12 — date ~2026-05-25/26 if not in Admin |
+| Log first ranunculus sale | _manual record_ | flowerSalesRecord | 2026-05-25 · $12 · cash · walk-up |
 | Peonies | — | — | Do not list until harvest-ready |
 
 ---
@@ -173,7 +182,7 @@ Punch list after field truth — partial from founder notes.
 
 | Time | Item (use publicName) | Amount | Method (cash/venmo/other) | Logged in Admin? |
 | --- | --- | --- | --- | --- |
-| ~2026-05-25/26 | Ranunculus bouquet (first of season) | $12.00 | _[cash/venmo/other — TBD]_ | [ ] confirm in Admin |
+| 2026-05-25 | Ranunculus bouquet (first of season) | $12.00 | **Cash** (walk-up) | [ ] confirm in Admin |
 
 ---
 
@@ -188,8 +197,8 @@ Punch list after field truth — partial from founder notes.
 ## End-of-day snapshot
 
 - Shelf empty? [ ] yes  [ ] partial  [ ] n/a  [ ] not checked
-- Field carryover for tomorrow: Cannabis monitoring; **ranunculus flush + peony bud watch**; log $12 sale in Admin if missing; note neighbor jar
-- One-line summary: **First ranunculus bouquet sold ($12); more ranunculus coming on; peony buds sizing up; neighbor left jar at stand.**
+- Field carryover for tomorrow: Cannabis monitoring; **ranunculus flush + peony bud watch**; log 2026-05-25 cash sale in Admin if missing
+- One-line summary: **First ranunculus bouquet — $12 cash walk-up 2026-05-25; more ranunculus coming on; peony buds sizing up; neighbor left empty jar for stand use.**
 
 ---
 
@@ -198,9 +207,9 @@ Punch list after field truth — partial from founder notes.
 | Truth | Status on 2026-05-27 |
 | --- | --- |
 | Garden | Partial — cannabis, ranunculus flush, peony buds logged |
-| Stand | Partial — neighbor jar noted; ranunculus sale |
+| Stand | Partial — empty jar for stand use; ranunculus walk-up sale |
 | Website (Sanity) | Not reviewed this cycle — no changes authorized by this pass |
-| Revenue | Partial — $12 ranunculus sale reported; Admin log unconfirmed |
+| Revenue | **2026-05-25 · $12 cash · ranunculus bouquet** — documented here; Admin entry still to confirm |
 
 ---
 
