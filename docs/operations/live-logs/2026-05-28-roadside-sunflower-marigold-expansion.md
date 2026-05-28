@@ -14,16 +14,18 @@ Founder planted a large additional batch of **sunflower** and **marigold** seed 
 
 This update expands the earlier 2026-05-28 sunflower roadside planting. It adds a much heavier sowing pattern and clarifies method: shallow trenches for sunflower seed, marigold seed scattered over/above those trenches, lightly covered and tamped.
 
+**Quantity backfill:** Founder later clarified this planting was approximately **500 marigold seeds** and **250 sunflower seeds** just planted.
+
 ---
 
 ## 2. Planting entries
 
 | Plant / item | Action | Amount / count | Source | Zone / location | Method | Truth state | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Sunflower seeds | Direct-sown | “A ton”; exact count unknown | Likely saved sunflower seed unless founder distinguishes from earlier batch | Lowest roadside point in yard below the flower stand | Dug trenches; sunflower seeds placed about 1/4 inch deep; lightly covered/tamped | Current active planting update | Track germination; confirm whether this is additional to earlier approx. 75 saved sunflower seeds or includes them |
-| Marigold seeds | Direct-sown | “A bunch”; exact count unknown | Seed source not specified | Lowest roadside point in yard below the flower stand | Sprinkled on top of sunflower trenches, covered with a little soil, light tamping | Current active planting update | Track surface germination; watch washout on slope and bird/ant activity |
-| Sunflower seeds | Direct-sown | “A ton”; exact count unknown | Likely saved sunflower seed unless founder distinguishes | From mid-roadside slope production bed near perennial shrubs up to top end of green plastic strip | Dug trenches; sunflower seeds about 1/4 inch deep; marigolds sprinkled above; lightly covered/tamped | Current active planting update | Track germination along gradient; note which trench bands establish best |
-| Marigold seeds | Direct-sown | “A bunch”; exact count unknown | Seed source not specified | From mid-roadside slope production bed near perennial shrubs up to top end of green plastic strip | Sprinkled above sunflower seed trenches; light cover/tamp | Current active planting update | Track as companion/edge filler; compare top vs mid-slope moisture and emergence |
+| Sunflower seeds | Direct-sown | Approx. 250 total across this expansion | Likely saved sunflower seed unless founder distinguishes from earlier batch | Lowest roadside point in yard below the flower stand | Dug trenches; sunflower seeds placed about 1/4 inch deep; lightly covered/tamped | Current active planting update; count backfilled by founder | Track germination; confirm whether this is additional to earlier approx. 75 saved sunflower seeds or includes them |
+| Marigold seeds | Direct-sown | Approx. 500 total across this expansion | Seed source not specified | Lowest roadside point in yard below the flower stand | Sprinkled on top of sunflower trenches, covered with a little soil, light tamping | Current active planting update; count backfilled by founder | Track surface germination; watch washout on slope and bird/ant activity |
+| Sunflower seeds | Direct-sown | Included in approx. 250 total across this expansion | Likely saved sunflower seed unless founder distinguishes | From mid-roadside slope production bed near perennial shrubs up to top end of green plastic strip | Dug trenches; sunflower seeds about 1/4 inch deep; marigolds sprinkled above; lightly covered/tamped | Current active planting update; count backfilled by founder | Track germination along gradient; note which trench bands establish best |
+| Marigold seeds | Direct-sown | Included in approx. 500 total across this expansion | Seed source not specified | From mid-roadside slope production bed near perennial shrubs up to top end of green plastic strip | Sprinkled above sunflower seed trenches; light cover/tamp | Current active planting update; count backfilled by founder | Track as companion/edge filler; compare top vs mid-slope moisture and emergence |
 
 ---
 
@@ -78,18 +80,22 @@ This update is connected to, but distinct from:
 - cosmos/sunflowers/marigolds planted at the back fresh-soil woodland-edge patch and back corner of the new guarded vegetable garden;
 - Temu unknown/tiny seed group planted between two black strips in Z2A.
 
-Do not merge the new “ton of sunflower and marigold seeds” into the earlier 75-sunflower count unless founder confirms the earlier 75 was included in this report.
+Do not merge the new **approx. 250 sunflower / 500 marigold** expansion into the earlier 75-sunflower count unless founder confirms the earlier 75 was included in this report.
 
 ---
 
 ## 7. Unresolved details
 
-- Approximate number of additional sunflower seeds in this expansion.
-- Approximate number of marigold seeds.
+- Whether this approx. 250 sunflower count is additional to the earlier approx. 75 saved sunflower seeds or includes them.
 - Whether sunflower seed source is the same saved-last-year sunflower seed as earlier update.
 - Whether lowest roadside point below flower stand already has a Z-ID or should receive one.
 - Whether the top end of green plastic strip needs a dedicated sub-zone.
 - Whether marigold seed was from saved seed or packet seed.
+
+Resolved details:
+
+- Approximate number of sunflower seeds in this expansion: **250**.
+- Approximate number of marigold seeds in this expansion: **500**.
 
 ---
 
@@ -120,8 +126,7 @@ Route this update to:
 Do not route this as:
 
 - stand-ready inventory;
-- exact seed count;
-- product availability;
+- exact product availability;
 - public claim;
 - Sanity mutation;
 - checkout or sales change.
