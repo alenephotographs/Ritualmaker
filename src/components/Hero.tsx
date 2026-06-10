@@ -2,9 +2,13 @@ import Link from "next/link";
 import type { SiteSettings } from "@/sanity/types";
 import { StandStatus } from "./StandStatus";
 import { RITUAL_BUNDLE_CUSTOMER_NOTE } from "@/lib/ritualBundle";
+import { isStandClosed, resolveHeroSubline, resolvePublicTagline } from "@/lib/standAvailability";
 
 export function Hero({ settings }: { settings: SiteSettings | null }) {
   const heroUrl = "/photos/field-mixed-tulips-cluster.jpg";
+  const standClosed = isStandClosed(settings?.standStatus);
+  const tagline = resolvePublicTagline(settings?.tagline, settings?.standStatus);
+  const subline = resolveHeroSubline(settings?.standStatus);
 
   return (
     <section className="relative flex min-h-[88vh] items-end overflow-hidden">
@@ -29,19 +33,17 @@ export function Hero({ settings }: { settings: SiteSettings | null }) {
           Self-serve stand · Hudson Valley
         </p>
         <h1 className="mt-4 max-w-4xl font-display text-5xl font-light text-cream md:text-7xl lg:text-8xl">
-          {settings?.tagline ?? "Fresh flowers in the neighborhood, 24/7"}
+          {tagline}
         </h1>
 
-        <p className="mt-5 max-w-xl text-base font-light text-cream/85 sm:text-lg">
-          38 Miller Hill Road — stop by the stand and buy what is fresh in inventory.
-        </p>
+        <p className="mt-5 max-w-xl text-base font-light text-cream/85 sm:text-lg">{subline}</p>
 
         <div className="mt-8 space-y-3">
           <Link
             href="/farm-stand#shop"
             className="inline-block bg-cream px-6 py-3 text-xs uppercase tracking-widest text-ink transition-colors hover:bg-stone"
           >
-            Shop
+            {standClosed ? "Shop shipped items" : "Shop"}
           </Link>
           <p className="max-w-md text-xs text-cream/70">{RITUAL_BUNDLE_CUSTOMER_NOTE}</p>
         </div>

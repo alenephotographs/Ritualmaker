@@ -15,6 +15,11 @@ import {
   shopProductDisplayTitle,
   shopProductHeroImageUrl,
 } from "@/lib/shopProduct";
+import {
+  canPurchaseProductWhenStandClosed,
+  STAND_CLOSED_CHECKOUT_ERROR,
+  validateCartForStandClosed,
+} from "@/lib/standAvailability";
 import { useShopCart } from "@/components/shop/ShopCartContext";
 
 async function readJsonSafe(response: Response) {
@@ -38,6 +43,8 @@ type BouquetGridProps = {
   flowerProducts?: FlowerProduct[];
   /** Shipped US checkout: hide stand-only promos and adjust copy. */
   shopMode?: "stand" | "shipped";
+  /** When true, stand-only items cannot be added or checked out. */
+  standClosed?: boolean;
   /** Link for “message before visiting” copy on stand pickup cards (e.g. Instagram). */
   standVisitInstagramUrl?: string;
 };
@@ -51,6 +58,7 @@ export function BouquetGrid({
   bouquets,
   flowerProducts = [],
   shopMode = "stand",
+  standClosed = false,
   standVisitInstagramUrl,
 }: BouquetGridProps) {
   const pathname = usePathname();
@@ -240,6 +248,10 @@ export function BouquetGrid({
 
   function addToCart(item: FlowerProduct) {
     setError(null);
+    if (standClosed && !canPurchaseProductWhenStandClosed(item)) {
+      setError(STAND_CLOSED_CHECKOUT_ERROR);
+      return;
+    }
     setCart((current) => {
       const existing = current.find((line) => line.item._id === item._id);
       if (existing) {
@@ -263,6 +275,14 @@ export function BouquetGrid({
   async function checkoutCart() {
     if (!cart.length) {
       setError("Add at least one stand item first.");
+      return;
+    }
+    const standCheck = validateCartForStandClosed(
+      cart.map((line) => line.item),
+      standClosed ? "closed" : "open",
+    );
+    if (!standCheck.ok) {
+      setError(standCheck.error);
       return;
     }
     if (shopMode === "shipped") {
@@ -343,9 +363,11 @@ export function BouquetGrid({
   if (!bouquets.length && !flowerProducts.length) {
     return (
       <p className="text-sm text-ink/50">
-        {shopMode === "shipped"
-          ? "Online shipping is not available yet — check back soon."
-          : "Nothing listed yet — check back."}
+        {standClosed
+          ? "The farm stand is closed for the season and no shipped items are listed online right now."
+          : shopMode === "shipped"
+            ? "Online shipping is not available yet — check back soon."
+            : "Nothing listed yet — check back."}
       </p>
     );
   }
@@ -469,6 +491,7 @@ export function BouquetGrid({
                         onAdd={addToCart}
                         shipped={shopMode === "shipped" && item.shipsNationwide === true}
                         showProductDebug={shopProductDebug}
+                        standClosed={standClosed}
                         standVisitInstagramUrl={standVisitInstagramUrl}
                       />
                     ))}
@@ -497,6 +520,7 @@ export function BouquetGrid({
                         onAdd={addToCart}
                         shipped={shopMode === "shipped" && item.shipsNationwide === true}
                         showProductDebug={shopProductDebug}
+                        standClosed={standClosed}
                         standVisitInstagramUrl={standVisitInstagramUrl}
                       />
                     ))}
@@ -543,6 +567,7 @@ export function BouquetGrid({
                         onAdd={addToCart}
                         shipped={shopMode === "shipped" && item.shipsNationwide === true}
                         showProductDebug={shopProductDebug}
+                        standClosed={standClosed}
                         standVisitInstagramUrl={standVisitInstagramUrl}
                       />
                     ))}
@@ -812,12 +837,14 @@ function FlowerProductCard({
   item,
   onAdd,
   shipped = false,
+  standClosed = false,
   showProductDebug = false,
   standVisitInstagramUrl,
 }: {
   item: FlowerProduct;
   onAdd: (item: FlowerProduct) => void;
   shipped?: boolean;
+  standClosed?: boolean;
   showProductDebug?: boolean;
   standVisitInstagramUrl?: string;
 }) {
@@ -825,6 +852,7 @@ function FlowerProductCard({
   const detailHref = slug ? `/farm-stand/product/${encodeURIComponent(slug)}` : null;
   const displayTitle = shopProductDisplayTitle(item);
   const heroUrl = shopProductHeroImageUrl(item);
+  const purchaseBlocked = standClosed && !canPurchaseProductWhenStandClosed(item);
 
   return (
     <article className="flex w-full max-w-full flex-col border border-ink/10 bg-cream sm:max-w-[400px] sm:justify-self-center">
@@ -919,10 +947,11 @@ function FlowerProductCard({
           </span>
           <button
             type="button"
+            disabled={purchaseBlocked}
             onClick={() => onAdd(item)}
             className="bg-ink px-5 py-2.5 text-xs uppercase tracking-widest text-cream transition-colors hover:bg-charcoal disabled:cursor-not-allowed disabled:bg-ink/20"
           >
-            Add to cart
+            {purchaseBlocked ? "Stand closed" : "Add to cart"}
           </button>
         </div>
       </div>

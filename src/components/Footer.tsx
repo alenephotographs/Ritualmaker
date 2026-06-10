@@ -4,6 +4,7 @@ import { siteSettingsQuery } from "@/sanity/queries";
 import type { SiteSettings } from "@/sanity/types";
 import { Wordmark } from "@/components/Logo";
 import { resolveContactLinks } from "@/lib/siteContact";
+import { resolvePublicTagline } from "@/lib/standAvailability";
 
 export async function Footer() {
   const s = await sanityClient
@@ -19,7 +20,7 @@ export async function Footer() {
             <Wordmark className="h-8 max-w-full lg:h-9" />
           </Link>
           <p className="mt-4 text-sm text-ink/60">
-            {s?.tagline ?? "Fresh flowers in the neighborhood, 24/7."}
+            {resolvePublicTagline(s?.tagline, s?.standStatus)}
           </p>
           {s?.address && (
             <p className="mt-4 text-sm text-ink/50">{s.address}</p>

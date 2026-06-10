@@ -12,6 +12,7 @@ import { InstagramFeedSection } from "@/components/InstagramFeedSection";
 import { FAQSection } from "@/components/FAQSection";
 import { getRecentInstagramMedia } from "@/lib/instagram";
 import { resolveContactLinks } from "@/lib/siteContact";
+import { isStandClosed, resolveHomeDescription } from "@/lib/standAvailability";
 
 export const revalidate = 60;
 
@@ -23,13 +24,12 @@ export default async function HomePage() {
   ]);
 
   const contact = resolveContactLinks(settings);
+  const standClosed = isStandClosed(settings?.standStatus);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: settings?.title ?? "Ritualmaker",
-    description:
-      settings?.description ??
-      "Self-serve flowers, Hudson Valley — 24/7.",
+    description: resolveHomeDescription(settings?.description, settings?.standStatus),
     url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com",
     address: {
       "@type": "PostalAddress",
@@ -40,12 +40,24 @@ export default async function HomePage() {
     sameAs: [contact.instagramUrl, contact.facebookUrl, contact.googleProfileUrl].filter(
       Boolean,
     ) as string[],
-    openingHoursSpecification: {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      opens: "00:00",
-      closes: "23:59",
-    },
+    ...(standClosed
+      ? {}
+      : {
+          openingHoursSpecification: {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ],
+            opens: "00:00",
+            closes: "23:59",
+          },
+        }),
   };
 
   return (

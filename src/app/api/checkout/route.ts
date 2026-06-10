@@ -3,12 +3,17 @@ import type Stripe from "stripe";
 import { sanityClient } from "@/sanity/client";
 import { getStripe } from "@/lib/stripe";
 import { farmLabel, sizeLabel } from "@/lib/format";
-import type { Bouquet, FlowerProduct, PantryItem } from "@/sanity/types";
+import type { Bouquet, FlowerProduct, PantryItem, SiteSettings } from "@/sanity/types";
 import {
   oneBouquetByIdQuery,
   oneFlowerProductByIdQuery,
   onePantryItemByIdQuery,
+  siteSettingsQuery,
 } from "@/sanity/queries";
+import {
+  resolveFulfillmentMode,
+  validateCartForStandClosed,
+} from "@/lib/standAvailability";
 import { getCheapestUspsRateCents, isShippoConfigured, type ShippoAddressInput } from "@/lib/shippo";
 import {
   computeRitualBundleDiscountCents,
@@ -226,6 +231,9 @@ export async function POST(req: Request) {
   }
 
   try {
+    const settings = await sanityClient.fetch<SiteSettings | null>(siteSettingsQuery);
+    const standStatus = settings?.standStatus;
+
     if (
       body.itemType &&
       body.itemType !== "bouquet" &&
@@ -258,6 +266,14 @@ export async function POST(req: Request) {
           item,
           quantity: Math.max(1, Math.min(99, Math.floor(rawLine.quantity ?? 1))),
         });
+      }
+
+      const standCartCheck = validateCartForStandClosed(
+        lines.map((line) => line.item),
+        standStatus,
+      );
+      if (!standCartCheck.ok) {
+        return NextResponse.json({ error: standCartCheck.error }, { status: 409 });
       }
 
       const hasFlowerForBundle = lines.some((line) => isBouquetCategory(line.item.category));
@@ -336,6 +352,7 @@ export async function POST(req: Request) {
         ritualBundleDiscountCents: String(discountCents),
         ritualBundleDiscountApplied: discountCents > 0 ? "yes" : "no",
         ctaVariant: body.ctaVariant ?? "",
+        fulfillmentMode: resolveFulfillmentMode(lines.map((line) => line.item)),
       };
 
       const transferDestination = transferDestinationForFlowerProducts(lines.map((line) => line.item));
@@ -415,6 +432,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (itemType === "flowerProduct") {
+      const standItemCheck = validateCartForStandClosed([item as FlowerProduct], standStatus);
+      if (!standItemCheck.ok) {
+        return NextResponse.json({ error: standItemCheck.error }, { status: 409 });
+      }
+    }
+
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
 
@@ -458,6 +482,10 @@ export async function POST(req: Request) {
       vendorId: item.vendorId ?? "",
       vendorName: item.vendorName ?? "",
       ctaVariant: body.ctaVariant ?? "",
+      fulfillmentMode:
+        itemType === "flowerProduct"
+          ? resolveFulfillmentMode([item as FlowerProduct])
+          : "pickup",
     };
 
     const transferDestinationSingle =
