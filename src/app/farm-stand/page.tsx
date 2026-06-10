@@ -5,6 +5,11 @@ import type { FlowerProduct, SiteSettings } from "@/sanity/types";
 import { ContactOutreachBlock } from "@/components/ContactOutreachBlock";
 import { BouquetGrid } from "@/components/BouquetGrid";
 import { StandStatus } from "@/components/StandStatus";
+import {
+  filterProductsForStandStatus,
+  isStandClosed,
+  STAND_CLOSED_SHOP_NOTICE,
+} from "@/lib/standAvailability";
 
 export const revalidate = 60;
 
@@ -27,13 +32,24 @@ export default async function FarmStandPage() {
   if (settled[1].status === "fulfilled") flowerProducts = settled[1].value;
   else console.error("[farm-stand] products fetch failed", settled[1].reason);
 
-  const flowersCount = flowerProducts.filter((p) => p.category !== "pantry").length;
-  const pantryCount = flowerProducts.filter((p) => p.category === "pantry").length;
+  const standClosed = isStandClosed(settings?.standStatus);
+  const shopProducts = filterProductsForStandStatus(flowerProducts, settings?.standStatus);
+  const flowersCount = shopProducts.filter((p) => p.category !== "pantry").length;
+  const pantryCount = shopProducts.filter((p) => p.category === "pantry").length;
   const c = resolveContactLinks(settings);
 
   return (
     <div className="mx-auto w-full max-w-screen-2xl px-6 py-16 pb-20 lg:px-8 lg:py-24">
       <StandStatus settings={settings} />
+      {standClosed ? (
+        <div
+          className="mt-6 max-w-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-ink/80"
+          role="status"
+        >
+          <p className="font-medium text-ink">Farm stand closed for the season</p>
+          <p className="mt-1 text-ink/70">{STAND_CLOSED_SHOP_NOTICE}</p>
+        </div>
+      ) : null}
       <p className="mt-6 max-w-xl text-sm text-ink/60">
         Browse bouquets and garden pantry items. Items marked for nationwide shipping can check out with
         USPS rates; everything else is for local pickup or the stand. Stand flowers are first come first
@@ -80,8 +96,9 @@ export default async function FarmStandPage() {
         ) : null}
         <BouquetGrid
           bouquets={[]}
-          flowerProducts={flowerProducts}
+          flowerProducts={shopProducts}
           shopMode="shipped"
+          standClosed={standClosed}
           standVisitInstagramUrl={c.instagramUrl}
         />
       </div>

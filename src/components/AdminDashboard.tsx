@@ -1387,6 +1387,36 @@ export function AdminDashboard({
         ))}
       </div>
 
+      {isOwner ? (
+        <AdminCard
+          title="Gear 1 — before opening shop or stand"
+          description="Manual checklist (Pass 04C). No automation — verify in Sanity Studio and a test checkout."
+        >
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/75">
+            <li>
+              <strong className="font-medium text-ink">Stand status</strong> — Site Settings →
+              open, restocking, or closed for the season
+            </li>
+            <li>
+              <strong className="font-medium text-ink">Product toggles</strong> — each SKU{" "}
+              <em>active</em> + <em>in stock</em> matches what you can actually sell
+            </li>
+            <li>
+              <strong className="font-medium text-ink">Shipped vs stand</strong> — nationwide
+              shipping only when <em>Ships nationwide</em> is on and Shippo env is configured
+            </li>
+            <li>
+              <strong className="font-medium text-ink">Checkout test</strong> — one stand pickup
+              path (stand open) and one shipped path when listed
+            </li>
+          </ol>
+          <p className={`${adminHelperClass} mt-4`}>
+            Ops reference:{" "}
+            <code className="text-xs">docs/operations/ritualmaker-stand-availability-workflow-v0-1.md</code>
+          </p>
+        </AdminCard>
+      ) : null}
+
       <AdminCard
         title="Quick stock — core bouquets"
         description="Fast price and availability for Glimmer, Blessing, and Abundance. Scroll horizontally on small screens."
