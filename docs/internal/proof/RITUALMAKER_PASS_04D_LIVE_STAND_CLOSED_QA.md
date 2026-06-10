@@ -1,7 +1,7 @@
 # Ritualmaker — Pass 04D Live Stand-Closed QA Proof
 
-**Date:** 2026-06-10  
-**Base:** `main` @ `58bde864af3fea6b9fff5b5ef9fe42ac0f89d378` (PR #11 merged)  
+**Date:** 2026-06-10
+**Base:** `main` @ `58bde864af3fea6b9fff5b5ef9fe42ac0f89d378` (PR #11 merged)
 **Mode:** Live-data verification + proof artifacts (no app code changes)
 
 ---
@@ -47,7 +47,7 @@
 | `botanical-sugar` | Botanical Sugar | yes |
 | `herbal-tea` | Herbal Tea | yes |
 
-Stand-only proof slug: **`glimmer`**  
+Stand-only proof slug: **`glimmer`**
 Shipped proof slug: **`garden-oil`**
 
 ---
