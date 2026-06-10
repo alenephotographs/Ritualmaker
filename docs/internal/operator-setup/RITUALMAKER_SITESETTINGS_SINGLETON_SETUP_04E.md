@@ -1,7 +1,7 @@
 # Ritualmaker — Site Settings singleton setup (Pass 04E)
 
-**Audience:** Founder / operator  
-**Mode:** CMS data setup — not a code change  
+**Audience:** Founder / operator
+**Mode:** CMS data setup — not a code change
 **Related:** PR #11 stand-closed boundaries · Pass 04D live QA proof
 
 ---
@@ -76,24 +76,24 @@ Expect: `_id` is `siteSettings` and `standStatus` matches what you set.
 
 ## 4. Founder instructions (step-by-step)
 
-1. **Open Studio for the production dataset**  
+1. **Open Studio for the production dataset**
    Go to https://ritualmakerny.com/studio and sign in. Confirm you are editing **`vr38n49n` / `production`** (check project/dataset in Studio settings or Vision — not `qjcf272e` / `ritualmaker`).
 
-2. **Create or locate Site Settings**  
-   - If no `siteSettings` doc exists: create a new **Site Settings** document.  
-   - Set document ID to **`siteSettings`** when prompted (or use Sanity Manage / API if Studio assigns a random ID — then recreate with the correct ID).  
+2. **Create or locate Site Settings**
+   - If no `siteSettings` doc exists: create a new **Site Settings** document.
+   - Set document ID to **`siteSettings`** when prompted (or use Sanity Manage / API if Studio assigns a random ID — then recreate with the correct ID).
    - If a doc exists with a different `_id`, prefer one canonical doc with `_id: "siteSettings"` and remove duplicates after verifying the public GROQ query above.
 
 3. **Fill recommended fields** (section 3) and set **`standStatus`** to your intended public state.
 
 4. **Publish** the document (not draft-only).
 
-5. **Wait for cache / revalidate**  
+5. **Wait for cache / revalidate**
    `/farm-stand` uses ISR with **`revalidate = 60`** seconds. Allow up to ~1 minute, or hard-refresh. If still stale, trigger a Vercel **production redeploy** and record the deploy SHA.
 
-6. **Test on production**  
-   - https://ritualmakerny.com/farm-stand  
-   - https://ritualmakerny.com/farm-stand/product/glimmer (stand-only)  
+6. **Test on production**
+   - https://ritualmakerny.com/farm-stand
+   - https://ritualmakerny.com/farm-stand/product/glimmer (stand-only)
    - https://ritualmakerny.com/farm-stand/product/garden-oil (shipped)
 
 7. **Restore intended public state** after any closed-state test (usually `standStatus: "open"`).
