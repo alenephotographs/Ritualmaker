@@ -2,6 +2,16 @@
 
 The Next.js + Sanity + Stripe rebuild of [ritualmakerny.com](https://ritualmakerny.com), replacing the prior Webflow site with no lapse to the QR-code stand checkout flow.
 
+## Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [`docs/internal/00_SYSTEM_INDEX.md`](./docs/internal/00_SYSTEM_INDEX.md) | **System index** — domains, blockers, GitHub routing, Cursor→ChatGPT handoff |
+| [`docs/internal/01_ARCHITECTURE_MAP.md`](./docs/internal/01_ARCHITECTURE_MAP.md) | Routes, APIs, Sanity vs Supabase split |
+| [`BUILD_NOTES.md`](./BUILD_NOTES.md) | Build and Vercel env requirements |
+| [`docs/cutover.md`](./docs/cutover.md) | Webflow → Vercel cutover (stand QR safety) |
+| [`.env.example`](./.env.example) | Environment variable reference |
+
 ## Stack
 
 - **Framework:** Next.js 14 (App Router) + TypeScript
@@ -60,24 +70,24 @@ See [`docs/cutover.md`](./docs/cutover.md).
 
 ## Project structure
 
+See [`docs/internal/01_ARCHITECTURE_MAP.md`](./docs/internal/01_ARCHITECTURE_MAP.md) for the full route and data map. Core layout:
+
 ```
 src/
   app/
-    layout.tsx                root layout, fonts, header/footer
-    page.tsx                  long-scroll home
-    shop/page.tsx             dedicated shop
-    gallery/page.tsx          archive.boutique gallery
+    page.tsx                  home
+    farm-stand/               shop + product pages (/shop redirects here)
+    photography/              portfolio
+    on-location/              weddings / Live Collage™
+    proposal/[token]/         hosted client proposals (Supabase)
     checkout/{success,cancel}
-    api/checkout/route.ts     creates Stripe Checkout Sessions
-    api/stripe/webhook/       handles checkout.session.completed
-    studio/                   embedded Sanity Studio at /studio
-  components/                 React UI
-  lib/                        formatters + Stripe singleton
-  sanity/
-    client.ts                 Sanity client + image URL builder
-    env.ts                    runtime env validation
-    queries.ts                GROQ queries
-    schemas/                  document schemas
-    types.ts                  TypeScript types for queried docs
-sanity.config.ts              Studio configuration
+    admin/                    sign-in, events CRM, (portal) dashboard
+    api/checkout/             Stripe Checkout Sessions
+    api/stripe/webhook/       checkout.session.completed
+    studio/                   embedded Sanity Studio
+  components/
+  lib/                        db (Supabase), stripe, client documents, pdf
+  sanity/                     schemas, queries, clients
+supabase/migrations/          Postgres schema
+docs/internal/              system index + architecture map
 ```
