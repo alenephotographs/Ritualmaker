@@ -388,6 +388,7 @@ export function clientDocumentPayloadToRecord(
     stripePaymentLinkDepositId: p.stripePaymentLinkDepositId,
     stripePaymentLinkBalanceId: p.stripePaymentLinkBalanceId,
     paymentLinksStale: false,
+    proposalPublicTokenExpiresAt: undefined,
     proposalLinkDisabled: false,
     proposalLifecycleStatus: "draft" as ProposalLifecycleStatus,
     proposalViewCount: 0,
