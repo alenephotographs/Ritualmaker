@@ -105,6 +105,7 @@ export type ClientDocumentRecord = {
   proposalPdfGeneratedAt?: string;
   /** Unguessable token for /proposal/[token]; admin-rotated. */
   proposalPublicToken?: string;
+  proposalPublicTokenExpiresAt?: string;
   proposalLinkDisabled: boolean;
   proposalLifecycleStatus: ProposalLifecycleStatus;
   proposalFirstViewedAt?: string;

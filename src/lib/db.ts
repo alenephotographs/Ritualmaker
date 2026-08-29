@@ -688,6 +688,7 @@ type ClientDocumentRow = {
   payment_links_stale: boolean | null;
   proposal_pdf_generated_at: string | null;
   proposal_public_token: string | null;
+  proposal_public_token_expires_at: string | null;
   proposal_link_disabled: boolean | null;
   proposal_lifecycle_status: string | null;
   proposal_first_viewed_at: string | null;
@@ -860,6 +861,8 @@ function mapClientDocument(r: ClientDocumentRow): ClientDocumentRecord {
     paymentLinksStale,
     proposalPdfGeneratedAt: r.proposal_pdf_generated_at ?? undefined,
     proposalPublicToken: r.proposal_public_token ?? undefined,
+    proposalPublicTokenExpiresAt:
+      r.proposal_public_token_expires_at ?? undefined,
     proposalLinkDisabled: r.proposal_link_disabled ?? false,
     proposalLifecycleStatus: parseProposalLifecycleStatus(
       r.proposal_lifecycle_status,
@@ -992,6 +995,8 @@ async function persistClientDocument(
         existing.lastPaymentSnapshotBalanceDueDate ?? null,
       proposal_pdf_generated_at: existing.proposalPdfGeneratedAt ?? null,
       proposal_public_token: existing.proposalPublicToken ?? null,
+      proposal_public_token_expires_at:
+        existing.proposalPublicTokenExpiresAt ?? null,
       proposal_link_disabled: existing.proposalLinkDisabled ?? false,
       proposal_lifecycle_status: existing.proposalLifecycleStatus,
       proposal_first_viewed_at: existing.proposalFirstViewedAt ?? null,
@@ -1055,6 +1060,7 @@ export async function insertClientDocument(
       stripe_payment_link_balance_id: input.stripePaymentLinkBalanceId ?? null,
       payment_links_stale: false,
       proposal_link_disabled: false,
+      proposal_public_token_expires_at: null,
       proposal_lifecycle_status: "draft",
       proposal_view_count: 0,
       document_type: input.documentType,
@@ -1413,7 +1419,14 @@ export async function getClientDocumentByPublicToken(
     .eq("proposal_link_disabled", false)
     .maybeSingle();
   if (error || !data) return null;
-  return mapClientDocument(data as unknown as ClientDocumentRow);
+  const mapped = mapClientDocument(data as unknown as ClientDocumentRow);
+  if (
+    mapped.proposalPublicTokenExpiresAt &&
+    new Date(mapped.proposalPublicTokenExpiresAt).getTime() <= Date.now()
+  ) {
+    return null;
+  }
+  return mapped;
 }
 
 export async function incrementProposalViewByToken(
@@ -1476,12 +1489,14 @@ export async function rotateProposalPublicTokenForAdmin(
   const existing = await getClientDocumentById(id);
   if (!existing) return null;
   const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
   const supabase = getServiceSupabase();
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("client_documents")
     .update({
       proposal_public_token: token,
+      proposal_public_token_expires_at: expiresAt,
       proposal_link_disabled: false,
       updated_at: now,
     })
@@ -1508,6 +1523,14 @@ export async function setProposalLinkDisabledForAdmin(
     const cur = await getClientDocumentById(id);
     if (cur?.proposalPublicToken) {
       patch.proposal_lifecycle_status = "sent";
+      if (
+        !cur.proposalPublicTokenExpiresAt ||
+        new Date(cur.proposalPublicTokenExpiresAt).getTime() <= Date.now()
+      ) {
+        patch.proposal_public_token_expires_at = new Date(
+          Date.now() + 1000 * 60 * 60 * 24 * 30,
+        ).toISOString();
+      }
     } else {
       patch.proposal_lifecycle_status = "draft";
     }
@@ -1567,4 +1590,21 @@ export async function adminSetProposalLifecycleStatus(
     .maybeSingle();
   if (error || !data) return null;
   return mapClientDocument(data as unknown as ClientDocumentRow);
+}
+
+export async function claimStripeWebhookEvent(
+  eventId: string,
+  eventType: string,
+): Promise<boolean> {
+  const id = eventId.trim();
+  if (!id) return false;
+  const supabase = getServiceSupabase();
+  const { error } = await supabase.from("processed_stripe_events").insert({
+    event_id: id,
+    event_type: eventType,
+  });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  console.error("[stripe] failed claiming webhook event", error);
+  throw error;
 }

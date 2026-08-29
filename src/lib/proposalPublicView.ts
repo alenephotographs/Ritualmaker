@@ -28,6 +28,9 @@ export type PublicProposalViewModel = {
   proposalLastViewedAt?: string;
   proposalViewCount: number;
   proposalLinkDisabled: boolean;
+  invoiceEnabled: boolean;
+  invoiceAvailable: boolean;
+  invoiceStatus?: string;
   depositPaidAt?: string;
   balancePaidAt?: string;
   scopeSections: ReturnType<typeof buildPublicScopeSections>;
@@ -66,6 +69,11 @@ export function toPublicProposalView(
     proposalLastViewedAt: doc.proposalLastViewedAt,
     proposalViewCount: doc.proposalViewCount,
     proposalLinkDisabled: doc.proposalLinkDisabled,
+    invoiceEnabled: doc.documentType === "invoice",
+    invoiceAvailable: Boolean(
+      doc.stripeInvoicePdfUrl?.trim() || doc.stripeInvoiceUrl?.trim(),
+    ),
+    invoiceStatus: doc.stripeInvoiceStatus,
     depositPaidAt: doc.depositPaidAt,
     balancePaidAt: doc.balancePaidAt,
     scopeSections: buildPublicScopeSections(

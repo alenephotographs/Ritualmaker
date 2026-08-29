@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import {
+  claimStripeWebhookEvent,
+  getClientDocumentById,
   markClientDocumentStripePayment,
   setClientDocumentStripeInvoiceStatus,
   updateVendorFromStripeAccount,
 } from "@/lib/db";
+import { sendPaymentNotificationEmail } from "@/lib/email/paymentNotifications";
 import { hasSupabaseService } from "@/lib/supabase/service";
 import { hasSanityWriteClient, sanityWriteClient } from "@/sanity/writeClient";
 import { trackUxEvent } from "@/lib/uxAnalytics";
@@ -59,6 +62,50 @@ async function syncInvoiceStatusToEventOrder(invoice: Stripe.Invoice) {
     .commit();
 }
 
+function siteOrigin(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ritualmakerny.com").replace(
+    /\/$/,
+    "",
+  );
+}
+
+function remainingBalanceCents(doc: {
+  paymentDepositPaid: boolean;
+  paymentBalancePaid: boolean;
+  proposalTotalCents?: number | null;
+  depositAmountCents?: number | null;
+}): number {
+  const total = doc.proposalTotalCents ?? 0;
+  const deposit = doc.depositAmountCents ?? 0;
+  if (doc.paymentDepositPaid && doc.paymentBalancePaid) return 0;
+  if (doc.paymentDepositPaid) return Math.max(0, total - deposit);
+  return total;
+}
+
+async function notifyClientDocumentPayment(input: {
+  clientDocumentId: string;
+  paymentType: "deposit" | "balance" | "full" | "invoice";
+  amountPaidCents: number;
+  proposalToken?: string;
+}) {
+  const doc = await getClientDocumentById(input.clientDocumentId);
+  if (!doc) return;
+
+  const token = input.proposalToken?.trim() || doc.proposalPublicToken;
+  const origin = siteOrigin();
+  await sendPaymentNotificationEmail({
+    clientName: doc.clientName,
+    eventType: doc.eventType,
+    eventDate: doc.eventDate,
+    paymentType: input.paymentType,
+    amountPaidCents: input.amountPaidCents,
+    proposalTotalCents: doc.proposalTotalCents ?? 0,
+    remainingBalanceCents: remainingBalanceCents(doc),
+    adminEventUrl: `${origin}/admin/events/${doc.id}`,
+    clientProposalUrl: token ? `${origin}/proposal/${token}` : origin,
+  });
+}
+
 export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature");
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -77,10 +124,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  if (hasSupabaseService()) {
+    try {
+      const claimed = await claimStripeWebhookEvent(event.id, event.type);
+      if (!claimed) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+    } catch {
+      return NextResponse.json(
+        { error: "Could not claim webhook event" },
+        { status: 500 },
+      );
+    }
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       try {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (session.payment_status !== "paid") {
+          console.log("[stripe] checkout completed without paid status", {
+            id: session.id,
+            payment_status: session.payment_status,
+          });
+          break;
+        }
         if (hasSupabaseService()) {
           try {
             const meta = await resolveProposalPaymentMeta(stripe, session);
@@ -90,18 +158,35 @@ export async function POST(req: Request) {
                 meta.paymentRole === "deposit" ||
                 meta.paymentRole === "balance"
               ) {
-                await markClientDocumentStripePayment(
+                const ok = await markClientDocumentStripePayment(
                   meta.clientDocumentId,
                   meta.paymentRole === "deposit" ? "deposit" : "balance",
                   { amountTotalCents: amount },
                 );
+                if (ok) {
+                  await notifyClientDocumentPayment({
+                    clientDocumentId: meta.clientDocumentId,
+                    paymentType:
+                      meta.paymentRole === "deposit" ? "deposit" : "balance",
+                    amountPaidCents: amount ?? 0,
+                    proposalToken: session.metadata?.proposalToken,
+                  });
+                }
                 console.log("[stripe] client document payment", meta);
               } else if (meta.paymentRole === "full") {
-                await markClientDocumentStripePayment(
+                const ok = await markClientDocumentStripePayment(
                   meta.clientDocumentId,
                   "full",
                   { amountTotalCents: amount },
                 );
+                if (ok) {
+                  await notifyClientDocumentPayment({
+                    clientDocumentId: meta.clientDocumentId,
+                    paymentType: "full",
+                    amountPaidCents: amount ?? 0,
+                    proposalToken: session.metadata?.proposalToken,
+                  });
+                }
                 console.log("[stripe] client document full payment", meta);
               }
             }
@@ -223,6 +308,22 @@ export async function POST(req: Request) {
               invoice.metadata?.event_order_id?.trim();
             if (docId) {
               await setClientDocumentStripeInvoiceStatus(docId, "paid");
+              await markClientDocumentStripePayment(docId, "full");
+              const shouldNotify = await claimStripeWebhookEvent(
+                `invoice-notification:${invoice.id}`,
+                event.type,
+              );
+              if (shouldNotify) {
+                const amountPaid =
+                  typeof invoice.amount_paid === "number"
+                    ? invoice.amount_paid
+                    : invoice.total ?? 0;
+                await notifyClientDocumentPayment({
+                  clientDocumentId: docId,
+                  paymentType: "invoice",
+                  amountPaidCents: amountPaid,
+                });
+              }
               console.log("[stripe] client document invoice paid", docId);
             }
           }

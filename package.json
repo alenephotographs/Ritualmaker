@@ -27,6 +27,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "resend": "^6.12.3",
     "sanity": "^3.69.0",
     "stripe": "^17.4.0",
     "styled-components": "^6.1.13"

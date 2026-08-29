@@ -40,6 +40,7 @@ const IMMEDIATE_PATCH_KEYS = new Set([
   "paymentDepositPaid",
   "paymentBalancePaid",
   "paymentDueDate",
+  "documentType",
 ]);
 
 function centsFromDollarsInput(n: number): number {
@@ -239,6 +240,11 @@ export function EventOrderAdmin({
     return `${origin}/proposal/${tok}`;
   }, [doc.proposalPublicToken]);
 
+  const hostedLinkExpired = useMemo(() => {
+    if (!doc.proposalPublicTokenExpiresAt) return false;
+    return new Date(doc.proposalPublicTokenExpiresAt).getTime() <= Date.now();
+  }, [doc.proposalPublicTokenExpiresAt]);
+
   async function runStripe(
     fn: () => Promise<Response>,
     onJson: (d: ClientDocumentRecord) => void,
@@ -416,12 +422,21 @@ export function EventOrderAdmin({
             (doc.paymentBalancePaid || balanceCents < 50) ? (
               <Badge tone="ok">Paid in full</Badge>
             ) : null}
-            {doc.proposalPublicToken && !doc.proposalLinkDisabled ? (
+            {doc.proposalPublicToken && !doc.proposalLinkDisabled && !hostedLinkExpired ? (
               <Badge tone="ok">Hosted proposal live</Badge>
             ) : doc.proposalPublicToken && doc.proposalLinkDisabled ? (
-              <Badge tone="bad">Hosted link disabled</Badge>
+              <Badge tone="bad">Hosted link revoked</Badge>
+            ) : doc.proposalPublicToken && hostedLinkExpired ? (
+              <Badge tone="bad">Hosted link expired</Badge>
             ) : (
               <Badge>Hosted proposal not set up</Badge>
+            )}
+            {doc.stripeInvoiceUrl || doc.stripeInvoicePdfUrl ? (
+              <Badge tone="ok">Invoice available to client</Badge>
+            ) : doc.documentType === "invoice" ? (
+              <Badge tone="warn">Client can generate invoice</Badge>
+            ) : (
+              <Badge>Client invoice off</Badge>
             )}
             <Badge tone="neutral">
               Workflow: {derivedLifecycle.replace(/_/g, " ")}
@@ -445,9 +460,10 @@ export function EventOrderAdmin({
             Client portal
           </h2>
           <p className="mb-6 text-sm leading-relaxed text-ink/55">
-            Send this link to your client (no login). They review, approve, and pay on
-            Ritualmaker with Stripe Checkout — amounts always match the numbers above.
-            Optional legacy Stripe Payment Links and PDF export are in Payment tools.
+            Generate a temporary private link for this client. They review, approve,
+            download documents, and pay on Ritualmaker with Stripe Checkout - amounts
+            always match the numbers above. Optional legacy Stripe Payment Links stay
+            in Payment tools.
           </p>
           {!process.env.NEXT_PUBLIC_SITE_URL ? (
             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-950">
@@ -491,12 +507,12 @@ export function EventOrderAdmin({
               className="rounded-full bg-ink px-4 py-2 text-xs font-medium text-white disabled:opacity-40"
             >
               {doc.proposalPublicToken
-                ? "Regenerate client link (invalidates old URL)"
-                : "Generate client proposal link"}
+                ? "Regenerate temporary client link"
+                : "Generate temporary client link"}
             </button>
             <button
               type="button"
-              disabled={proposalPortalBusy || !hostedProposalUrl}
+              disabled={proposalPortalBusy || !hostedProposalUrl || hostedLinkExpired}
               onClick={() => void copyText(hostedProposalUrl)}
               className="rounded-full border border-ink/15 px-4 py-2 text-xs text-ink/80 disabled:opacity-40"
             >
@@ -504,7 +520,7 @@ export function EventOrderAdmin({
             </button>
             <button
               type="button"
-              disabled={proposalPortalBusy || !hostedProposalUrl}
+              disabled={proposalPortalBusy || !hostedProposalUrl || hostedLinkExpired}
               onClick={() =>
                 window.open(hostedProposalUrl, "_blank", "noopener,noreferrer")
               }
@@ -554,11 +570,22 @@ export function EventOrderAdmin({
                 }
                 className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-900 disabled:opacity-40"
               >
-                Disable hosted link
+                Revoke client link
               </button>
             )}
           </div>
           <div className="grid gap-3 border-t border-ink/8 pt-6 text-xs text-ink/60 sm:grid-cols-2">
+            <p>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-ink/35">
+                Link expires
+              </span>
+              <br />
+              <span className="text-sm text-ink">
+                {doc.proposalPublicTokenExpiresAt
+                  ? new Date(doc.proposalPublicTokenExpiresAt).toLocaleString()
+                  : "Generate a link to start the 30-day window"}
+              </span>
+            </p>
             <p>
               <span className="text-[10px] font-medium uppercase tracking-wider text-ink/35">
                 First opened
@@ -601,24 +628,29 @@ export function EventOrderAdmin({
             </p>
             <p>
               <span className="text-[10px] font-medium uppercase tracking-wider text-ink/35">
-                Deposit paid
+                Payment status
               </span>
               <br />
               <span className="text-sm text-ink">
-                {doc.depositPaidAt
-                  ? new Date(doc.depositPaidAt).toLocaleString()
-                  : "—"}
+                {doc.paymentDepositPaid &&
+                (doc.paymentBalancePaid || balanceCents < 50)
+                  ? "Paid in full"
+                  : doc.paymentDepositPaid
+                    ? "Deposit paid, balance due"
+                    : "No website payment received"}
               </span>
             </p>
             <p>
               <span className="text-[10px] font-medium uppercase tracking-wider text-ink/35">
-                Balance paid
+                Invoice
               </span>
               <br />
               <span className="text-sm text-ink">
-                {doc.balancePaidAt
-                  ? new Date(doc.balancePaidAt).toLocaleString()
-                  : "—"}
+                {doc.stripeInvoiceUrl || doc.stripeInvoicePdfUrl
+                  ? `Available (${doc.stripeInvoiceStatus ?? "open"})`
+                  : doc.documentType === "invoice"
+                    ? "Client generation enabled"
+                    : "Not enabled for client"}
               </span>
             </p>
           </div>
@@ -698,9 +730,9 @@ export function EventOrderAdmin({
             </div>
           </div>
           <p className="mt-4 text-[11px] leading-relaxed text-ink/40">
-            Regenerating the link invalidates the old URL. Checkout sessions from
-            this page always use current totals; outdated amounts cannot clear
-            as paid.
+            Regenerating the link invalidates the old URL and starts a fresh 30-day
+            window. Checkout sessions from this page always use current totals;
+            outdated amounts cannot clear as paid.
           </p>
         </section>
 
@@ -775,6 +807,21 @@ export function EventOrderAdmin({
                 <option value="booked">Booked</option>
                 <option value="complete">Complete</option>
                 <option value="declined">Declined</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Client invoice access</label>
+              <select
+                className={fieldClass}
+                value={doc.documentType}
+                onChange={(e) => {
+                  const v = e.target.value as ClientDocumentRecord["documentType"];
+                  setDoc((d) => ({ ...d, documentType: v }));
+                  queuePatch({ documentType: v });
+                }}
+              >
+                <option value="proposal">Proposal only</option>
+                <option value="invoice">Corporate invoice enabled</option>
               </select>
             </div>
             <div>

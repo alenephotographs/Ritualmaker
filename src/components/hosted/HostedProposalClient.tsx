@@ -102,6 +102,11 @@ export function HostedProposalClient({ token, initial, paymentReturn }: Props) {
     null | "deposit" | "balance" | "full"
   >(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [invoiceBusy, setInvoiceBusy] = useState(false);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [invoiceAvailable, setInvoiceAvailable] = useState(
+    initial.invoiceAvailable,
+  );
 
   useEffect(() => {
     if (viewPosted.current) return;
@@ -242,6 +247,29 @@ export function HostedProposalClient({ token, initial, paymentReturn }: Props) {
       setApproveError("Could not record approval.");
     } finally {
       setApproveBusy(false);
+    }
+  }
+
+  async function generateInvoice() {
+    setInvoiceError(null);
+    setInvoiceBusy(true);
+    try {
+      const res = await fetch(
+        `/api/proposal/${encodeURIComponent(token)}/invoice`,
+        { method: "POST" },
+      );
+      const data = (await res.json()) as { error?: string; url?: string };
+      if (!res.ok || !data.url) {
+        setInvoiceError(data.error ?? "Could not generate invoice.");
+        return;
+      }
+      setInvoiceAvailable(true);
+      window.open(data.url, "_blank", "noopener,noreferrer");
+      router.refresh();
+    } catch {
+      setInvoiceError("Could not generate invoice.");
+    } finally {
+      setInvoiceBusy(false);
     }
   }
 
@@ -510,6 +538,45 @@ export function HostedProposalClient({ token, initial, paymentReturn }: Props) {
         )}
       </section>
 
+      <section className="mb-14 rounded-2xl border border-ink/[0.06] bg-white/70 p-8 text-center sm:p-10">
+        <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-ink/38">
+          Documents
+        </h2>
+        <div className="mx-auto flex max-w-md flex-col gap-3">
+          <a
+            href={`/api/proposal/${encodeURIComponent(token)}/pdf`}
+            className="rounded-full bg-ink py-4 text-sm font-medium text-cream transition hover:bg-ink/90"
+          >
+            Download Proposal PDF
+          </a>
+          {invoiceAvailable ? (
+            <a
+              href={`/api/proposal/${encodeURIComponent(token)}/invoice`}
+              className="rounded-full border border-ink/12 bg-white py-4 text-sm font-medium text-ink/85 transition hover:border-ink/25"
+            >
+              Download Invoice
+            </a>
+          ) : v.invoiceEnabled ? (
+            <button
+              type="button"
+              disabled={invoiceBusy || !v.proposalApprovedAt}
+              onClick={() => void generateInvoice()}
+              className="rounded-full border border-ink/12 bg-white py-4 text-sm font-medium text-ink/85 transition hover:border-ink/25 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {invoiceBusy ? "Generating invoice..." : "Generate invoice"}
+            </button>
+          ) : null}
+        </div>
+        {v.invoiceEnabled && !v.proposalApprovedAt && !invoiceAvailable ? (
+          <p className="mt-4 text-xs text-ink/45">
+            Approve the proposal first to generate a corporate invoice.
+          </p>
+        ) : null}
+        {invoiceError ? (
+          <p className="mt-4 text-sm text-rose-700">{invoiceError}</p>
+        ) : null}
+      </section>
+
       <section className="mb-14">
         <h2 className="mb-8 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-ink/38">
           Your progress
@@ -541,12 +608,6 @@ export function HostedProposalClient({ token, initial, paymentReturn }: Props) {
       </section>
 
       <footer className="border-t border-ink/[0.06] pt-10 text-center">
-        <a
-          href={`/api/proposal/${encodeURIComponent(token)}/pdf`}
-          className="text-sm text-ink/45 underline-offset-4 hover:text-ink/70 hover:underline"
-        >
-          Download PDF for your records
-        </a>
         <p className="mt-6 text-[11px] text-ink/35">
           Questions? Reply to your Ritualmaker thread or reach us through your
           planner.
