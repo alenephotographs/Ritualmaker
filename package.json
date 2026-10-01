@@ -8,11 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm lint && pnpm typecheck && ALLOW_BUILD_WITHOUT_SANITY=1 pnpm build",
+    "check": "pnpm lint && pnpm typecheck && ALLOW_BUILD_WITHOUT_SANITY=1 pnpm build && pnpm run check:reentry-currentness",
     "sanity:deploy-schema": "sanity schema deploy --dataset ritualmaker",
     "sanity:migrate-vendors": "node scripts/migrate-vendors.mjs",
     "sanity:normalize-flower-categories": "node scripts/normalize-flower-product-categories.mjs",
-    "sanity:seed": "node scripts/seed-cms.mjs"
+    "sanity:seed": "node scripts/seed-cms.mjs",
+    "check:reentry-currentness": "node scripts/verify-cold-reentry-currentness.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^3.4.5",
