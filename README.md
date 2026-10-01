@@ -2,6 +2,23 @@
 
 The Next.js + Sanity + Stripe rebuild of [ritualmakerny.com](https://ritualmakerny.com), replacing the prior Webflow site with no lapse to the QR-code stand checkout flow.
 
+## Documentation
+
+**Agents:** start with [`docs/internal/11_TASK_ROUTING_PROTOCOL.md`](./docs/internal/11_TASK_ROUTING_PROTOCOL.md) (startup ritual).
+
+| Doc | Description |
+|-----|-------------|
+| [`docs/internal/00_SYSTEM_INDEX.md`](./docs/internal/00_SYSTEM_INDEX.md) | Hub — domains, metasystem placement, handoff format |
+| [`docs/internal/02_CURRENT_STATE.md`](./docs/internal/02_CURRENT_STATE.md) | Local repo vs ecosystem; deploy snapshot |
+| [`docs/internal/11_TASK_ROUTING_PROTOCOL.md`](./docs/internal/11_TASK_ROUTING_PROTOCOL.md) | Startup ritual + precognitive reorientation |
+| [`docs/internal/10_RETRIEVAL_QUERIES.md`](./docs/internal/10_RETRIEVAL_QUERIES.md) | Task → doc/code retrieval |
+| [`docs/internal/12_GITHUB_ISSUE_TAXONOMY.md`](./docs/internal/12_GITHUB_ISSUE_TAXONOMY.md) | GitHub Issue labels and routing |
+| [`docs/internal/01_ARCHITECTURE_MAP.md`](./docs/internal/01_ARCHITECTURE_MAP.md) | Routes, APIs, Sanity vs Supabase |
+| [`docs/internal/03_CURSOR_WORKLOG.md`](./docs/internal/03_CURSOR_WORKLOG.md) | Agent worklog |
+| [`BUILD_NOTES.md`](./BUILD_NOTES.md) | Build and Vercel env requirements |
+| [`docs/cutover.md`](./docs/cutover.md) | Webflow → Vercel cutover (stand QR safety) |
+| [`.env.example`](./.env.example) | Environment variable reference |
+
 ## Stack
 
 - **Framework:** Next.js 14 (App Router) + TypeScript
@@ -60,24 +77,13 @@ See [`docs/cutover.md`](./docs/cutover.md).
 
 ## Project structure
 
+See [`docs/internal/01_ARCHITECTURE_MAP.md`](./docs/internal/01_ARCHITECTURE_MAP.md). Core layout:
+
 ```
-src/
-  app/
-    layout.tsx                root layout, fonts, header/footer
-    page.tsx                  long-scroll home
-    shop/page.tsx             dedicated shop
-    gallery/page.tsx          archive.boutique gallery
-    checkout/{success,cancel}
-    api/checkout/route.ts     creates Stripe Checkout Sessions
-    api/stripe/webhook/       handles checkout.session.completed
-    studio/                   embedded Sanity Studio at /studio
-  components/                 React UI
-  lib/                        formatters + Stripe singleton
-  sanity/
-    client.ts                 Sanity client + image URL builder
-    env.ts                    runtime env validation
-    queries.ts                GROQ queries
-    schemas/                  document schemas
-    types.ts                  TypeScript types for queried docs
-sanity.config.ts              Studio configuration
+src/app/           pages + API (farm-stand, proposal, admin, checkout, studio)
+src/components/    UI
+src/lib/           Supabase, Stripe, client documents, PDF
+src/sanity/        CMS schemas and queries
+supabase/migrations/
+docs/internal/     system index, routing protocol, worklog
 ```
