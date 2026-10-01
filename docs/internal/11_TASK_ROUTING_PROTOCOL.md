@@ -22,6 +22,20 @@ Execute in order on **every new session** or **non-trivial task**:
 
 ---
 
+### Active-program census gate
+
+Before step 4 task classification, confirm the cold-reentry field includes all materially active native programs rather than only the May startup blockers.
+
+At the current evidence epoch this includes PR #19 client-portal payment/invoice recovery alongside PR #5 startup/currentness lineage.
+
+```text
+CURRENT STATE READ != ACTIVE PROGRAM CENSUS COMPLETE
+VISIBLE EXTERNAL BLOCKER != NO LAWFUL NATIVE WORK
+PROTECTED LIVE EFFECT != BLOCKED NON-EFFECTFUL HARDENING
+```
+
+If a materially active program is absent from Current State / System Index, stop selection and repair currentness before implementation.
+
 ## Precognitive reorientation tenet (required)
 
 > The founder should not have to repeatedly force alternate-perspective thinking. The system must make that automatic.
