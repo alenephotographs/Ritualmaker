@@ -13,7 +13,7 @@
     "sanity:migrate-vendors": "node scripts/migrate-vendors.mjs",
     "sanity:normalize-flower-categories": "node scripts/normalize-flower-product-categories.mjs",
     "sanity:seed": "node scripts/seed-cms.mjs",
-    "check:reentry-currentness": "node scripts/verify-cold-reentry-currentness.mjs"
+    "check:reentry-currentness": "node --test scripts/verify-cold-reentry-currentness.test.mjs && node scripts/verify-cold-reentry-currentness.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^3.4.5",
