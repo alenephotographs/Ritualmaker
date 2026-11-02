@@ -26,6 +26,26 @@ Do **not** collapse Ritualmaker into generic Human Operating System language. Do
 
 ---
 
+## 2026-09-30 cold-reentry active-program census
+
+This index remains the startup/currentness owner, but its May blocker snapshot is not a complete current program census.
+
+Before selecting work, live-rebind the repository and include every materially active native program. Current required census includes:
+
+- PR #5 — startup/metasystem/currentness lineage;
+- PR #19 — materially active client-portal payment/invoice recovery program;
+- PR #19 remains subordinate to Ritualmaker product authority and does not become whole-repo planning authority;
+- provider/deployment/payment/email/migration actions remain separately protected.
+
+```text
+STARTUP SURFACES INTERNALLY COHERENT != ACTIVE PROGRAM CENSUS COMPLETE
+MATERIALLY ACTIVE NATIVE PROGRAM OMITTED FROM REENTRY => FAIL CLOSED
+EXTERNAL OR PROTECTED BLOCKER != WHOLE-SPHERE EXHAUSTION
+OPEN LAWFUL NATIVE WORK MUST REMAIN SELECTABLE
+```
+
+Historical B1/B3/B5 and stand-cutover priorities below remain evidence for their epoch; they do not erase or automatically outrank later admitted native programs.
+
 ## Project purpose
 
 Replace legacy **Webflow** for [ritualmakerny.com](https://ritualmakerny.com) with **Next.js 14**, preserving **zero-lapse** farm-stand QR checkout, plus farm stand commerce, on-location / Live Collage™, photography, and event proposal CRM (Supabase + Stripe).

@@ -1,8 +1,28 @@
 # Ritualmaker — Current State
 
-**As-of:** 2026-05-20 (issue operationalization)  
+**As-of:** 2026-09-30 (cold-reentry supersession; May snapshot preserved below)  
 **Repo:** `alenephotographs/Ritualmaker`  
-**Branch baseline:** `main` @ `1fd65ef` · metasystem docs on `cursor/metasystem-alignment-ab0b` @ `0f7099f`
+**Historical branch baseline:** `main` @ `1fd65ef` · metasystem docs on `cursor/metasystem-alignment-ab0b` @ `0f7099f`
+
+## 2026-09-30 currentness supersession
+
+The May state below is historical-valid but no longer sufficient for work selection.
+
+Current live program field must include at least:
+
+- PR #5 — startup/currentness/metasystem lineage;
+- PR #19 — active client-portal payment/invoice recovery on current-main ancestry;
+- the PR #19 payment/invoice horizon remains source/nonprod work with protected live Stripe, email, migration, merge and deployment effects;
+- current `main` carries `vercel.json` with Git-triggered deployment disabled; historical deploy assumptions must not re-arm it.
+
+PR #19's unresolved lawful work includes nonprod reconciliation/idempotency/recovery proof around invoice creation, local custody, payment-state persistence, notification failure/retry, and legacy public-token expiry. Those obligations remain selectable even while live provider effects are protected.
+
+```text
+HISTORICAL_CURRENT_STATE != CURRENT_SELECTION_AUTHORITY
+ACTIVE PROGRAM OMITTED FROM COLD REENTRY => FAIL CLOSED
+PAYMENT EFFECT PROTECTED != PAYMENT/RECOVERY PLANNING EXHAUSTED
+GREEN SOURCE != LIVE STRIPE/EMAIL/MIGRATION PROOF
+```
 
 Read with [`00_SYSTEM_INDEX.md`](./00_SYSTEM_INDEX.md) and [`01_ARCHITECTURE_MAP.md`](./01_ARCHITECTURE_MAP.md).
 
