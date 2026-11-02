@@ -19,7 +19,7 @@ for(const [path,marker] of cases)test('cold entry fails on omission: '+marker,()
  const dir=mkdtempSync(join(tmpdir(),'ritual-reentry-'));
  try{
   for(const p of paths){const dest=join(dir,p);mkdirSync(dirname(dest),{recursive:true});writeFileSync(dest,readFileSync(join(root,p)));}
-  const f=join(dir,path);writeFileSync(f,readFileSync(f,'utf8').replace(marker,'REMOVED_BY_ADVERSARIAL_TEST'));
+  const f=join(dir,path);writeFileSync(f,readFileSync(f,'utf8').replaceAll(marker,'REMOVED_BY_ADVERSARIAL_TEST'));
   const v=spawnSync(process.execPath,[join(root,'scripts/verify-cold-reentry-currentness.mjs')],{cwd:dir,encoding:'utf8'});
   assert.notEqual(v.status,0,v.stdout+v.stderr);
   assert.match(v.stderr,/RITUALMAKER_REENTRY_FAIL/);
