@@ -1,0 +1,53 @@
+{
+  "schema": "RM_TOPOLOGY_EXPRESSION_RECEIVING_BINDING_V1",
+  "sphereId": "Ritualmaker",
+  "repository": "alenephotographs/Ritualmaker",
+  "adapterReceivingDisposition": "NATIVE_EDGE_CONSUME",
+  "fclPortabilityCarrierPr": 4707,
+  "fclComposeObservePr": 4711,
+  "siteAdapter": "docs/internal/project-adapters/RITUALMAKER_SITE_ADAPTER.md",
+  "nativeManifestation": "seasonal-tactile-commerce-and-inquiry",
+  "expressionCoverageClaimed": true,
+  "ownerAdoption": false,
+  "runtimeAdoptionClaimed": false,
+  "humanBenefitClaimed": false,
+  "authorityCreated": false,
+  "mergeAuthorized": false,
+  "topologyExpressionRows": [
+    {
+      "id": "rm-stand-threshold-1",
+      "sphereId": "Ritualmaker",
+      "repository": "alenephotographs/Ritualmaker",
+      "nativeReferentId": "farm-stand-visit",
+      "semanticPurpose": "Preserve seasonal stand availability meaning without implying always-in-stock inventory",
+      "humanPurpose": "Know whether the stand can be visited and what is honestly listed now",
+      "owner": "Ritualmaker:site-adapter",
+      "authorityMembrane": "inspect only",
+      "accessibilityEquivalent": "structured stand status and listed SKU text",
+      "falsifier": "identity loss between stand visit, shelf FCFS, and Stripe checkout inventory pools",
+      "returnRoute": "Ritualmaker:site-adapter#seasonal-honesty",
+      "interactionMechanic": "orient",
+      "alternatives": [
+        "stand status text",
+        "listed SKU table",
+        "inquiry-only path"
+      ],
+      "disposition": "BOUND",
+      "sourceRefs": [
+        {
+          "artifact": "docs/internal/project-adapters/RITUALMAKER_SITE_ADAPTER.md",
+          "owner": "Ritualmaker",
+          "revision": "5e09f26b60b0b34f7945af5e29bd9ed4324cf3fb",
+          "evidenceClass": "NATIVE_SOURCE",
+          "currentness": "CURRENT_AT_REQUIRED_REF"
+        }
+      ],
+      "adapterReceivingDisposition": "NATIVE_EDGE_CONSUME",
+      "authorityCreated": false,
+      "runtimeAdoptionClaimed": false,
+      "humanBenefitClaimed": false,
+      "foreignGeometryImported": false
+    }
+  ],
+  "proofCeiling": "Source-bound native receiving under FCL#4707 census disposition NATIVE_EDGE_CONSUME. Not runtime UI adoption, not merge, not inventory sync proof."
+}
