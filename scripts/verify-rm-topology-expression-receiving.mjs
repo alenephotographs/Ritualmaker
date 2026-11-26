@@ -46,7 +46,7 @@ export function consumeRitualmakerExpressionDerivations(binding) {
     if (binding[flag] === true) errors.push(`RM_RECEIVING_BOUNDARY_${flag}`);
   }
   if (binding.masterBindLedgerPr === 4709) errors.push("RM_RECEIVING_HOLD_4709_FORBIDDEN");
-  if (binding.fclPortabilityTipSha !== "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7") errors.push("RM_RECEIVING_FCL_TIP_PIN_MISMATCH");
+  if (binding.fclPortabilityTipSha !== "ae6c82fcd97feca5d842d4b9ecbe3baee4c27a4a") errors.push("RM_RECEIVING_FCL_TIP_PIN_MISMATCH");
   if (binding.eightRepoReceivingHold !== true) errors.push("RM_RECEIVING_EIGHT_REPO_HOLD_REQUIRED");
   if (binding.censusObserveCarrierPr !== 22) errors.push("RM_RECEIVING_CENSUS_OBSERVE_PR_MISMATCH");
   if (!binding.eightRepoReceivingObserve || binding.eightRepoReceivingObserve.mode !== "OBSERVE_ONLY_POINTER" ||
@@ -54,8 +54,18 @@ export function consumeRitualmakerExpressionDerivations(binding) {
       binding.eightRepoReceivingObserve.mergeAuthorized !== false) {
     errors.push("RM_RECEIVING_EIGHT_REPO_OBSERVE_INVALID");
   }
-  if (binding.eightRepoReceivingObserve?.tips?.["Founder-Control-Logic"]?.tipSha !== "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7") {
+  if (binding.eightRepoReceivingObserve?.tips?.["Founder-Control-Logic"]?.tipSha !== "ae6c82fcd97feca5d842d4b9ecbe3baee4c27a4a") {
     errors.push("RM_RECEIVING_EIGHT_REPO_FCL_TIP_STALE");
+  }
+
+  const visual = binding.visualTransferFormCompareObserve;
+  if (!visual || visual.mode !== "OBSERVE_ONLY" || visual.createsRegistry !== false ||
+      visual.wrote4709 !== false || visual.formCount !== 4 ||
+      visual.expressionCorroborationTipSha !== "ae6c82fcd97feca5d842d4b9ecbe3baee4c27a4a" ||
+      visual.aos53ReceivingTipSha !== "a3568aa88efbc67ea6d1b45ba1a7bd3389ec6565" ||
+      visual.chatbotDashboardAutomaticAuthorityFalsified !== true ||
+      visual.hybridRemainsTransferCandidateNotSelected !== true) {
+    errors.push("RM_RECEIVING_VISUAL_FORM_COMPARE_OBSERVE_INVALID");
   }
   const rows = binding.topologyExpressionRows;
   if (!Array.isArray(rows) || !rows.length) errors.push("TOPOLOGY_EXPRESSION_EMPTY");
