@@ -13,7 +13,8 @@
     "sanity:deploy-schema": "sanity schema deploy --dataset ritualmaker",
     "sanity:migrate-vendors": "node scripts/migrate-vendors.mjs",
     "sanity:normalize-flower-categories": "node scripts/normalize-flower-product-categories.mjs",
-    "sanity:seed": "node scripts/seed-cms.mjs"
+    "sanity:seed": "node scripts/seed-cms.mjs",
+    "check:topology-expression-receiving": "node scripts/verify-rm-topology-expression-receiving.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^3.4.5",

@@ -435,3 +435,17 @@ Scope (suggested):
 [ ] System index / agent entry updated (future pass)
 [ ] Not claiming automation is enforced until CI exists
 ```
+
+---
+
+## Topology → expression receiving (2026-11-25)
+
+FCL [#4707](https://github.com/alenephotographs/Founder-Control-Logic/pull/4707) census disposition for this sphere: **`NATIVE_EDGE_CONSUME`**.
+
+- Binding: `docs/internal/project-adapters/topology-expression-receiving/RM_TOPOLOGY_EXPRESSION_RECEIVING_BINDING_01.json`
+- Verify / adversarial: `node scripts/verify-rm-topology-expression-receiving.mjs`
+- Manifestation preserved: seasonal / tactile stand honesty — no Boutique atlas geometry import
+- Ceiling: source-bound receiving only; `ownerAdoption=false`; not merge/runtime UI proof
+
+- Native invoke: `npm run check:topology-expression-receiving`
+- MoM: stop reflexive tip-observe updates; source-bound receive is the outcome for this edge.

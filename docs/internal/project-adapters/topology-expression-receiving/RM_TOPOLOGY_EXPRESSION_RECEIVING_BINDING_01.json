@@ -1,0 +1,142 @@
+{
+  "schema": "RM_TOPOLOGY_EXPRESSION_RECEIVING_BINDING_V1",
+  "sphereId": "Ritualmaker",
+  "repository": "alenephotographs/Ritualmaker",
+  "adapterReceivingDisposition": "NATIVE_EDGE_CONSUME",
+  "fclPortabilityCarrierPr": 4707,
+  "fclComposeObservePr": 4711,
+  "fclPortabilityTipSha": "ae6c82fcd97feca5d842d4b9ecbe3baee4c27a4a",
+  "censusObserveCarrierPr": 22,
+  "masterBindLedgerPr": null,
+  "eightRepoReceivingHold": true,
+  "eightRepoReceivingObserve": {
+    "mode": "OBSERVE_ONLY_POINTER",
+    "ownerAdoption": false,
+    "mergeAuthorized": false,
+    "tips": {
+      "Founder-Control-Logic": {
+        "pr": 4707,
+        "tipSha": "ae6c82fcd97feca5d842d4b9ecbe3baee4c27a4a",
+        "disposition": "COMPOSE_CROSSBIND_OBSERVE"
+      },
+      "Wayworking": {
+        "pr": 298,
+        "tipSha": "2666e0068872b0d2f621df39e7ac28606ad400c8",
+        "disposition": "NATIVE_EDGE_CONSUME",
+        "observeOnly": true
+      },
+      "Boutique": {
+        "pr": 3056,
+        "tipSha": "77bc7796ef5216b33394f2f45adf5586d39f7c73",
+        "disposition": "PORTABLE_KERNEL_VALIDATE",
+        "observeOnly": true
+      },
+      "BoutiqueMoMTopology": {
+        "pr": 3058,
+        "tipSha": "833fa2723e49aee57bbf19b41bb413ec6c0a5086",
+        "disposition": "MECHANICAL_SOURCE_POPULATION_NOT_NATIVE_ADOPTED",
+        "observeOnly": true,
+        "ownerAdoption": false
+      },
+      "ArchiveArchitect": {
+        "pr": 12,
+        "tipSha": "319673bb1237e4e8c02bbc06a030886126452a60",
+        "disposition": "OWNER_BOUND_HOLD"
+      },
+      "Ritualmaker": {
+        "pr": 22,
+        "tipSha": "cf84d1596f9d0a6b7088417412a588ab950cabad",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      },
+      "AlenePhotographs": {
+        "pr": 24,
+        "tipSha": "fc3a8935aca387c2ebe955c0486d4f51fe970202",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      },
+      "Alenearchive": {
+        "pr": 19,
+        "tipSha": "29565af02981482875e091d5aa17874985506869",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      },
+      "bcldesign": {
+        "pr": 12,
+        "tipSha": "36b6cc777c304eb874c822cff06db104af0b1db8",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      }
+    }
+  },
+  "siteAdapter": "docs/internal/project-adapters/RITUALMAKER_SITE_ADAPTER.md",
+  "nativeManifestation": "seasonal-tactile-commerce-and-inquiry",
+  "expressionCoverageClaimed": true,
+  "ownerAdoption": false,
+  "runtimeAdoptionClaimed": false,
+  "humanBenefitClaimed": false,
+  "authorityCreated": false,
+  "mergeAuthorized": false,
+  "topologyExpressionRows": [
+    {
+      "id": "rm-stand-threshold-1",
+      "sphereId": "Ritualmaker",
+      "repository": "alenephotographs/Ritualmaker",
+      "nativeReferentId": "farm-stand-visit",
+      "semanticPurpose": "Preserve seasonal stand availability meaning without implying always-in-stock inventory",
+      "humanPurpose": "Know whether the stand can be visited and what is honestly listed now",
+      "owner": "Ritualmaker:site-adapter",
+      "authorityMembrane": "inspect only",
+      "accessibilityEquivalent": "structured stand status and listed SKU text",
+      "falsifier": "identity loss between stand visit, shelf FCFS, and Stripe checkout inventory pools",
+      "returnRoute": "Ritualmaker:site-adapter#seasonal-honesty",
+      "interactionMechanic": "orient",
+      "alternatives": [
+        "stand status text",
+        "listed SKU table",
+        "inquiry-only path"
+      ],
+      "disposition": "BOUND",
+      "sourceRefs": [
+        {
+          "artifact": "docs/internal/project-adapters/RITUALMAKER_SITE_ADAPTER.md",
+          "owner": "Ritualmaker",
+          "revision": "5e09f26b60b0b34f7945af5e29bd9ed4324cf3fb",
+          "evidenceClass": "NATIVE_SOURCE",
+          "currentness": "CURRENT_AT_REQUIRED_REF"
+        }
+      ],
+      "adapterReceivingDisposition": "NATIVE_EDGE_CONSUME",
+      "authorityCreated": false,
+      "runtimeAdoptionClaimed": false,
+      "humanBenefitClaimed": false,
+      "foreignGeometryImported": false
+    }
+  ],
+  "proofCeiling": "Source-bound native receiving under FCL#4707 census disposition NATIVE_EDGE_CONSUME. Not runtime UI adoption, not merge, not inventory sync proof.",
+  "visualTransferFormCompareObserve": {
+    "mode": "OBSERVE_ONLY",
+    "momCommentId": "7197324206",
+    "transferLoopOwner": "docs/internal/FCL_CROSS_REPO_VISUAL_EXPERIMENT_INTAKE_AND_TRANSFER_LOOP_01.md",
+    "aos53ReceivingTipSha": "a3568aa88efbc67ea6d1b45ba1a7bd3389ec6565",
+    "aos53ReceivingOwners": [
+      "FCL#4565",
+      "FCL#1334"
+    ],
+    "expressionCorroborationTipSha": "ae6c82fcd97feca5d842d4b9ecbe3baee4c27a4a",
+    "formCount": 4,
+    "formIdsObserved": [
+      "STATUS_ORIENTATION_SURFACE",
+      "RELATIONSHIP_FIRST_FIELD",
+      "HYBRID_ORIENTATION_RELATIONSHIP_PROGRESSIVE_DETAIL",
+      "CHATBOT_DASHBOARD_AUTOMATIC_VISUAL_AUTHORITY"
+    ],
+    "chatbotDashboardAutomaticAuthorityFalsified": true,
+    "hybridRemainsTransferCandidateNotSelected": true,
+    "createsRegistry": false,
+    "universalVisualLanguageSelected": false,
+    "methodCorePromotion": false,
+    "intersectionOwners": [
+      "FCL#4707",
+      "WW_H3",
+      "WW_H9"
+    ],
+    "wrote4709": false
+  }
+}
