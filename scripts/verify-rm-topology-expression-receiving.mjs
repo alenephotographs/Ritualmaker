@@ -42,9 +42,12 @@ export function consumeRitualmakerExpressionDerivations(binding) {
   if (binding.adapterReceivingDisposition !== DISPOSITION) {
     return { status: "INVALID", errors: ["RM_RECEIVING_DISPOSITION_MISMATCH"], grantsAuthority: false };
   }
-  for (const flag of ["authorityCreated", "runtimeAdoptionClaimed", "humanBenefitClaimed", "ownerAdoption"]) {
+  for (const flag of ["authorityCreated", "runtimeAdoptionClaimed", "humanBenefitClaimed", "ownerAdoption", "mergeAuthorized"]) {
     if (binding[flag] === true) errors.push(`RM_RECEIVING_BOUNDARY_${flag}`);
   }
+  if (binding.masterBindLedgerPr === 4709) errors.push("RM_RECEIVING_HOLD_4709_FORBIDDEN");
+  if (binding.fclPortabilityTipSha !== "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7") errors.push("RM_RECEIVING_FCL_TIP_PIN_MISMATCH");
+  if (binding.eightRepoReceivingHold !== true) errors.push("RM_RECEIVING_EIGHT_REPO_HOLD_REQUIRED");
   const rows = binding.topologyExpressionRows;
   if (!Array.isArray(rows) || !rows.length) errors.push("TOPOLOGY_EXPRESSION_EMPTY");
   const seen = new Set();
@@ -141,6 +144,26 @@ function adversarial() {
   const g = consumeRitualmakerExpressionDerivations(boutiqueGeom);
   if (!g.errors?.some((e) => e.includes("FOREIGN_GEOMETRY"))) throw new Error("FALSE_SUCCESS_FOREIGN_GEOMETRY");
 
+  const mergeClaim = structuredClone(binding);
+  mergeClaim.mergeAuthorized = true;
+  const m = consumeRitualmakerExpressionDerivations(mergeClaim);
+  if (!m.errors?.includes("RM_RECEIVING_BOUNDARY_mergeAuthorized")) throw new Error("FALSE_SUCCESS_MERGE");
+
+  const adopt = structuredClone(binding);
+  adopt.ownerAdoption = true;
+  const o = consumeRitualmakerExpressionDerivations(adopt);
+  if (!o.errors?.includes("RM_RECEIVING_BOUNDARY_ownerAdoption")) throw new Error("FALSE_SUCCESS_OWNER_ADOPTION");
+
+  const ledger = structuredClone(binding);
+  ledger.masterBindLedgerPr = 4709;
+  const l = consumeRitualmakerExpressionDerivations(ledger);
+  if (!l.errors?.includes("RM_RECEIVING_HOLD_4709_FORBIDDEN")) throw new Error("FALSE_SUCCESS_4709");
+
+  const tip = structuredClone(binding);
+  tip.fclPortabilityTipSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+  const t = consumeRitualmakerExpressionDerivations(tip);
+  if (!t.errors?.includes("RM_RECEIVING_FCL_TIP_PIN_MISMATCH")) throw new Error("FALSE_SUCCESS_TIP_PIN");
+
   return {
     status: "RM_TOPOLOGY_EXPRESSION_RECEIVING_ADVERSARIAL_PASS",
     baseStatus: base.status,
@@ -150,6 +173,10 @@ function adversarial() {
       "AUTHORITY_INFLATION",
       "DISPOSITION_MISMATCH",
       "FOREIGN_BOUTIQUE_GEOMETRY",
+      "MERGE_AUTHORIZED",
+      "OWNER_ADOPTION",
+      "MASTER_BIND_4709",
+      "FCL_TIP_PIN",
     ],
     grantsAuthority: false,
   };
