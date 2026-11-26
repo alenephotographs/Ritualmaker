@@ -33,34 +33,34 @@
       },
       "BoutiqueMoMTopology": {
         "pr": 3058,
-        "tipSha": "0138251cbee8c8fb0277aecbd85f6fcd0ea6104a",
+        "tipSha": "b90e150806bb680de39187b73cff65d7b2a7dfc8",
         "disposition": "MECHANICAL_SOURCE_POPULATION_NOT_NATIVE_ADOPTED",
         "observeOnly": true,
         "ownerAdoption": false
       },
       "ArchiveArchitect": {
         "pr": 12,
-        "tipSha": "1006b4bc4185fd286ee878e2c9f7c9c52a747838",
+        "tipSha": "2cbef0a4d134aeb461f0a809a5c6a984e9147bb4",
         "disposition": "OWNER_BOUND_HOLD"
       },
       "Ritualmaker": {
         "pr": 22,
-        "tipSha": "250b8f43d45762ea75981bf076845ddb14bc5c46",
+        "tipSha": "f984218ddf928ece43cbd544a47049abbeb1f1f1",
         "disposition": "NATIVE_EDGE_CONSUME"
       },
       "AlenePhotographs": {
         "pr": 24,
-        "tipSha": "f8ebe44c618413deedd19a1743815bea11f66a0e",
+        "tipSha": "5763ec1d345d29abb2a74436314bc72e5275baf6",
         "disposition": "NATIVE_EDGE_CONSUME"
       },
       "Alenearchive": {
         "pr": 19,
-        "tipSha": "a8a37bd5d98f8556cfe483a421f3f5260486a23d",
+        "tipSha": "c3c6830ede4fd7b25a6f03b3698d2db6a44078c3",
         "disposition": "NATIVE_EDGE_CONSUME"
       },
       "bcldesign": {
         "pr": 12,
-        "tipSha": "9b264e7b45b7820a4107f6787a25255a1d2e055a",
+        "tipSha": "da5678866fae16189ec08c432217ac4169d1c5d9",
         "disposition": "NATIVE_EDGE_CONSUME"
       }
     }
