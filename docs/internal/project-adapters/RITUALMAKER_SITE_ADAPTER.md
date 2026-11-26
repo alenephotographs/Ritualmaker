@@ -446,3 +446,6 @@ FCL [#4707](https://github.com/alenephotographs/Founder-Control-Logic/pull/4707)
 - Verify / adversarial: `node scripts/verify-rm-topology-expression-receiving.mjs`
 - Manifestation preserved: seasonal / tactile stand honesty — no Boutique atlas geometry import
 - Ceiling: source-bound receiving only; `ownerAdoption=false`; not merge/runtime UI proof
+
+- Native invoke: `npm run check:topology-expression-receiving`
+- MoM: stop reflexive tip-observe updates; source-bound receive is the outcome for this edge.
