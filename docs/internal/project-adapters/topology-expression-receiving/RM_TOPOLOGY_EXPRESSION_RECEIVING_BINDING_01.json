@@ -6,8 +6,65 @@
   "fclPortabilityCarrierPr": 4707,
   "fclComposeObservePr": 4711,
   "fclPortabilityTipSha": "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7",
+  "censusObserveCarrierPr": 22,
   "masterBindLedgerPr": null,
   "eightRepoReceivingHold": true,
+  "eightRepoReceivingObserve": {
+    "mode": "OBSERVE_ONLY_POINTER",
+    "ownerAdoption": false,
+    "mergeAuthorized": false,
+    "tips": {
+      "Founder-Control-Logic": {
+        "pr": 4707,
+        "tipSha": "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7",
+        "disposition": "COMPOSE_CROSSBIND_OBSERVE"
+      },
+      "Wayworking": {
+        "pr": 298,
+        "tipSha": "76e7acad2550bc17a54eabb6c1e1e384a125db1c",
+        "disposition": "NATIVE_EDGE_CONSUME",
+        "observeOnly": true
+      },
+      "Boutique": {
+        "pr": 3056,
+        "tipSha": "ed16ea9e3a13e78f626d95f5d5641b10804d3998",
+        "disposition": "PORTABLE_KERNEL_VALIDATE",
+        "observeOnly": true
+      },
+      "BoutiqueMoMTopology": {
+        "pr": 3058,
+        "tipSha": "0138251cbee8c8fb0277aecbd85f6fcd0ea6104a",
+        "disposition": "MECHANICAL_SOURCE_POPULATION_NOT_NATIVE_ADOPTED",
+        "observeOnly": true,
+        "ownerAdoption": false
+      },
+      "ArchiveArchitect": {
+        "pr": 12,
+        "tipSha": "1006b4bc4185fd286ee878e2c9f7c9c52a747838",
+        "disposition": "OWNER_BOUND_HOLD"
+      },
+      "Ritualmaker": {
+        "pr": 22,
+        "tipSha": "250b8f43d45762ea75981bf076845ddb14bc5c46",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      },
+      "AlenePhotographs": {
+        "pr": 24,
+        "tipSha": "f8ebe44c618413deedd19a1743815bea11f66a0e",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      },
+      "Alenearchive": {
+        "pr": 19,
+        "tipSha": "a8a37bd5d98f8556cfe483a421f3f5260486a23d",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      },
+      "bcldesign": {
+        "pr": 12,
+        "tipSha": "9b264e7b45b7820a4107f6787a25255a1d2e055a",
+        "disposition": "NATIVE_EDGE_CONSUME"
+      }
+    }
+  },
   "siteAdapter": "docs/internal/project-adapters/RITUALMAKER_SITE_ADAPTER.md",
   "nativeManifestation": "seasonal-tactile-commerce-and-inquiry",
   "expressionCoverageClaimed": true,

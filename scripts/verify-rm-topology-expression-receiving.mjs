@@ -48,6 +48,15 @@ export function consumeRitualmakerExpressionDerivations(binding) {
   if (binding.masterBindLedgerPr === 4709) errors.push("RM_RECEIVING_HOLD_4709_FORBIDDEN");
   if (binding.fclPortabilityTipSha !== "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7") errors.push("RM_RECEIVING_FCL_TIP_PIN_MISMATCH");
   if (binding.eightRepoReceivingHold !== true) errors.push("RM_RECEIVING_EIGHT_REPO_HOLD_REQUIRED");
+  if (binding.censusObserveCarrierPr !== 22) errors.push("RM_RECEIVING_CENSUS_OBSERVE_PR_MISMATCH");
+  if (!binding.eightRepoReceivingObserve || binding.eightRepoReceivingObserve.mode !== "OBSERVE_ONLY_POINTER" ||
+      binding.eightRepoReceivingObserve.ownerAdoption !== false ||
+      binding.eightRepoReceivingObserve.mergeAuthorized !== false) {
+    errors.push("RM_RECEIVING_EIGHT_REPO_OBSERVE_INVALID");
+  }
+  if (binding.eightRepoReceivingObserve?.tips?.["Founder-Control-Logic"]?.tipSha !== "b55f78023e3431b5f08fe86ed7daf5eb7ef7b7f7") {
+    errors.push("RM_RECEIVING_EIGHT_REPO_FCL_TIP_STALE");
+  }
   const rows = binding.topologyExpressionRows;
   if (!Array.isArray(rows) || !rows.length) errors.push("TOPOLOGY_EXPRESSION_EMPTY");
   const seen = new Set();
@@ -163,6 +172,11 @@ function adversarial() {
   tip.fclPortabilityTipSha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
   const t = consumeRitualmakerExpressionDerivations(tip);
   if (!t.errors?.includes("RM_RECEIVING_FCL_TIP_PIN_MISMATCH")) throw new Error("FALSE_SUCCESS_TIP_PIN");
+  const censusPr = structuredClone(binding);
+  censusPr.censusObserveCarrierPr = 9999;
+  const cp = consumeRitualmakerExpressionDerivations(censusPr);
+  if (!cp.errors?.includes("RM_RECEIVING_CENSUS_OBSERVE_PR_MISMATCH")) throw new Error("FALSE_SUCCESS_CENSUS_PR");
+
 
   return {
     status: "RM_TOPOLOGY_EXPRESSION_RECEIVING_ADVERSARIAL_PASS",
@@ -177,6 +191,7 @@ function adversarial() {
       "OWNER_ADOPTION",
       "MASTER_BIND_4709",
       "FCL_TIP_PIN",
+      "CENSUS_OBSERVE_PR",
     ],
     grantsAuthority: false,
   };
